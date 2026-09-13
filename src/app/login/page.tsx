@@ -1,8 +1,7 @@
-import { GoogleSignInButton } from "@/components/auth/google-sign-in-button";
+import { MagicLinkForm } from "@/components/auth/magic-link-form";
 
 const ERROR_MESSAGES: Record<string, string> = {
-  unauthorized: "This Google account is not authorized to use this app.",
-  identity_mismatch: "This account no longer matches the identity on file.",
+  unauthorized: "This account is not authorized to use this app.",
   auth_failed: "Sign-in failed. Please try again.",
   missing_code: "Sign-in failed. Please try again.",
   profile_setup_failed: "Could not set up your profile. Please try again.",
@@ -28,7 +27,7 @@ export default async function LoginPage({
             {errorMessage}
           </p>
         ) : null}
-        <GoogleSignInButton />
+        <MagicLinkForm />
       </div>
     </div>
   );

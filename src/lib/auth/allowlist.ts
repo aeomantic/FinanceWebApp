@@ -3,7 +3,7 @@
 // auth flow (proxy, callback, page guards) calls this same function so
 // there is exactly one place the rule can go wrong.
 export function isAllowedEmail(email: string | null | undefined): boolean {
-  const allowed = process.env.ALLOWED_GOOGLE_EMAIL;
+  const allowed = process.env.ALLOWED_EMAIL;
   if (!allowed || !email) return false;
   return email.trim().toLowerCase() === allowed.trim().toLowerCase();
 }

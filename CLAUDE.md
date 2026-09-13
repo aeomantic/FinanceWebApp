@@ -2,29 +2,30 @@
 
 # Personal Finance Webapp
 
-A personal finance webapp for a single user (me), with Google-gated login, expense tracking, a wishlist, and recurring monthly payment tracking.
+A personal finance webapp for a single user (me), with magic-link-gated login, expense tracking, a wishlist, and recurring monthly payment tracking.
 
 ## Decided stack
 
 * Frontend and backend: Next.js (App Router) with TypeScript
 * Styling: Tailwind CSS
-* Database and auth: Supabase (Postgres, Google OAuth through Supabase Auth, Row Level Security)
+* Database and auth: Supabase (Postgres, magic link email auth through Supabase Auth, Row Level Security)
 * Validation: Zod on all incoming form and API data, backed by database constraints
 * Hosting: Vercel (Hobby plan) for the app, Supabase for the database and auth
 * Charts: Recharts
 
 Do not propose alternative stacks or re-open this decision.
 
+Auth was originally planned as Google OAuth; switched to Supabase's built-in magic link (passwordless email) to avoid the Google Cloud OAuth client setup. The single account is pre-created via the Supabase admin API, not through a public sign-up form (`shouldCreateUser: false` on every OTP request), so there is still no registration flow.
+
 ## Prerequisites
 
-1. A Supabase project, with the Google provider enabled under Authentication > Providers
-2. A Google Cloud OAuth 2.0 client (Web application type), with authorized origins and redirect URI pointing to the Supabase auth callback
-3. A GitHub repository for the project
-4. Environment variables in `.env.local` (gitignored, see `.env.example`):
+1. A Supabase project (no external OAuth provider needed; magic link uses Supabase's built-in email auth)
+2. A GitHub repository for the project
+3. Environment variables in `.env.local` (gitignored, see `.env.example`):
    * `NEXT_PUBLIC_SUPABASE_URL`
    * `NEXT_PUBLIC_SUPABASE_ANON_KEY`
    * `SUPABASE_SERVICE_ROLE_KEY` (server-only, never exposed to the client)
-   * `ALLOWED_GOOGLE_EMAIL` (the only email allowed to log in)
+   * `ALLOWED_EMAIL` (the only email allowed to log in)
 
 ## Data model
 
@@ -45,7 +46,7 @@ Notes on this schema:
 Work through phases one at a time. After each phase, stop, summarize what was built, and wait for confirmation before starting the next one.
 
 * Phase 0: Scaffolding — Next.js/TypeScript, Tailwind, Supabase clients (browser + server), env vars, repo pushed to GitHub.
-* Phase 1: Authentication — Google sign-in through Supabase Auth. Allowlist enforced server-side at session creation, not just hidden in the UI. Store and check `google_sub`. No registration flow, no password fallback.
+* Phase 1: Authentication — magic link sign-in through Supabase Auth. Allowlist enforced server-side at session creation, not just hidden in the UI. No registration flow (single pre-created account, `shouldCreateUser: false`), no password fallback.
 * Phase 2: Categories and transactions — CRUD, basic list view.
 * Phase 3: Dashboard — monthly spending view with date range and category filters, computed with SQL aggregation, not client-side summing.
 * Phase 4: Recurring payments — rules, generated occurrences, upcoming-due list, "mark paid" action that links to a transaction and advances `next_due_on`.
@@ -62,7 +63,7 @@ Backlog, explicitly out of scope unless asked: email or push reminders, receipt 
 * HttpOnly, Secure, SameSite cookies for session state, no tokens in localStorage
 * Validate everything server-side with Zod, even where the client already validates
 * Never log tokens, session cookies, or full transaction payloads
-* Reasonable Content Security Policy, OAuth redirect URIs restricted to known origins
+* Reasonable Content Security Policy, auth redirect URLs restricted to known origins
 
 ## Working style
 

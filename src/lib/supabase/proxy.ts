@@ -2,7 +2,7 @@ import { isAllowedEmail } from "@/lib/auth/allowlist";
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-const PUBLIC_PATHS = ["/login", "/auth/callback"];
+const PUBLIC_PATHS = ["/login", "/auth/callback", "/api/auth/magic-link"];
 
 // Runs on every request. Refreshes the session cookie so Server Components
 // always see a valid session, re-checks the email allowlist on every
