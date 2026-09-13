@@ -2,68 +2,60 @@ import { isAllowedEmail } from "@/lib/auth/allowlist";
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-const PUBLIC_PATHS = ["/login", "/auth/callback", "/api/auth/magic-link"];
+const PUBLIC_PATHS = new Set([
+  "/login",
+  "/register",
+  "/forgot-password",
+  "/auth/callback",
+  "/auth/reset-password",
+  "/api/auth/password",
+  "/preview",
+]);
 
-// Runs on every request. Refreshes the session cookie so Server Components
-// always see a valid session, re-checks the email allowlist on every
-// request (not just at login, in case the allowlist changes or a session
-// predates this check), and redirects unauthenticated requests to /login.
+// Refresh and authorize every request. Redirects must carry rotated or
+// deleted auth cookies as well as ordinary responses.
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
-
+  const authHeaders = new Headers();
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        getAll() {
-          return request.cookies.getAll();
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) =>
-            request.cookies.set(name, value),
-          );
+        getAll() { return request.cookies.getAll(); },
+        setAll(cookiesToSet, cacheHeaders) {
+          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
+          Object.entries(cacheHeaders).forEach(([name, value]) => authHeaders.set(name, value));
           supabaseResponse = NextResponse.next({ request });
-          cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options),
-          );
+          authHeaders.forEach((value, name) => supabaseResponse.headers.set(name, value));
+          cookiesToSet.forEach(({ name, value, options }) => supabaseResponse.cookies.set(name, value, options));
         },
       },
     },
   );
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  function redirectWithCookies(path: string, error?: string) {
+    const url = request.nextUrl.clone();
+    url.pathname = path;
+    url.search = error ? `?error=${error}` : "";
+    const response = NextResponse.redirect(url);
+    authHeaders.forEach((value, name) => response.headers.set(name, value));
+    supabaseResponse.cookies.getAll().forEach((cookie) => response.cookies.set(cookie));
+    return response;
+  }
 
-  const isPublicPath = PUBLIC_PATHS.some((path) =>
-    request.nextUrl.pathname.startsWith(path),
-  );
+  const { data: { user } } = await supabase.auth.getUser();
+  const pathname = request.nextUrl.pathname;
+  const isPublicPath = PUBLIC_PATHS.has(pathname);
 
   if (user && !isAllowedEmail(user.email)) {
     await supabase.auth.signOut();
-    if (!isPublicPath) {
-      const url = request.nextUrl.clone();
-      url.pathname = "/login";
-      url.search = "?error=unauthorized";
-      return NextResponse.redirect(url);
-    }
-    return supabaseResponse;
+    return isPublicPath ? supabaseResponse : redirectWithCookies("/login", "unauthorized");
   }
 
-  if (!user && !isPublicPath) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/login";
-    url.search = "";
-    return NextResponse.redirect(url);
+  if (!user && !isPublicPath) return redirectWithCookies("/login");
+  if (user && (pathname === "/login" || pathname === "/register")) {
+    return redirectWithCookies("/dashboard");
   }
-
-  if (user && request.nextUrl.pathname.startsWith("/login")) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/";
-    url.search = "";
-    return NextResponse.redirect(url);
-  }
-
   return supabaseResponse;
 }

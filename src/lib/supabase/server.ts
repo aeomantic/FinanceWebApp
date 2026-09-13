@@ -1,10 +1,10 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
-// Use in Server Components, Server Actions, and Route Handlers.
-// Cookie writes are wrapped in try/catch because Server Components
-// cannot set cookies; middleware handles session refresh in that case.
-export async function createClient() {
+// Route Handlers pass their response headers so SDK cache protections travel
+// with cookie writes. Server Components cannot write a response; the proxy
+// refreshes their sessions and applies the same protections before rendering.
+export async function createClient(responseHeaders?: Headers) {
   const cookieStore = await cookies();
 
   return createServerClient(
@@ -15,13 +15,12 @@ export async function createClient() {
         getAll() {
           return cookieStore.getAll();
         },
-        setAll(cookiesToSet) {
+        setAll(cookiesToSet, cacheHeaders) {
+          Object.entries(cacheHeaders).forEach(([name, value]) => responseHeaders?.set(name, value));
           try {
-            cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options),
-            );
+            cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options));
           } catch {
-            // Called from a Server Component; middleware refreshes the session instead.
+            // Called from a Server Component; the proxy refreshes its session.
           }
         },
       },

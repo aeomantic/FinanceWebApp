@@ -1,34 +1,19 @@
-import { MagicLinkForm } from "@/components/auth/magic-link-form";
+import type { Metadata } from "next";
+import { AuthForm } from "@/components/auth/auth-form";
+import { AuthShell } from "@/components/auth/auth-shell";
+
+export const metadata: Metadata = { title: "Sign in | folio" };
 
 const ERROR_MESSAGES: Record<string, string> = {
   unauthorized: "This account is not authorized to use this app.",
-  auth_failed: "Sign-in failed. Please try again.",
-  missing_code: "Sign-in failed. Please try again.",
+  auth_failed: "This link is invalid or has expired. Sign in or request a new password reset link.",
+  missing_code: "This link is incomplete. Sign in or request a new password reset link.",
   profile_setup_failed: "Could not set up your profile. Please try again.",
 };
 
-export default async function LoginPage({
-  searchParams,
-}: {
+export default async function LoginPage({ searchParams }: {
   searchParams: Promise<{ error?: string }>;
 }) {
   const { error } = await searchParams;
-  const errorMessage = error ? ERROR_MESSAGES[error] : undefined;
-
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
-      <div className="w-full max-w-sm space-y-6">
-        <div className="text-center">
-          <h1 className="text-xl font-semibold text-gray-900">Personal Finance</h1>
-          <p className="mt-1 text-sm text-gray-500">Sign in to continue</p>
-        </div>
-        {errorMessage ? (
-          <p className="rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">
-            {errorMessage}
-          </p>
-        ) : null}
-        <MagicLinkForm />
-      </div>
-    </div>
-  );
+  return <AuthShell><AuthForm initialError={error ? ERROR_MESSAGES[error] : undefined} /></AuthShell>;
 }
