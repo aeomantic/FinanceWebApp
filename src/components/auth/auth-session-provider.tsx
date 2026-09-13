@@ -24,7 +24,7 @@ export function AuthSessionProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      if (event === "SIGNED_IN" && nextSession && (pathname === "/login" || pathname === "/register")) {
+      if (event === "SIGNED_IN" && nextSession && pathname === "/login") {
         router.replace("/dashboard");
         router.refresh();
       }

@@ -36,10 +36,6 @@ export function signInWithPassword(credentials: Credentials): Promise<AuthResult
   return submit({ action: "login", ...credentials });
 }
 
-export function signUp(credentials: Credentials): Promise<AuthResult> {
-  return submit({ action: "register", ...credentials });
-}
-
 export function resetPasswordForEmail(email: string): Promise<AuthResult> {
   return submit({ action: "forgot", email });
 }

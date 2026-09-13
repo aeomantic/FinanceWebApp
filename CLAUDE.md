@@ -1,30 +1,30 @@
 @AGENTS.md
 
-# Personal Finance Webapp
+# Folio (Personal Finance Webapp)
 
-A personal finance webapp for a single user (me), with magic-link-gated login, expense tracking, a wishlist, and recurring monthly payment tracking.
+A personal finance webapp for a single user (me), called Folio: password-gated login, expense tracking, a wishlist, and recurring monthly payment tracking.
 
 ## Decided stack
 
 * Frontend and backend: Next.js (App Router) with TypeScript
 * Styling: Tailwind CSS
-* Database and auth: Supabase (Postgres, magic link email auth through Supabase Auth, Row Level Security)
+* Database and auth: Supabase (Postgres, email/password auth through Supabase Auth, Row Level Security)
 * Validation: Zod on all incoming form and API data, backed by database constraints
 * Hosting: Vercel (Hobby plan) for the app, Supabase for the database and auth
 * Charts: Recharts
 
 Do not propose alternative stacks or re-open this decision.
 
-Auth was originally planned as Google OAuth; switched to Supabase's built-in magic link (passwordless email) to avoid the Google Cloud OAuth client setup. The single account is pre-created via the Supabase admin API, not through a public sign-up form (`shouldCreateUser: false` on every OTP request), so there is still no registration flow.
+Auth history: originally planned as Google OAuth, then switched to Supabase magic link, then switched again to Supabase email/password. There is still no public registration: the single owner account is provisioned directly against Supabase (admin API or dashboard), never through a sign-up form. `/register` must not exist as a route.
 
 ## Prerequisites
 
-1. A Supabase project (no external OAuth provider needed; magic link uses Supabase's built-in email auth)
-2. A GitHub repository for the project
+1. A Supabase project with the Email provider enabled for password sign-in (no external OAuth provider needed)
+2. A GitHub repository for the project (already set up: `github.com/aeomantic/FinanceWebApp`)
 3. Environment variables in `.env.local` (gitignored, see `.env.example`):
    * `NEXT_PUBLIC_SUPABASE_URL`
    * `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-   * `SUPABASE_SERVICE_ROLE_KEY` (server-only, never exposed to the client)
+   * `SUPABASE_SERVICE_ROLE_KEY` (server-only, never exposed to the client, not used by any request-serving code path — only for one-off admin scripts like provisioning the owner account)
    * `ALLOWED_EMAIL` (the only email allowed to log in)
 
 ## Data model
@@ -43,20 +43,21 @@ Notes on this schema:
 
 ## Build order
 
-Work through phases one at a time. After each phase, stop, summarize what was built, and wait for confirmation before starting the next one.
+Work through phases one at a time. After each phase, stop, summarize what was built, and wait for confirmation before starting the next one. (Note: a large chunk of Phase 2/3 landed in one uncoordinated pass outside this discipline — see status below. Return to one-phase-at-a-time from here forward.)
 
-* Phase 0: Scaffolding — Next.js/TypeScript, Tailwind, Supabase clients (browser + server), env vars, repo pushed to GitHub.
-* Phase 1: Authentication — magic link sign-in through Supabase Auth. Allowlist enforced server-side at session creation, not just hidden in the UI. No registration flow (single pre-created account, `shouldCreateUser: false`), no password fallback.
-* Phase 2: Categories and transactions — CRUD, basic list view.
-* Phase 3: Dashboard — monthly spending view with date range and category filters, computed with SQL aggregation, not client-side summing.
-* Phase 4: Recurring payments — rules, generated occurrences, upcoming-due list, "mark paid" action that links to a transaction and advances `next_due_on`.
-* Phase 5: Wishlist — CRUD with priority and status, "mark purchased" action that links to a transaction.
-* Phase 6: Export — CSV export of transactions.
+* Phase 0: Scaffolding — done. Next.js/TypeScript, Tailwind, Supabase clients (browser + server), env vars, repo pushed to GitHub.
+* Phase 1: Authentication — done. Email/password sign-in through Supabase Auth (`/login`, `/forgot-password`, `/auth/reset-password`). Allowlist enforced server-side at session creation and re-checked on every request via the proxy, not just hidden in the UI. No registration route; the owner account is provisioned via the admin API.
+* Phase 2: Categories and transactions — partially done. `recordTransaction` (in `src/app/dashboard/actions.ts`) lets the owner record income/expense entries with amount, currency, date, and merchant. Categories (the `categories` table) are not yet wired into any UI — no category CRUD, no `category_id` set on new transactions. Still needed: category management UI, a transaction list/edit view beyond the dashboard's recent-activity list.
+* Phase 3: Dashboard — partially done. `/dashboard` shows a 12-month income/expense/balance summary and spend chart, currency-isolated, computed in `src/lib/dashboard/summary.ts`. Deviation from the original plan: this sums in the Node server layer after fetching rows (paginated, capped at 10,000, Zod-validated), not via SQL `SUM`/`GROUP BY`. Works correctly at personal-app scale; revisit if that matters later. No date-range or category filters yet.
+* Phase 4: Recurring payments — not started. Rules, generated occurrences, upcoming-due list, "mark paid" action that links to a transaction and advances `next_due_on`.
+* Phase 5: Wishlist — not started. CRUD with priority and status, "mark purchased" action that links to a transaction.
+* Phase 6: Export — not started. CSV export of transactions.
 
 Backlog, explicitly out of scope unless asked: email or push reminders, receipt parsing, bank CSV import, AI-based categorization, multi-currency conversion beyond storing the code.
 
 ## Security requirements (non-negotiable)
 
+* No public registration route or sign-up form, ever. The owner account is provisioned out-of-band (admin API or dashboard).
 * Enforce the email allowlist server-side, at session creation, never only in the UI
 * RLS enabled on every table, no exceptions; verify a logged-out request returns no data
 * `SUPABASE_SERVICE_ROLE_KEY` stays server-side only, never in client code or client bundles

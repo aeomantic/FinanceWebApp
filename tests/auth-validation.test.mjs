@@ -6,11 +6,10 @@ import {
   getAuthErrorMessage,
   getFieldErrors,
   loginSchema,
-  registerSchema,
   securePasswordSchema,
 } from "../.tmp/tests/lib/auth/validation.js";
 
-test("emails are normalized before login or registration", () => {
+test("emails are normalized before login or password reset", () => {
   assert.equal(emailSchema.parse("  Owner@Example.COM  "), "owner@example.com");
 });
 
@@ -22,10 +21,10 @@ test("emails with embedded controls, invalid syntax, or excessive length are rej
 
 test("password characters including surrounding whitespace are preserved", () => {
   const password = "  StrongPass9!  ";
-  assert.equal(registerSchema.parse({ email: "owner@example.com", password }).password, password);
+  assert.equal(securePasswordSchema.parse(password), password);
 });
 
-test("registration requires all password rules", () => {
+test("a reset password requires all password rules", () => {
   const invalid = ["Aa1!", "PASSWORD1!", "password1!", "Password!!", "Password12", "Password1 ", `Aa1!${"x".repeat(125)}`];
   for (const password of invalid) assert.equal(securePasswordSchema.safeParse(password).success, false, password);
   assert.equal(securePasswordSchema.safeParse("Asecure1!").success, true);
@@ -49,14 +48,13 @@ test("unknown auth actions and malformed requests are rejected", () => {
 });
 
 test("field errors report the first actionable failure without credentials", () => {
-  const parsed = registerSchema.safeParse({ email: "bad", password: "x" });
+  const parsed = loginSchema.safeParse({ email: "bad", password: "x" });
   assert.equal(parsed.success, false);
   assert.deepEqual(getFieldErrors(parsed.error), { email: "Enter a valid email address.", password: "Use at least 8 characters." });
 });
 
 test("provider errors become useful messages without exposing internal failures", () => {
   assert.match(getAuthErrorMessage({ code: "invalid_credentials", message: "internal" }), /Invalid login credentials/);
-  assert.match(getAuthErrorMessage({ code: "user_already_exists", message: "internal" }), /User already registered/);
   assert.match(getAuthErrorMessage({ code: "email_not_confirmed", message: "internal" }), /Confirm your email/);
   assert.equal(getAuthErrorMessage({ code: "unknown", message: "internal secret" }).includes("internal secret"), false);
 });

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
-import { resetPasswordForEmail, signInWithPassword, signUp, updatePassword } from "@/lib/auth/client";
+import { resetPasswordForEmail, signInWithPassword, updatePassword } from "@/lib/auth/client";
 import {
   authRequestSchema,
   emailSchema,
@@ -21,12 +21,6 @@ const CONTENT: Record<AuthMode, { title: string; description: string; button: st
     description: "A little clarity for your everyday money. Sign in to pick up where you left off.",
     button: "Sign in",
     loading: "Signing you in...",
-  },
-  register: {
-    title: "Make room for more.",
-    description: "Create your account and bring your finances into focus.",
-    button: "Create account",
-    loading: "Creating your account...",
   },
   forgot: {
     title: "Let's get you back in.",
@@ -63,7 +57,7 @@ export function AuthForm({ mode = "login", initialError }: { mode?: AuthMode; in
   const [fieldErrors, setFieldErrors] = useState<AuthFieldErrors>({});
   const [success, setSuccess] = useState<string | null>(null);
   const content = CONTENT[mode];
-  const needsConfirmation = mode === "register" || mode === "reset";
+  const needsConfirmation = mode === "reset";
 
   function validateField(field: "email" | "password") {
     const schema = field === "email" ? emailSchema : needsConfirmation ? securePasswordSchema : loginPasswordSchema;
@@ -88,7 +82,6 @@ export function AuthForm({ mode = "login", initialError }: { mode?: AuthMode; in
     let result: AuthResult;
     switch (parsed.data.action) {
       case "login": result = await signInWithPassword(parsed.data); break;
-      case "register": result = await signUp(parsed.data); break;
       case "forgot": result = await resetPasswordForEmail(parsed.data.email); break;
       case "reset": result = await updatePassword(parsed.data.password); break;
     }
@@ -114,12 +107,7 @@ export function AuthForm({ mode = "login", initialError }: { mode?: AuthMode; in
 
   return (
     <div className="w-full max-w-[390px]">
-      {mode === "login" || mode === "register" ? (
-        <nav aria-label="Account access" className="mb-9 inline-flex rounded-full bg-[#f0f3f1] p-1">
-          <Link href="/login" aria-current={mode === "login" ? "page" : undefined} className={`rounded-full px-6 py-2.5 text-xs font-medium transition ${mode === "login" ? "bg-white text-[#141414] shadow-sm" : "text-[#71717a] hover:text-[#141414]"}`}>Sign in</Link>
-          <Link href="/register" aria-current={mode === "register" ? "page" : undefined} className={`rounded-full px-6 py-2.5 text-xs font-medium transition ${mode === "register" ? "bg-white text-[#141414] shadow-sm" : "text-[#71717a] hover:text-[#141414]"}`}>Create account</Link>
-        </nav>
-      ) : (
+      {mode !== "login" && (
         <Link href="/login" className="mb-9 inline-flex items-center gap-2 text-xs font-medium text-[#71717a] hover:text-[#141414]">
           <span aria-hidden="true">&#8592;</span> Back to sign in
         </Link>

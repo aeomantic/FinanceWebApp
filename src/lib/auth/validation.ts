@@ -24,17 +24,11 @@ export const loginSchema = z.object({
   password: loginPasswordSchema,
 });
 
-export const registerSchema = z.object({
-  email: emailSchema,
-  password: securePasswordSchema,
-});
-
 export const forgotPasswordSchema = z.object({ email: emailSchema });
 export const resetPasswordSchema = z.object({ password: securePasswordSchema });
 
 export const authRequestSchema = z.discriminatedUnion("action", [
   loginSchema.extend({ action: z.literal("login") }),
-  registerSchema.extend({ action: z.literal("register") }),
   forgotPasswordSchema.extend({ action: z.literal("forgot") }),
   resetPasswordSchema.extend({ action: z.literal("reset") }),
 ]);
@@ -67,19 +61,15 @@ export function getAuthErrorMessage(error: { code?: string; message: string }): 
   const messages: Record<string, string> = {
     invalid_credentials: "Invalid login credentials. Check your email and password.",
     email_not_confirmed: "Confirm your email before signing in. Check your inbox for the confirmation link.",
-    user_already_exists: "User already registered. Sign in or reset your password.",
-    email_exists: "User already registered. Sign in or reset your password.",
     weak_password: "Choose a stronger password with uppercase, lowercase, a number, and a symbol.",
     same_password: "Choose a password different from your current password.",
     over_email_send_rate_limit: "Too many emails requested. Wait a minute, then try again.",
     over_request_rate_limit: "Too many attempts. Wait a moment, then try again.",
-    signup_disabled: "Registration is currently unavailable. Contact the account owner.",
     session_not_found: "Your session has expired. Request a new password reset link.",
     otp_expired: "This link has expired. Request a new password reset link.",
   };
 
   if (error.code && messages[error.code]) return messages[error.code];
   if (/invalid login credentials/i.test(error.message)) return messages.invalid_credentials;
-  if (/already registered/i.test(error.message)) return messages.user_already_exists;
   return "We couldn't complete that request. Please try again.";
 }

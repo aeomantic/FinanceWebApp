@@ -10,21 +10,20 @@ A personal finance journal with Supabase email/password authentication and a res
 4. Run `npm run dev` and open [Sign in](http://localhost:3000/login).
 5. Open [Explore Folio](http://localhost:3000/preview) to view the reference dashboard with clearly labeled sample data.
 
-The existing owner-only access policy is preserved. Only `ALLOWED_EMAIL` can register or use the protected dashboard. The service-role key is not used by the new authentication or dashboard flows; queries and writes use the signed-in user's session and row-level security.
+There is no public registration. `ALLOWED_EMAIL` is the single owner account, and it is provisioned directly in Supabase (via the admin API or dashboard), not through a sign-up form. The service-role key is not used by the authentication or dashboard flows; queries and writes use the signed-in user's session and row-level security.
 
 ## Authentication
 
 - `/login`: email/password sign-in, inline validation, password visibility and loading states.
-- `/register`: registration, strong password validation and confirmation. A returned session opens `/dashboard`; otherwise the form asks the user to confirm their email.
-- `/forgot-password`: sends a recovery email through Supabase.
+- `/forgot-password`: sends a recovery email through Supabase. Also how the owner sets their first password, since there is no registration form.
 - `/auth/callback`: exchanges the PKCE code, checks the owner allowlist, ensures the profile exists, and redirects to the dashboard or password reset form.
 - `/auth/reset-password`: validates the session before accepting a new password. Successful changes end the local session and prompt a fresh login.
 
-Existing magic-link users can use **Forgot password?** to set their first password. Open confirmation and recovery emails in the browser where the request started because the PKCE verifier is stored there.
+Open confirmation and recovery emails in the browser where the request started, because the PKCE verifier is stored there.
 
-Typed browser helpers are in `src/lib/auth/client.ts`. They call the validated same-origin `/api/auth/password` endpoint. Server helpers in `src/lib/auth/server.ts` call `signInWithPassword`, `signUp`, `resetPasswordForEmail` and `updateUser` while preserving the existing allowlist. This keeps the owner email private and prevents the UI from bypassing application authorization.
+Typed browser helpers are in `src/lib/auth/client.ts`. They call the validated same-origin `/api/auth/password` endpoint. Server helpers in `src/lib/auth/server.ts` call `signInWithPassword`, `resetPasswordForEmail` and `updateUser` while preserving the existing allowlist. This keeps the owner email private and prevents the UI from bypassing application authorization.
 
-`AuthForm` in `src/components/auth/auth-form.tsx` handles all four form modes. `AuthSessionProvider` listens to `onAuthStateChange`, tracks the current session in memory, and routes sign-in events to `/dashboard`. Supabase owns session cookie persistence and token rotation; the app does not duplicate tokens in localStorage. Auth responses and refreshed-session responses carry no-store cache headers.
+`AuthForm` in `src/components/auth/auth-form.tsx` handles the login, forgot-password, and reset-password modes. `AuthSessionProvider` listens to `onAuthStateChange`, tracks the current session in memory, and routes sign-in events to `/dashboard`. Supabase owns session cookie persistence and token rotation; the app does not duplicate tokens in localStorage. Auth responses and refreshed-session responses carry no-store cache headers.
 
 Emails are trimmed and lowercased. Passwords are never trimmed. New passwords require 8-128 characters, uppercase, lowercase, a number, and a symbol. Sign-in accepts existing passwords of 8-128 characters without imposing new complexity rules.
 
@@ -34,8 +33,8 @@ The local `supabase/config.toml` includes the password policy and callback URLs.
 
 For your hosted project:
 
-1. Enable the Email provider and allow email/password sign-in. Enable new user signups if registration is needed.
-2. Choose whether email confirmation is required. Both confirmation-enabled and immediate-session signup responses are supported.
+1. Enable the Email provider and allow email/password sign-in. Leave public signups disabled; the owner account is created directly (admin API or dashboard), not through the app.
+2. Choose whether email confirmation is required for the owner account.
 3. Set the Site URL to the deployed application origin.
 4. Add exact redirect URLs for each intended origin:
    - `https://your-app.example/auth/callback`
@@ -67,7 +66,7 @@ Pay and Receive record ledger entries with exact integer minor units. They do no
 
 The test runner uses the installed TypeScript compiler and Node's built-in test runner. It writes generated test files to the ignored `.tmp/` folder and does not require experimental TypeScript execution.
 
-Local browser verification covers desktop/mobile overflow, chart ranges and keyboard controls, search, currency selection, dialogs, CSV export, guarded routes, expired recovery links, and mocked login/registration/recovery form responses. No live account registration or recovery email is sent by these checks. A real end-to-end sign-in and emailed confirmation/recovery round trip should be verified against the configured Supabase project before deployment.
+Local browser verification covers desktop/mobile overflow, chart ranges and keyboard controls, search, currency selection, dialogs, CSV export, guarded routes, expired recovery links, and mocked login/recovery form responses. No live recovery email is sent by these checks. A real end-to-end sign-in and emailed recovery round trip should be verified against the configured Supabase project before deployment.
 
 ## Database migrations
 

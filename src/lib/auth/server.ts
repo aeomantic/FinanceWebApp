@@ -3,8 +3,14 @@ import { getAuthErrorMessage, type AuthRequest, type AuthResult } from "@/lib/au
 import { createClient } from "@/lib/supabase/server";
 import type { Session, SupabaseClient, User } from "@supabase/supabase-js";
 
-const CONFIRMATION_MESSAGE = "If this email is eligible, check your inbox to confirm your account. You can then sign in with your password.";
 const RECOVERY_MESSAGE = "If an account exists for this email, you'll receive a password reset link shortly.";
+const AUTH_CONFIGURATION_ERROR = "Sign-in is not configured. Ask the app owner to configure account access.";
+const ACCOUNT_ACCESS_ERROR = "This app is restricted to its configured owner. This email is not authorized to sign in.";
+
+function getAccountAccessError(email: string): string | null {
+  if (!process.env.ALLOWED_EMAIL?.trim()) return AUTH_CONFIGURATION_ERROR;
+  return isAllowedEmail(email) ? null : ACCOUNT_ACCESS_ERROR;
+}
 
 export async function ensureProfile(supabase: SupabaseClient, user: User): Promise<boolean> {
   const { error } = await supabase.from("profiles").upsert({ id: user.id, email: user.email });
@@ -37,37 +43,18 @@ async function completeSignIn(supabase: SupabaseClient, session: Session): Promi
 }
 
 export async function signInWithPassword(email: string, password: string, responseHeaders?: Headers): Promise<AuthResult> {
-  // Keep the owner allowlist server-side. A disallowed address receives the
-  // same error as an incorrect password without creating a Supabase session.
-  if (!isAllowedEmail(email)) {
-    return { ok: false, error: "Invalid login credentials. Check your email and password." };
-  }
+  // Explain the owner restriction without exposing the configured address.
+  // A rejected request must not create a Supabase session.
+  const accessError = getAccountAccessError(email);
+  if (accessError) return { ok: false, error: accessError };
   const supabase = await createClient(responseHeaders);
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) return { ok: false, error: getAuthErrorMessage(error) };
   return completeSignIn(supabase, data.session);
 }
 
-export async function signUp(email: string, password: string, origin: string, responseHeaders?: Headers): Promise<AuthResult> {
-  if (!isAllowedEmail(email)) return { ok: true, message: CONFIRMATION_MESSAGE };
-
-  const supabase = await createClient(responseHeaders);
-  const { data, error } = await supabase.auth.signUp({
-    email,
-    password,
-    options: { emailRedirectTo: `${origin}/auth/callback` },
-  });
-  if (error) return { ok: false, error: getAuthErrorMessage(error) };
-
-  // Supabase can deliberately return an obfuscated user for a duplicate signup.
-  if (data.user?.identities?.length === 0) {
-    return { ok: false, error: "User already registered. Sign in or reset your password." };
-  }
-  if (data.session) return completeSignIn(supabase, data.session);
-  return { ok: true, message: CONFIRMATION_MESSAGE };
-}
-
 export async function resetPasswordForEmail(email: string, origin: string, responseHeaders?: Headers): Promise<AuthResult> {
+  if (!process.env.ALLOWED_EMAIL?.trim()) return { ok: false, error: AUTH_CONFIGURATION_ERROR };
   if (!isAllowedEmail(email)) return { ok: true, message: RECOVERY_MESSAGE };
 
   const supabase = await createClient(responseHeaders);
@@ -97,7 +84,6 @@ export async function updatePassword(password: string, responseHeaders?: Headers
 export async function submitAuthRequest(request: AuthRequest, origin: string, responseHeaders: Headers): Promise<AuthResult> {
   switch (request.action) {
     case "login": return signInWithPassword(request.email, request.password, responseHeaders);
-    case "register": return signUp(request.email, request.password, origin, responseHeaders);
     case "forgot": return resetPasswordForEmail(request.email, origin, responseHeaders);
     case "reset": return updatePassword(request.password, responseHeaders);
   }

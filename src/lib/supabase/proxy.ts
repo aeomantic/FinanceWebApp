@@ -4,7 +4,6 @@ import { NextResponse, type NextRequest } from "next/server";
 
 const PUBLIC_PATHS = new Set([
   "/login",
-  "/register",
   "/forgot-password",
   "/auth/callback",
   "/auth/reset-password",
@@ -54,7 +53,7 @@ export async function updateSession(request: NextRequest) {
   }
 
   if (!user && !isPublicPath) return redirectWithCookies("/login");
-  if (user && (pathname === "/login" || pathname === "/register")) {
+  if (user && pathname === "/login") {
     return redirectWithCookies("/dashboard");
   }
   return supabaseResponse;
