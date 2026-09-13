@@ -1,10 +1,13 @@
+import { isAllowedEmail } from "@/lib/auth/allowlist";
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-// Refreshes the Supabase session cookie on every request so that
-// Server Components (which cannot write cookies themselves) always
-// see a valid session. Also where the email allowlist gets enforced
-// once auth is wired up in Phase 1.
+const PUBLIC_PATHS = ["/login", "/auth/callback"];
+
+// Runs on every request. Refreshes the session cookie so Server Components
+// always see a valid session, re-checks the email allowlist on every
+// request (not just at login, in case the allowlist changes or a session
+// predates this check), and redirects unauthenticated requests to /login.
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
 
@@ -29,7 +32,38 @@ export async function updateSession(request: NextRequest) {
     },
   );
 
-  await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const isPublicPath = PUBLIC_PATHS.some((path) =>
+    request.nextUrl.pathname.startsWith(path),
+  );
+
+  if (user && !isAllowedEmail(user.email)) {
+    await supabase.auth.signOut();
+    if (!isPublicPath) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/login";
+      url.search = "?error=unauthorized";
+      return NextResponse.redirect(url);
+    }
+    return supabaseResponse;
+  }
+
+  if (!user && !isPublicPath) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/login";
+    url.search = "";
+    return NextResponse.redirect(url);
+  }
+
+  if (user && request.nextUrl.pathname.startsWith("/login")) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/";
+    url.search = "";
+    return NextResponse.redirect(url);
+  }
 
   return supabaseResponse;
 }
