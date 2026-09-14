@@ -58,30 +58,33 @@ export function WalletList({ wallets, selectedWalletId, onSelect, onCreated, onC
       <div className={styles.currencyCards} role="group" aria-label="Wallets">
         <div className={styles.currencyScroller}>
           {wallets.map((wallet, index) => (
-            <div key={wallet.id} className={`${styles.currencyCard} ${selectedWalletId === wallet.id ? styles.selectedCurrency : ""}`}>
-              <div className={styles.cardMenuSlot}>
-                <WalletCardMenu
-                  wallet={wallet}
-                  demo={demo}
-                  canDelete={wallets.length > 1}
-                  isBalanceHidden={hiddenWalletIds.has(wallet.id)}
-                  onToggleHideBalance={onToggleHideBalance}
-                  onChanged={onChanged}
-                />
-              </div>
-              <button
-                type="button"
-                className={styles.currencyCardInner}
-                onClick={() => onSelect(wallet.id)}
-                aria-pressed={selectedWalletId === wallet.id}
-              >
-                <span className={styles.currencyTop}>
-                  <span className={`${styles.currencySymbol} ${styles[wallet.color && TONES.includes(wallet.color as typeof TONES[number]) ? wallet.color : TONES[index % TONES.length]]}`}>{wallet.name.slice(0, 1).toUpperCase()}</span>
+            <div
+              key={wallet.id}
+              className={`${styles.currencyCard} ${selectedWalletId === wallet.id ? styles.selectedCurrency : ""}`}
+              role="button"
+              tabIndex={0}
+              aria-pressed={selectedWalletId === wallet.id}
+              onClick={() => onSelect(wallet.id)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") { event.preventDefault(); onSelect(wallet.id); }
+              }}
+            >
+              <span className={styles.currencyTop}>
+                <span className={`${styles.currencySymbol} ${styles[wallet.color && TONES.includes(wallet.color as typeof TONES[number]) ? wallet.color : TONES[index % TONES.length]]}`}>{wallet.name.slice(0, 1).toUpperCase()}</span>
+                <span className={styles.currencyTopRight}>
                   <span className={styles.currencyCode}>{wallet.currency}</span>
+                  <WalletCardMenu
+                    wallet={wallet}
+                    demo={demo}
+                    canDelete={wallets.length > 1}
+                    isBalanceHidden={hiddenWalletIds.has(wallet.id)}
+                    onToggleHideBalance={onToggleHideBalance}
+                    onChanged={onChanged}
+                  />
                 </span>
-                <span className={styles.currencyName}>{wallet.name}{wallet.isDefault && <span className={styles.defaultLabel}>Default</span>}</span>
-                <span className={styles.currencyValue}>{hiddenWalletIds.has(wallet.id) ? maskMoney(wallet.currency) : formatMoney(wallet.balanceMinor, wallet.currency)}</span>
-              </button>
+              </span>
+              <span className={styles.currencyName}>{wallet.name}{wallet.isDefault && <span className={styles.defaultLabel}>Default</span>}</span>
+              <span className={styles.currencyValue}>{hiddenWalletIds.has(wallet.id) ? maskMoney(wallet.currency) : formatMoney(wallet.balanceMinor, wallet.currency)}</span>
             </div>
           ))}
         </div>

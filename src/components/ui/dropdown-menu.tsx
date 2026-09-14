@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useId, useRef, useState, type ReactNode } from "react";
+import { useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 
 export interface DropdownMenuItem {
   key: string;
@@ -19,33 +20,71 @@ export interface DropdownMenuProps {
   align?: "start" | "end";
 }
 
+interface Position {
+  top: number;
+  left?: number;
+  right?: number;
+}
+
 /**
  * The menu (action list) pattern, distinct from Select's listbox (bound
  * value) pattern: items trigger side effects rather than setting a value,
  * so this uses role="menu"/"menuitem" instead of role="listbox"/"option".
  * Hand-rolled for the same reason as Select - no UI library dependency yet.
+ *
+ * The panel is portaled to document.body instead of rendered as a normal
+ * absolutely-positioned child: wallet cards live inside a horizontally
+ * scrolling container, and a popover clipped to that container's bounds
+ * both cuts off its own content and (since overflow-x: auto with no
+ * explicit overflow-y computes overflow-y to auto too) can trigger a
+ * phantom vertical scrollbar on the scroller whenever the menu is taller
+ * than the card. Positioning via getBoundingClientRect sidesteps both.
  */
 export function DropdownMenu({ trigger, triggerLabel, items, align = "end" }: DropdownMenuProps) {
   const [open, setOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
+  const [position, setPosition] = useState<Position | null>(null);
   const rootRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const instanceId = useId();
   const enabledCount = items.length;
 
+  useLayoutEffect(() => {
+    if (!open || !triggerRef.current) return;
+    const rect = triggerRef.current.getBoundingClientRect();
+    setPosition(
+      align === "end"
+        ? { top: rect.bottom + 6, right: window.innerWidth - rect.right }
+        : { top: rect.bottom + 6, left: rect.left },
+    );
+  }, [open, align]);
+
   useEffect(() => {
     if (!open) return;
     function handlePointerDown(event: MouseEvent) {
-      if (rootRef.current && !rootRef.current.contains(event.target as Node)) setOpen(false);
+      const target = event.target as Node;
+      if (rootRef.current?.contains(target)) return;
+      if (listRef.current?.contains(target)) return;
+      setOpen(false);
     }
     function handleKey(event: KeyboardEvent) {
       if (event.key === "Escape") setOpen(false);
     }
+    // A scroll anywhere invalidates the computed position; closing is
+    // simpler and safer than continuously re-measuring while open.
+    function handleScroll() {
+      setOpen(false);
+    }
     document.addEventListener("mousedown", handlePointerDown);
     document.addEventListener("keydown", handleKey);
+    window.addEventListener("scroll", handleScroll, true);
+    window.addEventListener("resize", handleScroll);
     return () => {
       document.removeEventListener("mousedown", handlePointerDown);
       document.removeEventListener("keydown", handleKey);
+      window.removeEventListener("scroll", handleScroll, true);
+      window.removeEventListener("resize", handleScroll);
     };
   }, [open]);
 
@@ -89,8 +128,9 @@ export function DropdownMenu({ trigger, triggerLabel, items, align = "end" }: Dr
   }
 
   return (
-    <div ref={rootRef} onClick={(event) => event.stopPropagation()} style={{ position: "relative", display: "inline-flex" }}>
+    <div ref={rootRef} onClick={(event) => event.stopPropagation()} style={{ display: "inline-flex" }}>
       <button
+        ref={triggerRef}
         type="button"
         aria-haspopup="menu"
         aria-expanded={open}
@@ -101,14 +141,16 @@ export function DropdownMenu({ trigger, triggerLabel, items, align = "end" }: Dr
       >
         {trigger}
       </button>
-      {open && (
+      {open && position && createPortal(
         <div
           ref={listRef}
           role="menu"
           tabIndex={-1}
           aria-label={triggerLabel}
           id={`${instanceId}-menu`}
-          className={`select-menu menu-panel ${align === "end" ? "menu-panel-end" : ""}`}
+          className="select-menu menu-panel-portal"
+          style={{ top: position.top, left: position.left ?? "auto", right: position.right ?? "auto" }}
+          onClick={(event) => event.stopPropagation()}
           onKeyDown={handleListKeyDown}
           autoFocus
         >
@@ -127,7 +169,8 @@ export function DropdownMenu({ trigger, triggerLabel, items, align = "end" }: Dr
               {item.trailing}
             </button>
           ))}
-        </div>
+        </div>,
+        document.body,
       )}
     </div>
   );

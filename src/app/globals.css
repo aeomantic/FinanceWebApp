@@ -172,8 +172,7 @@ button, a, input, select { outline-offset: 4px; }
 .menu-trigger { display: flex; align-items: center; justify-content: center; width: 26px; height: 26px; padding: 0; border: 0; border-radius: 50%; background: none; color: #8c928a; transition: background .15s, color .15s; }
 .menu-trigger:hover { background: #f0f3ee; color: #141414; }
 .menu-trigger[aria-expanded="true"] { background: #ebeee7; color: #141414; }
-.menu-panel { width: max-content; min-width: 180px; }
-.menu-panel-end { right: 0; left: auto; }
+.menu-panel-portal { position: fixed; z-index: 50; width: max-content; min-width: 180px; top: 0; }
 .menu-option-destructive { color: #b33b31; }
 .menu-option-destructive svg:first-child { color: #b33b31; }
 .primary-button { display: flex; align-items: center; justify-content: center; gap: 12px; background: #141414; color: #fff; padding: 14px 20px; border: 0; border-radius: 14px; width: 100%; margin-top: 24px; font-size: 13px; font-weight: 500; }
