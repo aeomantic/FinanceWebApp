@@ -1,7 +1,7 @@
 import { isAllowedEmail } from "@/lib/auth/allowlist";
 import { getAuthErrorMessage, type AuthRequest, type AuthResult } from "@/lib/auth/validation";
 import { createClient } from "@/lib/supabase/server";
-import type { Session, SupabaseClient, User } from "@supabase/supabase-js";
+import type { Session, SupabaseClient } from "@supabase/supabase-js";
 
 const RECOVERY_MESSAGE = "If an account exists for this email, you'll receive a password reset link shortly.";
 const AUTH_CONFIGURATION_ERROR = "Sign-in is not configured. Ask the app owner to configure account access.";
@@ -12,28 +12,10 @@ function getAccountAccessError(email: string): string | null {
   return isAllowedEmail(email) ? null : ACCOUNT_ACCESS_ERROR;
 }
 
-export async function ensureProfile(supabase: SupabaseClient, user: User): Promise<boolean> {
-  const { error } = await supabase.from("profiles").upsert({ id: user.id, email: user.email });
-  if (!error) return true;
-
-  console.error("Profile upsert failed:", {
-    code: error.code,
-    message: error.message,
-    details: error.details,
-    hint: error.hint,
-  });
-  await supabase.auth.signOut();
-  return false;
-}
-
 async function completeSignIn(supabase: SupabaseClient, session: Session): Promise<AuthResult> {
   if (!isAllowedEmail(session.user.email)) {
     await supabase.auth.signOut();
     return { ok: false, error: "This account is not authorized to use this app." };
-  }
-
-  if (!(await ensureProfile(supabase, session.user))) {
-    return { ok: false, error: "Could not set up your profile. Please try again." };
   }
 
   return {

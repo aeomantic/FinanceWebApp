@@ -24,12 +24,7 @@ export async function recordTransaction(input: RecordTransactionInput): Promise<
       return { success: false, error: "Your session has expired. Please sign in again." };
     }
 
-    const { error: profileError } = await supabase.from("profiles").upsert(
-      { id: user.id, email: user.email!.trim().toLowerCase() },
-      { onConflict: "id" },
-    );
-    if (profileError) return { success: false, error: "We couldn't prepare your account. Please try again." };
-
+    // Profiles are provisioned by the Auth trigger and migration backfill.
     const { error } = await supabase.from("transactions").insert({
       user_id: user.id,
       merchant: parsed.data.title,
@@ -38,6 +33,9 @@ export async function recordTransaction(input: RecordTransactionInput): Promise<
       occurred_on: parsed.data.date,
       type: parsed.data.type,
     });
+    if (error?.code === "23503") {
+      return { success: false, error: "Your account setup is incomplete. Ask the app owner to apply the profile migration." };
+    }
     if (error) return { success: false, error: "We couldn't save this transaction. Please try again." };
   } catch {
     return { success: false, error: "We couldn't reach your account. Check your connection and try again." };

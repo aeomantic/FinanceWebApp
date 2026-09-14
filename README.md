@@ -16,7 +16,7 @@ There is no public registration. `ALLOWED_EMAIL` is the single owner account, an
 
 - `/login`: email/password sign-in, inline validation, password visibility and loading states.
 - `/forgot-password`: sends a recovery email through Supabase. Also how the owner sets their first password, since there is no registration form.
-- `/auth/callback`: exchanges the PKCE code, checks the owner allowlist, ensures the profile exists, and redirects to the dashboard or password reset form.
+- `/auth/callback`: exchanges the PKCE code and verifies the owner. It redirects to the password reset form for recovery or the dashboard otherwise. No login, recovery or callback handler reads or writes a profile.
 - `/auth/reset-password`: validates the session before accepting a new password. Successful changes end the local session and prompt a fresh login.
 
 Open confirmation and recovery emails in the browser where the request started, because the PKCE verifier is stored there.
@@ -44,6 +44,24 @@ For your hosted project:
 
 For development, both `http://localhost:3000` and `http://127.0.0.1:3000` callback/recovery URLs are included in the local configuration. Hosted projects used during local development need these entries in their hosted redirect allowlist too.
 
+### Profile setup and password recovery
+
+Supabase Auth stores password hashes in `auth.users`; `public.profiles` contains application data only. Do not add a password column to the profile table. An empty profile table does not mean the Auth account is missing.
+
+Apply `supabase/migrations/20260913060000_profile_access.sql` as `postgres` in the hosted SQL Editor before deploying the authentication changes. The script is transactional and safe to rerun. It:
+
+- Enables RLS and grants authenticated users SELECT, INSERT and UPDATE access, with separate policies that constrain every operation to `auth.uid() = id`.
+- Installs the `on_auth_user_created` trigger, which inserts a profile when a new email-based Auth account is created. Its function has a fixed empty search path, a trusted owner, and no direct execution privilege for public or client roles.
+- Backfills missing profiles for existing email accounts, including accounts created using magic links. Existing profile rows are preserved.
+
+Profile creation runs inside the Auth user insertion transaction without depending on a browser session. The database trigger is the only ongoing provisioner; login, callbacks, recovery, and recording a transaction do not create profiles. Account names continue to come from Auth metadata, so no metadata columns are added to `profiles`. Phone-only accounts are outside this email-only app and are skipped when email is null.
+
+The former `42501: new row violates row-level security policy` meant that a profile write failed its RLS checks. It did not indicate a missing password field. The refactored login and recovery paths depend only on Supabase Auth and the owner allowlist, so a profile write cannot turn successful authentication into a sign-in error.
+
+Run `supabase/diagnostics/profile_access.sql` in the hosted SQL Editor to inspect permissions, policies, the trigger, and the count of email accounts missing profiles. It is read-only. It also shows any custom policies left in place; the repair replaces only this app's known policy names and the alternate names from the manual repair.
+
+After applying the migration, deploy the revised application to Vercel, request a fresh link through the deployed `/forgot-password` page, and open it in the same browser. Save the new password, then sign in normally. SQL changes and application deployment are separate steps; neither applies the other.
+
 ## Design and dashboard components
 
 Tailwind 4 tokens are declared with `@theme inline` in `src/app/globals.css`, so no legacy Tailwind configuration file is necessary. Shared tokens include `bg-canvas` (#EBF5F0), `bg-surface` (#FFFFFF), `bg-lime` (#FEF38B), `text-ink` (#141414), `text-positive` (#16A34A), and `rounded-card` (28px). Geist supplies the geometric sans-serif typography. The dashboard uses a responsive bento grid, rounded cards, subtle ambient shadows, and a mobile bottom navigation.
@@ -60,9 +78,10 @@ Pay and Receive record ledger entries with exact integer minor units. They do no
 
 ## Verification
 
-- `npm test`: 17 focused tests for email normalization, password rules, errors, exact decimal parsing, safe amounts, calendar boundaries and currency-isolated totals.
+- `npm test`: focused tests for recovery callback routing and authorization, email normalization, password rules, errors, exact decimal parsing, safe amounts, calendar boundaries and currency-isolated totals.
 - `npm run lint`: ESLint.
 - `npm run build`: production compilation and TypeScript validation.
+- `supabase/tests/profile_access.sql`: local PostgreSQL regression checks for automatic provisioning, own-profile access, denied cross-user access, and missing-session/anonymous access. Run with `psql -v ON_ERROR_STOP=1 -f supabase/tests/profile_access.sql` against a disposable local database with the migrations and Supabase Auth roles/schema installed. The test rolls back its synthetic accounts.
 
 The test runner uses the installed TypeScript compiler and Node's built-in test runner. It writes generated test files to the ignored `.tmp/` folder and does not require experimental TypeScript execution.
 
@@ -70,4 +89,4 @@ Local browser verification covers desktop/mobile overflow, chart ranges and keyb
 
 ## Database migrations
 
-Schema changes live in `supabase/migrations/` and are applied in order. Create a migration with `npx supabase migration new <name>` and apply it with `npx supabase db push`. This update uses the existing schema and does not add a database migration.
+Schema and permission changes live in `supabase/migrations/` and are applied in order. Create a migration with `npx supabase migration new <name>` and apply it with `npx supabase db push` after linking the CLI to the intended project. Alternatively, run a pending migration in that project's SQL Editor. Editing these files or deploying Vercel alone does not apply them to hosted Supabase. The profile repair adds `20260913060000_profile_access.sql`, including the Auth trigger and existing-account backfill; it leaves the existing columns unchanged.

@@ -3,10 +3,8 @@ import { createClient } from "@/lib/supabase/server";
 import { AUTH_CACHE_HEADERS } from "@/lib/supabase/cache";
 import { NextResponse, type NextRequest } from "next/server";
 
-// Handles email confirmation and password recovery PKCE redirects. This is the point of
-// session creation, so the allowlist is enforced here server-side: a
-// session for any other email is signed out before this handler returns,
-// not just hidden behind a client-side redirect.
+// Verify the provider session and owner before allowing any callback destination.
+// Profile creation belongs to the database trigger, so auth never writes profiles.
 export async function GET(request: NextRequest) {
   const code = request.nextUrl.searchParams.get("code");
   const origin = request.nextUrl.origin;
@@ -31,22 +29,6 @@ export async function GET(request: NextRequest) {
   if (!user || !isAllowedEmail(user.email)) {
     await supabase.auth.signOut();
     return redirectTo(`${origin}/login?error=unauthorized`);
-  }
-
-  const { error: upsertError } = await supabase.from("profiles").upsert({
-    id: user.id,
-    email: user.email,
-  });
-
-  if (upsertError) {
-    console.error("Profile upsert failed:", {
-      code: upsertError.code,
-      message: upsertError.message,
-      details: upsertError.details,
-      hint: upsertError.hint,
-    });
-    await supabase.auth.signOut();
-    return redirectTo(`${origin}/login?error=profile_setup_failed`);
   }
 
   const destination = request.nextUrl.searchParams.get("next") === "/auth/reset-password"

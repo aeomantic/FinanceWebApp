@@ -8,7 +8,6 @@ const ERROR_MESSAGES: Record<string, string> = {
   unauthorized: "This account is not authorized to use this app.",
   auth_failed: "This link is invalid or has expired. Sign in or request a new password reset link.",
   missing_code: "This link is incomplete. Sign in or request a new password reset link.",
-  profile_setup_failed: "Could not set up your profile. Please try again.",
 };
 
 export default async function LoginPage({ searchParams }: {
