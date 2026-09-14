@@ -12,6 +12,15 @@ import type {
   RecordTransactionInput,
   RecordTransactionResult,
 } from "@/lib/dashboard/types";
+import type { PostgrestError } from "@supabase/supabase-js";
+
+// Postgrest errors carry a code/message/details/hint that are safe to log
+// (schema-level detail, never the request payload or a token) but useful
+// for diagnosing RLS/constraint failures that only show up against the
+// live database, not in local dev.
+function logDbError(context: string, error: PostgrestError) {
+  console.error(context, { code: error.code, message: error.message, details: error.details, hint: error.hint });
+}
 
 /** Record ledger activity. This action never sends money or performs a bank transfer. */
 export async function recordTransaction(input: RecordTransactionInput): Promise<RecordTransactionResult> {
@@ -33,7 +42,10 @@ export async function recordTransaction(input: RecordTransactionInput): Promise<
 
     const { data: wallet, error: walletError } = await supabase
       .from("wallets").select("id,currency").eq("id", parsed.data.walletId).single();
-    if (walletError || !wallet) return { success: false, error: "That wallet could not be found." };
+    if (walletError || !wallet) {
+      if (walletError) logDbError("Wallet lookup failed:", walletError);
+      return { success: false, error: "That wallet could not be found." };
+    }
 
     // amount_minor is a positive magnitude; type and wallet_id/destination_wallet_id
     // determine direction. The database trigger keeps wallet balances in sync.
@@ -48,7 +60,10 @@ export async function recordTransaction(input: RecordTransactionInput): Promise<
       type: parsed.data.type,
       note: parsed.data.note ?? null,
     });
-    if (error) return { success: false, error: "We couldn't save this transaction. Please try again." };
+    if (error) {
+      logDbError("Transaction insert failed:", error);
+      return { success: false, error: "We couldn't save this transaction. Please try again." };
+    }
   } catch {
     return { success: false, error: "We couldn't reach your account. Check your connection and try again." };
   }
@@ -75,7 +90,10 @@ export async function createWallet(input: CreateWalletInput): Promise<CreateWall
       color: parsed.data.color ?? null,
     }).select("id,name,currency,balance_minor,color").single();
 
-    if (error || !data) return { success: false, error: "We couldn't create this wallet. Please try again." };
+    if (error || !data) {
+      if (error) logDbError("Wallet insert failed:", error);
+      return { success: false, error: "We couldn't create this wallet. Please try again." };
+    }
 
     revalidatePath("/dashboard");
     return { success: true, wallet: { id: data.id, name: data.name, currency: data.currency, balanceMinor: data.balance_minor, color: data.color } };
@@ -102,7 +120,10 @@ export async function createCategory(input: CreateCategoryInput): Promise<Create
       icon: parsed.data.icon ?? null,
     }).select("id,name,type,icon,color").single();
 
-    if (error || !data) return { success: false, error: "We couldn't create this category. Please try again." };
+    if (error || !data) {
+      if (error) logDbError("Category insert failed:", error);
+      return { success: false, error: "We couldn't create this category. Please try again." };
+    }
 
     revalidatePath("/dashboard");
     return { success: true, category: { id: data.id, name: data.name, type: data.type, icon: data.icon, color: data.color } };
