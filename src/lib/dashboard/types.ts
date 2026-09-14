@@ -6,6 +6,7 @@ export interface Wallet {
   currency: string;
   balanceMinor: number;
   color: string | null;
+  isDefault: boolean;
 }
 
 export type CategoryType = "expense" | "income";
@@ -78,6 +79,10 @@ export interface CreateWalletInput {
 
 export type CreateWalletResult =
   | { success: true; wallet: Wallet }
+  | { success: false; error: string };
+
+export type SetDefaultWalletResult =
+  | { success: true }
   | { success: false; error: string };
 
 export interface CreateCategoryInput {

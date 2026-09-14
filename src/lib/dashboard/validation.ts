@@ -10,7 +10,7 @@ export function parseAmountMinor(value: string): number | null {
   return Number.isSafeInteger(amount) && amount > 0 ? amount : null;
 }
 
-const uuidSchema = z.string().uuid();
+export const uuidSchema = z.string().uuid();
 
 const baseTransactionSchema = z.object({
   walletId: uuidSchema,

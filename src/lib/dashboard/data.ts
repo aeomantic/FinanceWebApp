@@ -17,6 +17,7 @@ const walletRowSchema = z.object({
   balance_minor: z.union([z.number(), z.string().regex(/^-?\d+$/).transform(Number)])
     .refine((value) => Number.isSafeInteger(value)),
   color: z.string().nullable(),
+  is_default: z.boolean(),
 });
 
 const categoryRowSchema = z.object({
@@ -66,7 +67,8 @@ export async function getDashboardData(): Promise<DashboardData> {
 
   try {
     const [walletsRes, categoriesRes] = await Promise.all([
-      supabase.from("wallets").select("id,name,currency,balance_minor,color").eq("user_id", user.id).order("created_at", { ascending: true }),
+      supabase.from("wallets").select("id,name,currency,balance_minor,color,is_default").eq("user_id", user.id)
+        .order("is_default", { ascending: false }).order("created_at", { ascending: true }),
       supabase.from("categories").select("id,name,type,icon,color").eq("user_id", user.id).eq("is_archived", false).order("created_at", { ascending: true }),
     ]);
 
@@ -79,7 +81,7 @@ export async function getDashboardData(): Promise<DashboardData> {
     if (!parsedCategories.success) return { ...base, error: "Some categories contain unsupported data. Please try refreshing the page." };
 
     const wallets: Wallet[] = parsedWallets.data.map((row) => ({
-      id: row.id, name: row.name, currency: row.currency, balanceMinor: row.balance_minor, color: row.color,
+      id: row.id, name: row.name, currency: row.currency, balanceMinor: row.balance_minor, color: row.color, isDefault: row.is_default,
     }));
     const categories: Category[] = parsedCategories.data.map((row) => ({
       id: row.id, name: row.name, type: row.type, icon: row.icon, color: row.color,

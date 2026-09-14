@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { isAllowedEmail } from "@/lib/auth/allowlist";
 import { createClient } from "@/lib/supabase/server";
-import { categoryInputSchema, parseAmountMinor, transactionInputSchema, walletInputSchema } from "@/lib/dashboard/validation";
+import { categoryInputSchema, parseAmountMinor, transactionInputSchema, uuidSchema, walletInputSchema } from "@/lib/dashboard/validation";
 import type {
   CreateCategoryInput,
   CreateCategoryResult,
@@ -11,6 +11,7 @@ import type {
   CreateWalletResult,
   RecordTransactionInput,
   RecordTransactionResult,
+  SetDefaultWalletResult,
 } from "@/lib/dashboard/types";
 import type { PostgrestError } from "@supabase/supabase-js";
 
@@ -83,12 +84,21 @@ export async function createWallet(input: CreateWalletInput): Promise<CreateWall
       return { success: false, error: "Your session has expired. Please sign in again." };
     }
 
+    const { count: existingWallets, error: countError } = await supabase
+      .from("wallets").select("id", { count: "exact", head: true }).eq("user_id", user.id);
+    if (countError) {
+      logDbError("Wallet count failed:", countError);
+      return { success: false, error: "We couldn't create this wallet. Please try again." };
+    }
+
+    // The first wallet a user creates becomes their default automatically.
     const { data, error } = await supabase.from("wallets").insert({
       user_id: user.id,
       name: parsed.data.name,
       currency: parsed.data.currency,
       color: parsed.data.color ?? null,
-    }).select("id,name,currency,balance_minor,color").single();
+      is_default: existingWallets === 0,
+    }).select("id,name,currency,balance_minor,color,is_default").single();
 
     if (error || !data) {
       if (error) logDbError("Wallet insert failed:", error);
@@ -96,7 +106,40 @@ export async function createWallet(input: CreateWalletInput): Promise<CreateWall
     }
 
     revalidatePath("/dashboard");
-    return { success: true, wallet: { id: data.id, name: data.name, currency: data.currency, balanceMinor: data.balance_minor, color: data.color } };
+    return { success: true, wallet: { id: data.id, name: data.name, currency: data.currency, balanceMinor: data.balance_minor, color: data.color, isDefault: data.is_default } };
+  } catch {
+    return { success: false, error: "We couldn't reach your account. Check your connection and try again." };
+  }
+}
+
+export async function setDefaultWallet(walletId: string): Promise<SetDefaultWalletResult> {
+  if (!uuidSchema.safeParse(walletId).success) return { success: false, error: "That wallet could not be found." };
+
+  try {
+    const supabase = await createClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user || !isAllowedEmail(user.email)) {
+      return { success: false, error: "Your session has expired. Please sign in again." };
+    }
+
+    // The partial unique index on wallets only allows one is_default = true
+    // row per user, so the old default must be cleared before the new one
+    // is set - clearing first never violates it, since zero defaults is fine.
+    const { error: clearError } = await supabase.from("wallets").update({ is_default: false }).eq("user_id", user.id);
+    if (clearError) {
+      logDbError("Clearing default wallet failed:", clearError);
+      return { success: false, error: "We couldn't update your default wallet. Please try again." };
+    }
+
+    const { error: setError, count } = await supabase
+      .from("wallets").update({ is_default: true }, { count: "exact" }).eq("id", walletId).eq("user_id", user.id);
+    if (setError || !count) {
+      if (setError) logDbError("Setting default wallet failed:", setError);
+      return { success: false, error: "That wallet could not be found." };
+    }
+
+    revalidatePath("/dashboard");
+    return { success: true };
   } catch {
     return { success: false, error: "We couldn't reach your account. Check your connection and try again." };
   }

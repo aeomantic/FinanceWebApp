@@ -2,9 +2,9 @@ import type { MonthlySpendPoint, Transaction, Wallet } from "./types";
 
 /** Fictional sample wallets and activity for the explicitly labeled design preview only. */
 export const DEMO_WALLETS: Wallet[] = [
-  { id: "demo-main", name: "Everyday", currency: "USD", balanceMinor: 2688709, color: "mint" },
-  { id: "demo-food", name: "Food & Groceries", currency: "USD", balanceMinor: 42150, color: "peach" },
-  { id: "demo-bills", name: "Bills", currency: "USD", balanceMinor: 128000, color: "blue" },
+  { id: "demo-main", name: "Everyday", currency: "USD", balanceMinor: 2688709, color: "mint", isDefault: true },
+  { id: "demo-food", name: "Food & Groceries", currency: "USD", balanceMinor: 42150, color: "peach", isDefault: false },
+  { id: "demo-bills", name: "Bills", currency: "USD", balanceMinor: 128000, color: "blue", isDefault: false },
 ];
 
 export const DEMO_TRANSACTIONS: Transaction[] = [
