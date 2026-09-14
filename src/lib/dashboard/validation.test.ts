@@ -14,10 +14,20 @@ test("decimal parsing rejects negative, exponent, zero, excess precision, and un
   }
 });
 
-test("transaction schema trims titles and rejects invalid dates and unsupported currencies", () => {
-  const input = { title: "  Coffee  ", amount: "5.50", date: "2026-09-13", type: "expense", currency: "USD" };
-  assert.equal(transactionInputSchema.parse(input).title, "Coffee");
+const WALLET_A = "11111111-1111-4111-8111-111111111111";
+const WALLET_B = "22222222-2222-4222-8222-222222222222";
+
+test("transaction schema trims notes and rejects invalid dates and types", () => {
+  const input = { walletId: WALLET_A, amount: "5.50", date: "2026-09-13", type: "expense", note: "  Coffee  " };
+  assert.equal(transactionInputSchema.parse(input).note, "Coffee");
   assert.equal(transactionInputSchema.safeParse({ ...input, date: "2026-02-30" }).success, false);
-  assert.equal(transactionInputSchema.safeParse({ ...input, currency: "JPY" }).success, false);
-  assert.equal(transactionInputSchema.safeParse({ ...input, title: " " }).success, false);
+  assert.equal(transactionInputSchema.safeParse({ ...input, type: "withdrawal" }).success, false);
+  assert.equal(transactionInputSchema.safeParse({ ...input, walletId: "not-a-uuid" }).success, false);
+});
+
+test("transfers require a destination wallet different from the source", () => {
+  const input = { walletId: WALLET_A, amount: "5.50", date: "2026-09-13", type: "transfer" as const };
+  assert.equal(transactionInputSchema.safeParse(input).success, false);
+  assert.equal(transactionInputSchema.safeParse({ ...input, destinationWalletId: WALLET_A }).success, false);
+  assert.equal(transactionInputSchema.safeParse({ ...input, destinationWalletId: WALLET_B }).success, true);
 });

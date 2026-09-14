@@ -4,7 +4,7 @@ import { formatMoney, getPeriodStart, isValidDate, summarizeTransactions } from 
 import type { Transaction } from "./types";
 
 function transaction(overrides: Partial<Transaction> = {}): Transaction {
-  return { id: "test", title: "Test", date: "2026-09-13", amountMinor: 100, currency: "USD", type: "expense", ...overrides };
+  return { id: "test", title: "Test", date: "2026-09-13", amountMinor: 100, currency: "USD", type: "expense", walletId: "wallet-1", ...overrides };
 }
 
 test("totals never combine different currencies or future and out-of-period entries", () => {

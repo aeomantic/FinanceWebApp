@@ -29,16 +29,24 @@ Auth history: originally planned as Google OAuth, then switched to Supabase magi
 
 ## Data model
 
-See `supabase/migrations/` for the schema as SQL migration files, applied in order. Do not apply schema changes by hand through the dashboard; commit a migration file instead.
+See `supabase/migrations/` for the schema as SQL migration files, applied in order. Do not apply schema changes by hand through the dashboard; commit a migration file instead. Migrations that need to land on the live project get pasted into the Supabase SQL Editor manually — there is no working CLI link to this project (the local `supabase` CLI login is tied to an unrelated project), and no DB password for a direct connection.
 
-Tables: `profiles`, `categories`, `transactions`, `wishlist_items`, `recurring_rules`, `recurring_occurrences`.
+Tables: `profiles`, `wallets`, `categories`, `transactions`, `wishlist_items`, `recurring_rules`, `recurring_occurrences`.
 
-Notes on this schema:
+The ledger is wallet-based (envelope style): every transaction moves money into, out of, or between wallets, not just into a category. This was a deliberate pivot from the original "categories on bare transactions" design (see `supabase/migrations/20260914053049_add_wallets_ledger_model.sql`).
+
+* `wallets`: named balances (`balance_minor`) the owner tracks separately, e.g. "Everyday", "Food & Groceries", "Bills". Each has its own currency.
+* `categories`: narrowed to `type` in (`expense`, `income`) — transfers are a transaction type now, not a category. Has `icon` for the picker UI, plus the original `color`/`is_archived`.
+* `transactions`: `wallet_id` (required), `destination_wallet_id` (only for `type = 'transfer'`), `category_id` (nullable, `on delete set null`), `amount_minor` (positive magnitude, direction comes from `type`), `note` (replaces the old separate `merchant`/`notes` fields).
+* A Postgres trigger (`sync_wallet_balance`) keeps `wallets.balance_minor` correct on every transaction insert/update/delete, so the balance is derived from the ledger rather than trusted from a second client-side write.
+* RLS on `transactions` also verifies `wallet_id`/`destination_wallet_id`/`category_id` belong to the caller, not just `user_id` — otherwise a request could satisfy `user_id = auth.uid()` while still pointing at (and mutating the balance of) another user's wallet.
+
+Notes on the rest of the schema:
 
 * Money is always an integer in minor units. `amount_minor = 1250` means SGD 12.50. Never use a float or JS number for stored money.
 * Every table carries `user_id` even though there is one user. This keeps RLS simple and future-proofs the schema.
 * A wishlist item links to a transaction only after purchase, through `purchased_transaction_id`. Wishlist and transactions stay separate: one is intent, the other is fact.
-* Recurring payments follow a rule-plus-occurrences pattern, not full RRULE syntax. Five frequency values are sufficient for v1: weekly, monthly, quarterly, yearly, custom_months.
+* Recurring payments follow a rule-plus-occurrences pattern, not full RRULE syntax. Five frequency values are sufficient for v1: weekly, monthly, quarterly, yearly, custom_months. Not started yet; when it is, decide how recurring bills interact with the narrowed category `type`.
 * Row Level Security is enabled on every table, with policies restricting select, insert, update, and delete to rows where `user_id = auth.uid()`.
 
 ## Build order
@@ -47,8 +55,8 @@ Work through phases one at a time. After each phase, stop, summarize what was bu
 
 * Phase 0: Scaffolding — done. Next.js/TypeScript, Tailwind, Supabase clients (browser + server), env vars, repo pushed to GitHub.
 * Phase 1: Authentication — done. Email/password sign-in through Supabase Auth (`/login`, `/forgot-password`, `/auth/reset-password`). Allowlist enforced server-side at session creation and re-checked on every request via the proxy, not just hidden in the UI. No registration route; the owner account is provisioned via the admin API.
-* Phase 2: Categories and transactions — partially done. `recordTransaction` (in `src/app/dashboard/actions.ts`) lets the owner record income/expense entries with amount, currency, date, and merchant. Categories (the `categories` table) are not yet wired into any UI — no category CRUD, no `category_id` set on new transactions. Still needed: category management UI, a transaction list/edit view beyond the dashboard's recent-activity list.
-* Phase 3: Dashboard — partially done. `/dashboard` shows a 12-month income/expense/balance summary and spend chart, currency-isolated, computed in `src/lib/dashboard/summary.ts`. Deviation from the original plan: this sums in the Node server layer after fetching rows (paginated, capped at 10,000, Zod-validated), not via SQL `SUM`/`GROUP BY`. Works correctly at personal-app scale; revisit if that matters later. No date-range or category filters yet.
+* Phase 2: Wallets, categories, and transactions — partially done. `src/app/dashboard/actions.ts` has `createWallet`, `createCategory`, and a transfer-aware `recordTransaction` (expense/income/transfer, wallet-scoped, optional category, `note`). Category creation is available inline from the transaction form. Still needed: dedicated category management (edit/archive), a transaction edit/delete view beyond the dashboard's recent-activity list, and wallet editing. Known gap: a transfer only appears in the source wallet's activity feed, not the destination's (the destination's balance still updates correctly via the DB trigger, just not its visible feed) — revisit if that matters.
+* Phase 3: Dashboard — partially done. `/dashboard` shows the selected wallet's real balance (from `wallets.balance_minor`, not a derived figure) plus a 12-month income/expense summary and spend chart scoped to that wallet, computed in `src/lib/dashboard/summary.ts`. Deviation from the original plan: the summary sums in the Node server layer after fetching rows (paginated, capped at 10,000, Zod-validated), not via SQL `SUM`/`GROUP BY`. Works correctly at personal-app scale; revisit if that matters later. No date-range filter yet.
 * Phase 4: Recurring payments — not started. Rules, generated occurrences, upcoming-due list, "mark paid" action that links to a transaction and advances `next_due_on`.
 * Phase 5: Wishlist — not started. CRUD with priority and status, "mark purchased" action that links to a transaction.
 * Phase 6: Export — not started. CSV export of transactions.

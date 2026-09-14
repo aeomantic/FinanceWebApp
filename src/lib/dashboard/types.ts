@@ -1,4 +1,22 @@
-export type TransactionType = "income" | "expense";
+export type TransactionType = "income" | "expense" | "transfer";
+
+export interface Wallet {
+  id: string;
+  name: string;
+  currency: string;
+  balanceMinor: number;
+  color: string | null;
+}
+
+export type CategoryType = "expense" | "income";
+
+export interface Category {
+  id: string;
+  name: string;
+  type: CategoryType;
+  icon: string | null;
+  color: string | null;
+}
 
 export interface Transaction {
   id: string;
@@ -8,6 +26,9 @@ export interface Transaction {
   currency: string;
   type: TransactionType;
   category?: string;
+  walletId: string;
+  destinationWalletId?: string;
+  note?: string;
 }
 
 export interface MonthlySpendPoint {
@@ -25,6 +46,8 @@ export interface CurrencySummary {
 }
 
 export interface DashboardData {
+  wallets: Wallet[];
+  categories: Category[];
   transactions: Transaction[];
   today: string;
   periodStart: string;
@@ -34,13 +57,35 @@ export interface DashboardData {
 }
 
 export interface RecordTransactionInput {
-  title: string;
+  walletId: string;
+  destinationWalletId?: string;
+  categoryId?: string;
   amount: string;
-  currency: string;
   date: string;
   type: TransactionType;
+  note?: string;
 }
 
 export type RecordTransactionResult =
   | { success: true }
+  | { success: false; error: string };
+
+export interface CreateWalletInput {
+  name: string;
+  currency: string;
+  color?: string;
+}
+
+export type CreateWalletResult =
+  | { success: true; wallet: Wallet }
+  | { success: false; error: string };
+
+export interface CreateCategoryInput {
+  name: string;
+  type: CategoryType;
+  icon?: string;
+}
+
+export type CreateCategoryResult =
+  | { success: true; category: Category }
   | { success: false; error: string };

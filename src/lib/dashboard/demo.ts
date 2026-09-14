@@ -1,13 +1,19 @@
-import type { MonthlySpendPoint, Transaction } from "./types";
+import type { MonthlySpendPoint, Transaction, Wallet } from "./types";
 
-/** Fictional sample activity for the explicitly labeled design preview only. */
+/** Fictional sample wallets and activity for the explicitly labeled design preview only. */
+export const DEMO_WALLETS: Wallet[] = [
+  { id: "demo-main", name: "Everyday", currency: "USD", balanceMinor: 2688709, color: "mint" },
+  { id: "demo-food", name: "Food & Groceries", currency: "USD", balanceMinor: 42150, color: "peach" },
+  { id: "demo-bills", name: "Bills", currency: "USD", balanceMinor: 128000, color: "blue" },
+];
+
 export const DEMO_TRANSACTIONS: Transaction[] = [
-  { id: "demo-eva", title: "Eva Novak", date: "2026-09-13", amountMinor: 571020, currency: "USD", type: "income", category: "Personal" },
-  { id: "demo-binance", title: "Binance", date: "2026-09-13", amountMinor: 71400, currency: "USD", type: "income", category: "Investment" },
-  { id: "demo-henrik", title: "Henrik Jansen", date: "2026-09-12", amountMinor: 42800, currency: "USD", type: "income", category: "Personal" },
-  { id: "demo-multiplex", title: "Multiplex", date: "2026-09-12", amountMinor: 12455, currency: "USD", type: "expense", category: "Entertainment" },
-  { id: "demo-spotify", title: "Spotify Premium", date: "2026-09-12", amountMinor: 1099, currency: "USD", type: "expense", category: "Subscription" },
-  { id: "demo-coffee", title: "% Arabica", date: "2026-09-11", amountMinor: 650, currency: "USD", type: "expense", category: "Food & drink" },
+  { id: "demo-eva", title: "Personal", date: "2026-09-13", amountMinor: 571020, currency: "USD", type: "income", category: "Personal", walletId: "demo-main" },
+  { id: "demo-binance", title: "Investment", date: "2026-09-13", amountMinor: 71400, currency: "USD", type: "income", category: "Investment", walletId: "demo-main" },
+  { id: "demo-henrik", title: "Personal", date: "2026-09-12", amountMinor: 42800, currency: "USD", type: "income", category: "Personal", walletId: "demo-main" },
+  { id: "demo-multiplex", title: "Entertainment", date: "2026-09-12", amountMinor: 12455, currency: "USD", type: "expense", category: "Entertainment", walletId: "demo-main" },
+  { id: "demo-spotify", title: "Subscription", date: "2026-09-12", amountMinor: 1099, currency: "USD", type: "expense", category: "Subscription", walletId: "demo-bills" },
+  { id: "demo-coffee", title: "Food & drink", date: "2026-09-11", amountMinor: 650, currency: "USD", type: "expense", category: "Food & drink", walletId: "demo-food" },
 ];
 
 export const DEMO_MONTHLY_POINTS: MonthlySpendPoint[] = [

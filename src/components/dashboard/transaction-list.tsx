@@ -9,7 +9,7 @@ export interface DashboardTransaction {
   date: string;
   amountMinor: number;
   currency: string;
-  type: "income" | "expense";
+  type: "income" | "expense" | "transfer";
   category?: string;
 }
 
@@ -104,6 +104,7 @@ export function TransactionList({ transactions, today, query = "", onQueryChange
             <ul className={styles.transactionRows}>
               {rows.map((transaction) => {
                 const income = transaction.type === "income";
+                const transfer = transaction.type === "transfer";
                 const amount = new Intl.NumberFormat("en-US", { style: "currency", currency: transaction.currency }).format(Math.abs(transaction.amountMinor) / 100);
                 return (
                   <li key={transaction.id} className={styles.transactionRow}>
@@ -111,7 +112,7 @@ export function TransactionList({ transactions, today, query = "", onQueryChange
                     <div className={styles.transactionDetails}>
                       <p className={styles.transactionTitle}>{transaction.title}</p>
                       <p className={styles.transactionMeta}>
-                        {income ? "Received" : "Paid"}<span className={styles.statusIcon} aria-hidden="true">{income ? "↙" : "↗"}</span>
+                        {transfer ? "Transferred" : income ? "Received" : "Paid"}<span className={styles.statusIcon} aria-hidden="true">{income ? "↙" : "↗"}</span>
                         {transaction.category ? <span className={styles.category}>{transaction.category}</span> : null}
                       </p>
                     </div>
