@@ -5,7 +5,9 @@ import { z } from "zod";
 import { isAllowedEmail } from "@/lib/auth/allowlist";
 import { createClient } from "@/lib/supabase/server";
 import { getPeriodStart, isValidDate, summarizeTransactions, SUPPORTED_CURRENCIES } from "./summary";
+import { DEFAULT_CATEGORIES } from "./default-categories";
 import type { Category, DashboardData, Transaction, Wallet } from "./types";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 const PAGE_SIZE = 1000;
 const MAX_TRANSACTIONS = 10000;
@@ -38,8 +40,17 @@ const transactionRowSchema = z.object({
   note: z.string().nullable(),
   wallet_id: z.string().uuid(),
   destination_wallet_id: z.string().uuid().nullable(),
-  category: z.object({ name: z.string() }).nullable(),
+  category: z.object({ name: z.string(), icon: z.string().nullable() }).nullable(),
 });
+
+/** A brand-new account has no categories yet; seed the standard taxonomy
+ * once so the picker isn't empty on the very first transaction. Idempotent
+ * by construction: only called when the user's category list is empty. */
+async function seedDefaultCategories(supabase: SupabaseClient, userId: string) {
+  return supabase.from("categories").insert(
+    DEFAULT_CATEGORIES.map((category) => ({ user_id: userId, name: category.name, type: category.type, icon: category.icon })),
+  ).select("id,name,type,icon,color");
+}
 
 function walletTitle(wallets: Map<string, Wallet>, transaction: z.infer<typeof transactionRowSchema>): string {
   if (transaction.type === "transfer") {
@@ -75,9 +86,17 @@ export async function getDashboardData(): Promise<DashboardData> {
     if (walletsRes.error) return { ...base, error: "We couldn't load your wallets. Please try refreshing the page." };
     if (categoriesRes.error) return { ...base, error: "We couldn't load your categories. Please try refreshing the page." };
 
+    let categoryRows = categoriesRes.data;
+    if (categoryRows.length === 0) {
+      const seeded = await seedDefaultCategories(supabase, user.id);
+      // A failed seed isn't fatal: the category picker just starts empty
+      // and the user can add categories by hand, same as before this existed.
+      if (!seeded.error && seeded.data) categoryRows = seeded.data;
+    }
+
     const parsedWallets = z.array(walletRowSchema).safeParse(walletsRes.data);
     if (!parsedWallets.success) return { ...base, error: "Some wallets contain unsupported data. Please try refreshing the page." };
-    const parsedCategories = z.array(categoryRowSchema).safeParse(categoriesRes.data);
+    const parsedCategories = z.array(categoryRowSchema).safeParse(categoryRows);
     if (!parsedCategories.success) return { ...base, error: "Some categories contain unsupported data. Please try refreshing the page." };
 
     const wallets: Wallet[] = parsedWallets.data.map((row) => ({
@@ -93,7 +112,7 @@ export async function getDashboardData(): Promise<DashboardData> {
     for (let offset = 0; offset < MAX_TRANSACTIONS;) {
       const { data, error, count } = await supabase
         .from("transactions")
-        .select("id,occurred_on,amount_minor,currency,type,note,wallet_id,destination_wallet_id,category:categories(name)", { count: "exact" })
+        .select("id,occurred_on,amount_minor,currency,type,note,wallet_id,destination_wallet_id,category:categories(name,icon)", { count: "exact" })
         .eq("user_id", user.id)
         .gte("occurred_on", periodStart)
         .lte("occurred_on", today)
@@ -121,6 +140,7 @@ export async function getDashboardData(): Promise<DashboardData> {
           currency: row.currency,
           type: row.type,
           category: row.category?.name,
+          categoryIcon: row.category?.icon ?? undefined,
           walletId: row.wallet_id,
           destinationWalletId: row.destination_wallet_id ?? undefined,
           note: row.note ?? undefined,

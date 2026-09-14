@@ -1,5 +1,5 @@
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
-import { DEMO_WALLETS, getDemoTransactions } from "@/lib/dashboard/demo";
+import { DEMO_CATEGORIES, DEMO_WALLETS, getDemoTransactions } from "@/lib/dashboard/demo";
 import type { DashboardData } from "@/lib/dashboard/types";
 
 export const metadata = { title: "Explore Folio | A calmer way to money" };
@@ -11,7 +11,7 @@ export default function PreviewPage() {
     email: "alex@example.com",
     today,
     wallets: DEMO_WALLETS,
-    categories: [],
+    categories: DEMO_CATEGORIES,
     transactions: getDemoTransactions(today),
     error: null,
     periodStart: "2025-10-01",

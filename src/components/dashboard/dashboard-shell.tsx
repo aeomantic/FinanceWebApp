@@ -10,6 +10,9 @@ import { SpendChart } from "./spend-chart";
 import { WalletList } from "./wallet-list";
 import { BrandMark, Icon } from "@/components/ui/icon";
 import { Modal } from "@/components/ui/modal";
+import { CategoryIcon } from "@/components/ui/category-icon";
+import { Select } from "@/components/ui/select";
+import { Wallet as WalletIcon } from "lucide-react";
 import { createCategory, recordTransaction } from "@/app/dashboard/actions";
 import { DEMO_MONTHLY_POINTS, DEMO_WALLETS } from "@/lib/dashboard/demo";
 import { formatMoney, summarizeTransactions } from "@/lib/dashboard/summary";
@@ -58,7 +61,7 @@ export function DashboardShell({ data, demo = false }: DashboardShellProps) {
           <a href="#overview" className="rail-link active" aria-label="Overview" title="Overview"><Icon name="home" /></a>
           <a href="#transactions" className="rail-link" aria-label="Transactions" title="Transactions"><Icon name="transfer" /></a>
           <a href="#activity" className="rail-link" aria-label="Activity" title="Activity"><Icon name="activity" /></a>
-          <a href="#wallets" className="rail-link" aria-label="Wallets" title="Wallets"><Icon name="wallet" /></a>
+          <Link href={demo ? "/preview" : "/wallets"} className="rail-link" aria-label="Wallets" title="Wallets"><Icon name="wallet" /></Link>
         </nav>
         <button className="rail-link rail-help" onClick={() => setPanel("help")} aria-label="Help"><Icon name="help" /></button>
         <span className="rail-avatar" aria-hidden="true">{name.slice(0, 1).toUpperCase()}</span>
@@ -67,7 +70,7 @@ export function DashboardShell({ data, demo = false }: DashboardShellProps) {
       <div className="app-content">
         <header className="topbar">
           <Link href={demo ? "/preview" : "/dashboard"} className="wordmark">folio<span>.</span></Link>
-          <nav className="top-nav" aria-label="Dashboard sections"><a href="#overview" className="selected">Overview</a><a href="#transactions">Transactions</a><a href="#wallets">Wallets</a></nav>
+          <nav className="top-nav" aria-label="Dashboard sections"><a href="#overview" className="selected">Overview</a><a href="#transactions">Transactions</a><Link href={demo ? "/preview" : "/wallets"}>Wallets</Link></nav>
           <div className="topbar-actions">
             <button className="icon-button" aria-label="Search transactions" onClick={() => { document.getElementById("transactions")?.scrollIntoView(); searchInput.current?.focus(); }}><Icon name="search" /></button>
             <button className="icon-button" aria-label="Notifications" onClick={() => setPanel("notifications")}><Icon name="bell" /></button>
@@ -121,7 +124,7 @@ export function DashboardShell({ data, demo = false }: DashboardShellProps) {
         </main>
       </div>
 
-      <nav className="mobile-nav" aria-label="Mobile navigation"><a href="#transactions" aria-label="Transactions"><Icon name="transfer" /></a><a href="#overview" className="mobile-home" aria-label="Overview"><Icon name="home" /></a><a href="#wallets" aria-label="Wallets"><Icon name="wallet" /></a></nav>
+      <nav className="mobile-nav" aria-label="Mobile navigation"><a href="#transactions" aria-label="Transactions"><Icon name="transfer" /></a><a href="#overview" className="mobile-home" aria-label="Overview"><Icon name="home" /></a><Link href={demo ? "/preview" : "/wallets"} aria-label="Wallets"><Icon name="wallet" /></Link></nav>
 
       {panel && wallet && <Modal title={panel === "notifications" ? "You’re all caught up" : panel === "help" ? "A little help with Folio" : panel === "transfer" ? "Transfer between wallets" : panel === "expense" ? "Record an expense" : "Record income"} onClose={() => setPanel(null)}>
         {panel === "expense" || panel === "income" || panel === "transfer" ? (
@@ -194,18 +197,30 @@ function TransactionForm({ action, wallet, wallets, categories, today, demo, onC
         <p className="form-information">You need at least one other wallet to transfer money. Add a wallet first.</p>
       ) : (
         <label>To wallet
-          <select name="destinationWalletId" value={destinationWalletId} onChange={(event) => setDestinationWalletId(event.target.value)} disabled={pending}>
-            {otherWallets.map((item) => <option key={item.id} value={item.id}>{item.name} ({item.currency})</option>)}
-          </select>
+          <Select
+            aria-label="To wallet"
+            value={destinationWalletId}
+            onChange={setDestinationWalletId}
+            disabled={pending}
+            options={otherWallets.map((item) => ({ value: item.id, label: `${item.name} (${item.currency})`, icon: <WalletIcon size={16} /> }))}
+          />
         </label>
       )
     ) : (
       <label>Category
-        <select value={categoryId} onChange={(event) => { if (event.target.value === "__new") { setShowNewCategory(true); return; } setCategoryId(event.target.value); }} disabled={pending}>
-          <option value="">No category</option>
-          {relevantCategories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}
-          <option value="__new">+ New category</option>
-        </select>
+        <Select
+          aria-label="Category"
+          value={categoryId}
+          onChange={setCategoryId}
+          disabled={pending}
+          placeholder="No category"
+          options={[
+            { value: "", label: "No category", icon: <CategoryIcon name={null} size={16} /> },
+            ...relevantCategories.map((category) => ({ value: category.id, label: category.name, icon: <CategoryIcon name={category.icon} size={16} /> })),
+          ]}
+          onCreateNew={() => setShowNewCategory(true)}
+          createNewLabel="New category"
+        />
       </label>
     )}
 

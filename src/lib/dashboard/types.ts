@@ -27,6 +27,7 @@ export interface Transaction {
   currency: string;
   type: TransactionType;
   category?: string;
+  categoryIcon?: string;
   walletId: string;
   destinationWalletId?: string;
   note?: string;

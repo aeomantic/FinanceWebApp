@@ -1,6 +1,8 @@
 "use client";
 
 import { useId, useState } from "react";
+import { ArrowLeftRight } from "lucide-react";
+import { CategoryIcon } from "@/components/ui/category-icon";
 import styles from "./components.module.css";
 
 export interface DashboardTransaction {
@@ -11,6 +13,7 @@ export interface DashboardTransaction {
   currency: string;
   type: "income" | "expense" | "transfer";
   category?: string;
+  categoryIcon?: string;
 }
 
 export interface TransactionListProps {
@@ -33,25 +36,12 @@ function dateHeading(date: string, today: string): string {
   }).format(new Date(`${date}T12:00:00.000Z`));
 }
 
-function MerchantAvatar({ title, type }: Pick<DashboardTransaction, "title" | "type">) {
-  const initials = title.trim().split(/\s+/).slice(0, 2).map((word) => word[0]).join("").toUpperCase();
-  if (/binance/i.test(title)) {
-    return (
-      <span className={`${styles.avatar} ${styles.binance}`} aria-hidden="true">
-        <svg width="23" height="23" viewBox="0 0 24 24" fill="currentColor">
-          <path d="m12 2 4 4-2 2-2-2-2 2-2-2 4-4ZM6 8l2 2-2 2-2-2 2-2Zm12 0 2 2-2 2-2-2 2-2Zm-6 0 4 4-4 4-4-4 4-4ZM2 12l4 4-2 2-4-4 2-2Zm20 0 2 2-4 4-2-2 4-4Zm-12 4 2 2 2-2 2 2-4 4-4-4 2-2Z" />
-        </svg>
-      </span>
-    );
-  }
-  if (/multiplex/i.test(title)) {
-    return <span className={`${styles.avatar} ${styles.avatarDark}`} aria-hidden="true"><span className={styles.cinemaMark}>mx</span></span>;
-  }
-  if (/spotify/i.test(title)) {
-    return <span className={`${styles.avatar} ${styles.avatarDark}`} aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#91db9a" strokeWidth="1.8" strokeLinecap="round"><path d="M5 8c4-1.9 9-1.7 14 .7M6 12c3.5-1.6 7.4-1.4 11.7.5M7 16c2.8-1.2 6-1.1 9.4.3" /></svg></span>;
+function MerchantAvatar({ type, categoryIcon }: Pick<DashboardTransaction, "type" | "categoryIcon">) {
+  if (type === "transfer") {
+    return <span className={`${styles.avatar} ${styles.avatarLavender}`} aria-hidden="true"><ArrowLeftRight size={17} strokeWidth={1.8} /></span>;
   }
   const palette = type === "income" ? styles.avatarMint : styles.avatarLavender;
-  return <span className={`${styles.avatar} ${palette}`} aria-hidden="true">{initials}</span>;
+  return <span className={`${styles.avatar} ${palette}`} aria-hidden="true"><CategoryIcon name={categoryIcon} size={18} /></span>;
 }
 
 export function TransactionList({ transactions, today, query = "", onQueryChange }: TransactionListProps) {
@@ -108,7 +98,7 @@ export function TransactionList({ transactions, today, query = "", onQueryChange
                 const amount = new Intl.NumberFormat("en-US", { style: "currency", currency: transaction.currency }).format(Math.abs(transaction.amountMinor) / 100);
                 return (
                   <li key={transaction.id} className={styles.transactionRow}>
-                    <MerchantAvatar title={transaction.title} type={transaction.type} />
+                    <MerchantAvatar type={transaction.type} categoryIcon={transaction.categoryIcon} />
                     <div className={styles.transactionDetails}>
                       <p className={styles.transactionTitle}>{transaction.title}</p>
                       <p className={styles.transactionMeta}>

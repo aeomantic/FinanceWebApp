@@ -1,4 +1,4 @@
-.transactions, .spendCard, .currencySection { padding: 27px 28px; min-width: 0; }
+.transactions, .spendCard, .currencySection, .donutCard { padding: 27px 28px; min-width: 0; }
 .cardHeading { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
 .cardHeading h2 { margin: 0; color: var(--color-ink, #141414); font-size: 19px; font-weight: 560; letter-spacing: -.65px; }
 .eyebrow { margin: 0 0 7px; color: var(--color-muted, #71717a); font-size: 9px; font-weight: 600; letter-spacing: 1.5px; }
@@ -18,7 +18,6 @@
 .avatar { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 40px; width: 40px; height: 40px; border-radius: 50%; font-size: 12px; font-weight: 600; letter-spacing: -.5px; }
 .avatarMint { color: #446857; background: linear-gradient(135deg, #e8f1db, #c7e5d9); }
 .avatarLavender { color: #706384; background: linear-gradient(135deg, #f1eaf5, #e1dcef); }
-.binance { color: #f5d766; background: #1c1e1c; }
 .transactionDetails { flex: 1; min-width: 0; }
 .transactionTitle { overflow: hidden; margin: 0 0 4px; color: var(--color-ink, #141414); font-size: 12px; font-weight: 530; text-overflow: ellipsis; white-space: nowrap; }
 .transactionMeta { display: flex; align-items: center; gap: 5px; margin: 0; color: #8a8e88; font-size: 10px; }
@@ -105,11 +104,30 @@
   .chartCaption { font-size: 9px; }
 }
 
-.avatarDark { color: white; background: #202421; }
-.cinemaMark { padding: 2px 5px; border-radius: 4px; color: white; background: #ed574d; font-size: 10px; font-weight: 600; line-height: 1; letter-spacing: -1px; }
-
 @media (max-width: 640px) {
   .axisLabel, .activeAxisLabel { font-size: 16px; }
   .tooltipValue { font-size: 20px; }
   .tooltipLabel { font-size: 13px; }
 }
+
+.donutCard h2 { margin: 4px 0 0; color: var(--color-ink, #141414); font-size: clamp(24px, 2.5vw, 32px); font-weight: 530; letter-spacing: -1.1px; font-variant-numeric: tabular-nums; }
+.donutChartArea { position: relative; margin-top: 4px; }
+.donutCenter { display: flex; position: absolute; top: 50%; left: 50%; flex-direction: column; align-items: center; transform: translate(-50%, -50%); pointer-events: none; text-align: center; }
+.donutCenter strong { color: var(--color-ink, #141414); font-size: 26px; font-weight: 560; letter-spacing: -.7px; }
+.donutCenter span { margin-top: 2px; color: #8a8e88; font-size: 10px; }
+.donutTooltip { padding: 9px 13px; border-radius: 11px; background: #fef38b; color: #202415; font-size: 12px; font-weight: 550; box-shadow: 0 12px 30px -8px rgba(20, 40, 25, .25); }
+.donutTooltip span { color: #7d773e; }
+.donutLegend { display: flex; flex-direction: column; gap: 10px; margin: 18px 0 0; padding: 0; list-style: none; }
+.donutLegend li { display: flex; align-items: center; gap: 9px; font-size: 12px; }
+.donutLegendDot { width: 9px; height: 9px; flex-shrink: 0; border-radius: 50%; }
+.donutLegendName { flex: 1; min-width: 0; overflow: hidden; color: var(--color-ink, #141414); text-overflow: ellipsis; white-space: nowrap; }
+.donutLegendShare { color: #8a8e88; font-variant-numeric: tabular-nums; }
+.donutNote { margin: 16px 0 0; padding-top: 14px; border-top: 1px solid #f1f3f0; color: #8a8e88; font-size: 10px; line-height: 1.6; }
+
+.walletGridCard { padding: 27px 28px; min-width: 0; }
+.walletGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; margin: 20px 0 0; padding: 0; list-style: none; }
+.walletGridItem { position: relative; padding: 16px; border: 1px solid #ebeee7; border-radius: 18px; background: #fafcf9; }
+.walletGridTop { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+.walletGridName { overflow: hidden; color: var(--color-ink, #141414); font-size: 12px; font-weight: 550; text-overflow: ellipsis; white-space: nowrap; }
+.walletGridBalance { margin: 16px 0 0; color: var(--color-ink, #141414); font-size: 19px; font-weight: 550; letter-spacing: -.5px; font-variant-numeric: tabular-nums; }
+.walletGridCurrency { margin: 4px 0 0; color: #8a8e88; font-size: 10px; }

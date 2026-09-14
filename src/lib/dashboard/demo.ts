@@ -1,4 +1,4 @@
-import type { MonthlySpendPoint, Transaction, Wallet } from "./types";
+import type { Category, MonthlySpendPoint, Transaction, Wallet } from "./types";
 
 /** Fictional sample wallets and activity for the explicitly labeled design preview only. */
 export const DEMO_WALLETS: Wallet[] = [
@@ -7,13 +7,21 @@ export const DEMO_WALLETS: Wallet[] = [
   { id: "demo-bills", name: "Bills", currency: "USD", balanceMinor: 128000, color: "blue", isDefault: false },
 ];
 
+export const DEMO_CATEGORIES: Category[] = [
+  { id: "demo-cat-salary", name: "Salary & Wages", type: "income", icon: "briefcase", color: null },
+  { id: "demo-cat-investments", name: "Investments & Dividends", type: "income", icon: "trending-up", color: null },
+  { id: "demo-cat-entertainment", name: "Entertainment", type: "expense", icon: "film", color: null },
+  { id: "demo-cat-utilities", name: "Utilities & Bills", type: "expense", icon: "zap", color: null },
+  { id: "demo-cat-food", name: "Food & Dining", type: "expense", icon: "utensils", color: null },
+];
+
 export const DEMO_TRANSACTIONS: Transaction[] = [
-  { id: "demo-eva", title: "Personal", date: "2026-09-13", amountMinor: 571020, currency: "USD", type: "income", category: "Personal", walletId: "demo-main" },
-  { id: "demo-binance", title: "Investment", date: "2026-09-13", amountMinor: 71400, currency: "USD", type: "income", category: "Investment", walletId: "demo-main" },
-  { id: "demo-henrik", title: "Personal", date: "2026-09-12", amountMinor: 42800, currency: "USD", type: "income", category: "Personal", walletId: "demo-main" },
-  { id: "demo-multiplex", title: "Entertainment", date: "2026-09-12", amountMinor: 12455, currency: "USD", type: "expense", category: "Entertainment", walletId: "demo-main" },
-  { id: "demo-spotify", title: "Subscription", date: "2026-09-12", amountMinor: 1099, currency: "USD", type: "expense", category: "Subscription", walletId: "demo-bills" },
-  { id: "demo-coffee", title: "Food & drink", date: "2026-09-11", amountMinor: 650, currency: "USD", type: "expense", category: "Food & drink", walletId: "demo-food" },
+  { id: "demo-eva", title: "Salary & Wages", date: "2026-09-13", amountMinor: 571020, currency: "USD", type: "income", category: "Salary & Wages", categoryIcon: "briefcase", walletId: "demo-main" },
+  { id: "demo-binance", title: "Investments & Dividends", date: "2026-09-13", amountMinor: 71400, currency: "USD", type: "income", category: "Investments & Dividends", categoryIcon: "trending-up", walletId: "demo-main" },
+  { id: "demo-henrik", title: "Salary & Wages", date: "2026-09-12", amountMinor: 42800, currency: "USD", type: "income", category: "Salary & Wages", categoryIcon: "briefcase", walletId: "demo-main" },
+  { id: "demo-multiplex", title: "Entertainment", date: "2026-09-12", amountMinor: 12455, currency: "USD", type: "expense", category: "Entertainment", categoryIcon: "film", walletId: "demo-main" },
+  { id: "demo-spotify", title: "Utilities & Bills", date: "2026-09-12", amountMinor: 1099, currency: "USD", type: "expense", category: "Utilities & Bills", categoryIcon: "zap", walletId: "demo-bills" },
+  { id: "demo-coffee", title: "Food & Dining", date: "2026-09-11", amountMinor: 650, currency: "USD", type: "expense", category: "Food & Dining", categoryIcon: "utensils", walletId: "demo-food" },
 ];
 
 export const DEMO_MONTHLY_POINTS: MonthlySpendPoint[] = [
