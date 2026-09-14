@@ -1,16 +1,15 @@
 "use client";
 
-import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Star } from "lucide-react";
 import { SignOutButton } from "@/components/auth/sign-out-button";
 import { BrandMark, Icon } from "@/components/ui/icon";
 import { WalletList } from "./wallet-list";
+import { WalletCardMenu } from "./wallet-card-menu";
 import { WalletDistributionChart } from "./wallet-distribution-chart";
-import { setDefaultWallet } from "@/app/dashboard/actions";
-import { formatMoney } from "@/lib/dashboard/summary";
+import { formatMoney, maskMoney } from "@/lib/dashboard/summary";
 import { DEMO_WALLETS } from "@/lib/dashboard/demo";
+import { useHiddenWallets } from "@/lib/dashboard/use-hidden-wallets";
 import type { Wallet } from "@/lib/dashboard/types";
 import styles from "./components.module.css";
 
@@ -26,6 +25,7 @@ export function WalletsView({ wallets: initialWallets, name: fullName, error, de
   const router = useRouter();
   const wallets = demo ? DEMO_WALLETS : initialWallets;
   const name = fullName.split(" ")[0] || "there";
+  const { hiddenIds, toggle } = useHiddenWallets();
   const currencyCounts = new Map<string, number>();
   for (const wallet of wallets) currencyCounts.set(wallet.currency, (currencyCounts.get(wallet.currency) ?? 0) + 1);
   const primaryCurrency = (wallets.find((wallet) => wallet.isDefault) ?? wallets[0])?.currency
@@ -74,10 +74,19 @@ export function WalletsView({ wallets: initialWallets, name: fullName, error, de
               <WalletDistributionChart wallets={primaryWallets} currency={primaryCurrency} otherCurrencyCount={otherCurrencyCount} />
             </div>
             <div style={{ gridColumn: "span 7" }}>
-              <WalletGrid wallets={wallets} demo={demo} onChanged={() => router.refresh()} />
+              <WalletGrid wallets={wallets} demo={demo} hiddenIds={hiddenIds} onToggleHideBalance={toggle} onChanged={() => router.refresh()} />
             </div>
             <div style={{ gridColumn: "1 / -1" }}>
-              <WalletList wallets={wallets} selectedWalletId={null} onSelect={() => {}} onCreated={() => router.refresh()} onDefaultChanged={() => router.refresh()} demo={demo} />
+              <WalletList
+                wallets={wallets}
+                selectedWalletId={null}
+                onSelect={() => {}}
+                onCreated={() => router.refresh()}
+                onChanged={() => router.refresh()}
+                hiddenWalletIds={hiddenIds}
+                onToggleHideBalance={toggle}
+                demo={demo}
+              />
             </div>
           </div>
 
@@ -94,20 +103,13 @@ export function WalletsView({ wallets: initialWallets, name: fullName, error, de
   );
 }
 
-function WalletGrid({ wallets, demo, onChanged }: { wallets: Wallet[]; demo: boolean; onChanged: () => void }) {
-  const [pending, startTransition] = useTransition();
-  const [pendingId, setPendingId] = useState<string | null>(null);
-
-  function handleSetDefault(walletId: string) {
-    if (demo) return;
-    setPendingId(walletId);
-    startTransition(async () => {
-      await setDefaultWallet(walletId);
-      onChanged();
-      setPendingId(null);
-    });
-  }
-
+function WalletGrid({ wallets, demo, hiddenIds, onToggleHideBalance, onChanged }: {
+  wallets: Wallet[];
+  demo: boolean;
+  hiddenIds: Set<string>;
+  onToggleHideBalance: (walletId: string) => void;
+  onChanged: () => void;
+}) {
   return (
     <section className={`surface-card ${styles.walletGridCard}`} aria-label="All wallets">
       <div className={styles.cardHeading}>
@@ -118,19 +120,16 @@ function WalletGrid({ wallets, demo, onChanged }: { wallets: Wallet[]; demo: boo
           <li key={wallet.id} className={styles.walletGridItem}>
             <div className={styles.walletGridTop}>
               <span className={styles.walletGridName}>{wallet.name}</span>
-              <button
-                type="button"
-                className={`${styles.defaultToggle} ${wallet.isDefault ? styles.defaultToggleActive : ""}`}
-                onClick={() => handleSetDefault(wallet.id)}
-                disabled={demo || wallet.isDefault || (pending && pendingId === wallet.id)}
-                aria-pressed={wallet.isDefault}
-                aria-label={wallet.isDefault ? `${wallet.name} is your default wallet` : `Set ${wallet.name} as default wallet`}
-                style={{ position: "static" }}
-              >
-                <Star size={13} fill={wallet.isDefault ? "currentColor" : "none"} strokeWidth={1.8} aria-hidden="true" />
-              </button>
+              <WalletCardMenu
+                wallet={wallet}
+                demo={demo}
+                canDelete={wallets.length > 1}
+                isBalanceHidden={hiddenIds.has(wallet.id)}
+                onToggleHideBalance={onToggleHideBalance}
+                onChanged={onChanged}
+              />
             </div>
-            <p className={styles.walletGridBalance}>{formatMoney(wallet.balanceMinor, wallet.currency)}</p>
+            <p className={styles.walletGridBalance}>{hiddenIds.has(wallet.id) ? maskMoney(wallet.currency) : formatMoney(wallet.balanceMinor, wallet.currency)}</p>
             <p className={styles.walletGridCurrency}>{wallet.currency}{wallet.isDefault ? " · Default" : ""}</p>
           </li>
         ))}

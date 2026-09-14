@@ -86,6 +86,19 @@ export type SetDefaultWalletResult =
   | { success: true }
   | { success: false; error: string };
 
+export interface RenameWalletInput {
+  walletId: string;
+  name: string;
+}
+
+export type RenameWalletResult =
+  | { success: true; name: string }
+  | { success: false; error: string };
+
+export type DeleteWalletResult =
+  | { success: true }
+  | { success: false; error: string };
+
 export interface CreateCategoryInput {
   name: string;
   type: CategoryType;

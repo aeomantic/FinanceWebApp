@@ -16,6 +16,7 @@ import { Wallet as WalletIcon } from "lucide-react";
 import { createCategory, recordTransaction } from "@/app/dashboard/actions";
 import { DEMO_MONTHLY_POINTS, DEMO_WALLETS } from "@/lib/dashboard/demo";
 import { formatMoney, summarizeTransactions } from "@/lib/dashboard/summary";
+import { useHiddenWallets } from "@/lib/dashboard/use-hidden-wallets";
 import type { Category, DashboardData, Wallet } from "@/lib/dashboard/types";
 
 interface DashboardShellProps { data: DashboardData; demo?: boolean }
@@ -25,6 +26,7 @@ export function DashboardShell({ data, demo = false }: DashboardShellProps) {
   const router = useRouter();
   const wallets = demo ? DEMO_WALLETS : data.wallets;
   const [categories, setCategories] = useState<Category[]>(data.categories);
+  const { hiddenIds, toggle: toggleHideBalance } = useHiddenWallets();
   const [selectedWalletId, setSelectedWalletId] = useState<string | null>((wallets.find((item) => item.isDefault) ?? wallets[0])?.id ?? null);
   const [query, setQuery] = useState("");
   const [panel, setPanel] = useState<Panel>(null);
@@ -103,7 +105,7 @@ export function DashboardShell({ data, demo = false }: DashboardShellProps) {
               <TransactionList transactions={transactions} today={data.today} query={query} />
             </div>
             <div className="wallets-area" id="wallets">
-              <WalletList wallets={wallets} selectedWalletId={selectedWalletId} onSelect={setSelectedWalletId} onCreated={() => router.refresh()} onDefaultChanged={() => router.refresh()} demo={demo} />
+              <WalletList wallets={wallets} selectedWalletId={selectedWalletId} onSelect={setSelectedWalletId} onCreated={() => router.refresh()} onChanged={() => router.refresh()} hiddenWalletIds={hiddenIds} onToggleHideBalance={toggleHideBalance} demo={demo} />
               <section className="insight-card">
                 <div className="insight-top"><span className="eyebrow">SMALL STEPS. BIG PICTURE.</span><span className="insight-icon"><Icon name="activity" size={18} /></span></div>
                 <h2>Good habits start<br />with a clear view.</h2>
@@ -116,7 +118,7 @@ export function DashboardShell({ data, demo = false }: DashboardShellProps) {
           {!data.error && !wallet && (
             <div className="dashboard-grid">
               <div className="wallets-area" id="wallets" style={{ gridColumn: "1 / -1" }}>
-                <WalletList wallets={wallets} selectedWalletId={selectedWalletId} onSelect={setSelectedWalletId} onCreated={() => router.refresh()} onDefaultChanged={() => router.refresh()} demo={demo} />
+                <WalletList wallets={wallets} selectedWalletId={selectedWalletId} onSelect={setSelectedWalletId} onCreated={() => router.refresh()} onChanged={() => router.refresh()} hiddenWalletIds={hiddenIds} onToggleHideBalance={toggleHideBalance} demo={demo} />
               </div>
             </div>
           )}

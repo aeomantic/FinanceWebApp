@@ -22,6 +22,11 @@ export function formatMoney(amountMinor: number, currency = "USD"): string {
     .map((part) => part.type === "fraction" ? fraction : part.value).join("");
 }
 
+/** A privacy-masked stand-in for formatMoney, same shape without the digits. */
+export function maskMoney(currency = "USD"): string {
+  return `${currency} ••••••`;
+}
+
 export function isValidDate(value: string): boolean {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
   const timestamp = Date.parse(`${value}T00:00:00.000Z`);

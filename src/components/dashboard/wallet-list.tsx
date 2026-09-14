@@ -1,38 +1,31 @@
 "use client";
 
-import { useId, useRef, useState, useTransition, type FormEvent } from "react";
-import { createWallet, setDefaultWallet } from "@/app/dashboard/actions";
-import { formatMoney } from "@/lib/dashboard/summary";
+import { useId, useRef, useState, type FormEvent } from "react";
+import { createWallet } from "@/app/dashboard/actions";
+import { WalletCardMenu } from "./wallet-card-menu";
+import { formatMoney, maskMoney } from "@/lib/dashboard/summary";
 import { SUPPORTED_CURRENCIES } from "@/lib/dashboard/summary";
 import type { Wallet } from "@/lib/dashboard/types";
 import styles from "./components.module.css";
 
 const TONES = ["mint", "blue", "peach"] as const;
 
-function StarIcon({ filled }: { filled: boolean }) {
-  return (
-    <svg width="13" height="13" viewBox="0 0 24 24" fill={filled ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" aria-hidden="true">
-      <path d="m12 3 2.7 5.9 6.3.7-4.7 4.4 1.3 6.3L12 17.1 6.4 20.3l1.3-6.3-4.7-4.4 6.3-.7Z" />
-    </svg>
-  );
-}
-
 export interface WalletListProps {
   wallets: Wallet[];
   selectedWalletId: string | null;
   onSelect: (walletId: string) => void;
   onCreated: (wallet: Wallet) => void;
-  onDefaultChanged: () => void;
+  onChanged: () => void;
+  hiddenWalletIds: Set<string>;
+  onToggleHideBalance: (walletId: string) => void;
   demo?: boolean;
 }
 
-export function WalletList({ wallets, selectedWalletId, onSelect, onCreated, onDefaultChanged, demo = false }: WalletListProps) {
+export function WalletList({ wallets, selectedWalletId, onSelect, onCreated, onChanged, hiddenWalletIds, onToggleHideBalance, demo = false }: WalletListProps) {
   const [name, setName] = useState("");
   const [currency, setCurrency] = useState<string>(SUPPORTED_CURRENCIES[0]);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
-  const [, startDefaultTransition] = useTransition();
-  const [pendingWalletId, setPendingWalletId] = useState<string | null>(null);
   const dialog = useRef<HTMLDialogElement>(null);
   const instanceId = useId();
 
@@ -56,16 +49,6 @@ export function WalletList({ wallets, selectedWalletId, onSelect, onCreated, onD
     dialog.current?.close();
   }
 
-  function handleSetDefault(walletId: string) {
-    if (demo) return;
-    setPendingWalletId(walletId);
-    startDefaultTransition(async () => {
-      await setDefaultWallet(walletId);
-      onDefaultChanged();
-      setPendingWalletId(null);
-    });
-  }
-
   return (
     <section className={`surface-card ${styles.currencySection}`} aria-labelledby={`${instanceId}-heading`}>
       <div className={styles.cardHeading}>
@@ -76,16 +59,16 @@ export function WalletList({ wallets, selectedWalletId, onSelect, onCreated, onD
         <div className={styles.currencyScroller}>
           {wallets.map((wallet, index) => (
             <div key={wallet.id} className={`${styles.currencyCard} ${selectedWalletId === wallet.id ? styles.selectedCurrency : ""}`}>
-              <button
-                type="button"
-                className={`${styles.defaultToggle} ${wallet.isDefault ? styles.defaultToggleActive : ""}`}
-                onClick={() => handleSetDefault(wallet.id)}
-                disabled={demo || wallet.isDefault || pendingWalletId === wallet.id}
-                aria-pressed={wallet.isDefault}
-                aria-label={wallet.isDefault ? `${wallet.name} is your default wallet` : `Set ${wallet.name} as default wallet`}
-              >
-                <StarIcon filled={wallet.isDefault} />
-              </button>
+              <div className={styles.cardMenuSlot}>
+                <WalletCardMenu
+                  wallet={wallet}
+                  demo={demo}
+                  canDelete={wallets.length > 1}
+                  isBalanceHidden={hiddenWalletIds.has(wallet.id)}
+                  onToggleHideBalance={onToggleHideBalance}
+                  onChanged={onChanged}
+                />
+              </div>
               <button
                 type="button"
                 className={styles.currencyCardInner}
@@ -96,9 +79,8 @@ export function WalletList({ wallets, selectedWalletId, onSelect, onCreated, onD
                   <span className={`${styles.currencySymbol} ${styles[wallet.color && TONES.includes(wallet.color as typeof TONES[number]) ? wallet.color : TONES[index % TONES.length]]}`}>{wallet.name.slice(0, 1).toUpperCase()}</span>
                   <span className={styles.currencyCode}>{wallet.currency}</span>
                 </span>
-                <span className={styles.currencyName}>{wallet.name}</span>
-                <span className={styles.currencyValue}>{formatMoney(wallet.balanceMinor, wallet.currency)}</span>
-                {wallet.isDefault && <span className={styles.defaultBadge}><StarIcon filled />Default</span>}
+                <span className={styles.currencyName}>{wallet.name}{wallet.isDefault && <span className={styles.defaultLabel}>Default</span>}</span>
+                <span className={styles.currencyValue}>{hiddenWalletIds.has(wallet.id) ? maskMoney(wallet.currency) : formatMoney(wallet.balanceMinor, wallet.currency)}</span>
               </button>
             </div>
           ))}
@@ -107,7 +89,7 @@ export function WalletList({ wallets, selectedWalletId, onSelect, onCreated, onD
           <span className={styles.addSymbol} aria-hidden="true">+</span><span>Add<br />wallet</span>
         </button>
       </div>
-      <p className={styles.currencyNote}>{demo ? "You're viewing sample wallets." : "Pick a wallet to see its balance and activity, or star one as your default."}</p>
+      <p className={styles.currencyNote}>{demo ? "You're viewing sample wallets." : "Pick a wallet to see its balance and activity, or use the menu to manage wallet settings."}</p>
       <dialog ref={dialog} className={styles.currencyDialog} aria-labelledby={`${instanceId}-dialog-title`} onClick={(event) => { if (event.target === event.currentTarget) dialog.current?.close(); }}>
         <form onSubmit={submit} className={styles.dialogContent}>
           <div className={styles.dialogHeading}><h2 id={`${instanceId}-dialog-title`}>A new wallet.</h2><button type="button" className={styles.closeDialog} onClick={() => dialog.current?.close()} aria-label="Close add wallet dialog">×</button></div>

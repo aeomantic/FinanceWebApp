@@ -33,10 +33,17 @@ export const transactionInputSchema = baseTransactionSchema.check((ctx) => {
   }
 });
 
+export const walletNameSchema = z.string().trim().min(1, "Enter a wallet name.").max(60, "Keep the name under 60 characters.");
+
 export const walletInputSchema = z.object({
-  name: z.string().trim().min(1, "Enter a wallet name.").max(60, "Keep the name under 60 characters."),
+  name: walletNameSchema,
   currency: z.enum(SUPPORTED_CURRENCIES, { error: "Choose a supported currency." }),
   color: z.string().trim().max(30).optional(),
+});
+
+export const renameWalletInputSchema = z.object({
+  walletId: uuidSchema,
+  name: walletNameSchema,
 });
 
 export const categoryInputSchema = z.object({

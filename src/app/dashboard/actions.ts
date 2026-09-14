@@ -3,14 +3,17 @@
 import { revalidatePath } from "next/cache";
 import { isAllowedEmail } from "@/lib/auth/allowlist";
 import { createClient } from "@/lib/supabase/server";
-import { categoryInputSchema, parseAmountMinor, transactionInputSchema, uuidSchema, walletInputSchema } from "@/lib/dashboard/validation";
+import { categoryInputSchema, parseAmountMinor, renameWalletInputSchema, transactionInputSchema, uuidSchema, walletInputSchema } from "@/lib/dashboard/validation";
 import type {
   CreateCategoryInput,
   CreateCategoryResult,
   CreateWalletInput,
   CreateWalletResult,
+  DeleteWalletResult,
   RecordTransactionInput,
   RecordTransactionResult,
+  RenameWalletInput,
+  RenameWalletResult,
   SetDefaultWalletResult,
 } from "@/lib/dashboard/types";
 import type { PostgrestError } from "@supabase/supabase-js";
@@ -139,6 +142,86 @@ export async function setDefaultWallet(walletId: string): Promise<SetDefaultWall
     }
 
     revalidatePath("/dashboard");
+    return { success: true };
+  } catch {
+    return { success: false, error: "We couldn't reach your account. Check your connection and try again." };
+  }
+}
+
+export async function renameWallet(input: RenameWalletInput): Promise<RenameWalletResult> {
+  const parsed = renameWalletInputSchema.safeParse(input);
+  if (!parsed.success) return { success: false, error: parsed.error.issues[0]?.message ?? "Check the wallet name." };
+
+  try {
+    const supabase = await createClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user || !isAllowedEmail(user.email)) {
+      return { success: false, error: "Your session has expired. Please sign in again." };
+    }
+
+    const { error, count } = await supabase
+      .from("wallets").update({ name: parsed.data.name }, { count: "exact" }).eq("id", parsed.data.walletId).eq("user_id", user.id);
+    if (error || !count) {
+      if (error) logDbError("Wallet rename failed:", error);
+      return { success: false, error: "That wallet could not be found." };
+    }
+
+    revalidatePath("/dashboard");
+    revalidatePath("/wallets");
+    return { success: true, name: parsed.data.name };
+  } catch {
+    return { success: false, error: "We couldn't reach your account. Check your connection and try again." };
+  }
+}
+
+export async function deleteWallet(walletId: string): Promise<DeleteWalletResult> {
+  if (!uuidSchema.safeParse(walletId).success) return { success: false, error: "That wallet could not be found." };
+
+  try {
+    const supabase = await createClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user || !isAllowedEmail(user.email)) {
+      return { success: false, error: "Your session has expired. Please sign in again." };
+    }
+
+    const { data: allWallets, error: listError } = await supabase
+      .from("wallets").select("id,is_default").eq("user_id", user.id).order("created_at", { ascending: true });
+    if (listError) {
+      logDbError("Wallet list failed:", listError);
+      return { success: false, error: "We couldn't delete this wallet. Please try again." };
+    }
+
+    const target = allWallets?.find((wallet) => wallet.id === walletId);
+    if (!target) return { success: false, error: "That wallet could not be found." };
+    if (allWallets.length === 1) {
+      return { success: false, error: "You need at least one wallet. Create another before deleting this one." };
+    }
+
+    // Deleting the default wallet needs a new one promoted first, since the
+    // app assumes a default always exists once any wallet does.
+    if (target.is_default) {
+      const nextDefault = allWallets.find((wallet) => wallet.id !== walletId);
+      if (nextDefault) {
+        const { error: promoteError } = await supabase.from("wallets").update({ is_default: true }).eq("id", nextDefault.id).eq("user_id", user.id);
+        if (promoteError) {
+          logDbError("Promoting fallback default wallet failed:", promoteError);
+          return { success: false, error: "We couldn't delete this wallet. Please try again." };
+        }
+      }
+    }
+
+    // Cascades to delete every transaction recorded against this wallet
+    // (transactions.wallet_id is ON DELETE CASCADE) - the confirmation UI
+    // must make that permanence clear before calling this.
+    const { error: deleteError, count } = await supabase
+      .from("wallets").delete({ count: "exact" }).eq("id", walletId).eq("user_id", user.id);
+    if (deleteError || !count) {
+      if (deleteError) logDbError("Wallet delete failed:", deleteError);
+      return { success: false, error: "We couldn't delete this wallet. Please try again." };
+    }
+
+    revalidatePath("/dashboard");
+    revalidatePath("/wallets");
     return { success: true };
   } catch {
     return { success: false, error: "We couldn't reach your account. Check your connection and try again." };
