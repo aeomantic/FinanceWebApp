@@ -69,8 +69,23 @@ create index transactions_destination_wallet_id_idx on transactions (destination
 -- referenced wallet(s) and category belong to the same user. Without this,
 -- a request that passes user_id = auth.uid() could still point wallet_id
 -- at someone else's wallet and mutate its balance through the trigger below.
-drop policy "transactions_insert_own" on transactions;
-drop policy "transactions_update_own" on transactions;
+--
+-- Dropped by looking up whatever the live policy names actually are, rather
+-- than the names from the original migration file: this project's schema
+-- has repeatedly turned out to differ from what was committed (see the
+-- Phase 0 note in CLAUDE.md), so INSERT/UPDATE policies on this table may
+-- not be named transactions_insert_own / transactions_update_own here.
+do $$
+declare
+  pol record;
+begin
+  for pol in
+    select policyname from pg_policies
+    where schemaname = 'public' and tablename = 'transactions' and cmd in ('INSERT', 'UPDATE')
+  loop
+    execute format('drop policy %I on transactions', pol.policyname);
+  end loop;
+end $$;
 
 create policy "transactions_insert_own" on transactions
   for insert with check (
