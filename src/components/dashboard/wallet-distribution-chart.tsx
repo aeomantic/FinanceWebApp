@@ -42,7 +42,7 @@ export function WalletDistributionChart({ wallets, currency, otherCurrencyCount 
       ) : (
         <>
           <div className={styles.donutChartArea}>
-            <ResponsiveContainer width="100%" height={220}>
+            <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie data={data} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={64} outerRadius={92} paddingAngle={data.length > 1 ? 3 : 0} stroke="none">
                   {data.map((entry, index) => <Cell key={entry.name} fill={SLICE_COLORS[index % SLICE_COLORS.length]} />)}

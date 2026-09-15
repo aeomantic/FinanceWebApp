@@ -8,6 +8,7 @@ import { BalanceCard, type BalanceAction } from "./balance-card";
 import { TransactionList } from "./transaction-list";
 import { SpendChart } from "./spend-chart";
 import { WalletList } from "./wallet-list";
+import { MobileNav } from "./mobile-nav";
 import { BrandMark, Icon } from "@/components/ui/icon";
 import { Modal } from "@/components/ui/modal";
 import { CategoryIcon } from "@/components/ui/category-icon";
@@ -126,7 +127,7 @@ export function DashboardShell({ data, demo = false }: DashboardShellProps) {
         </main>
       </div>
 
-      <nav className="mobile-nav" aria-label="Mobile navigation"><a href="#transactions" aria-label="Transactions"><Icon name="transfer" /></a><a href="#overview" className="mobile-home" aria-label="Overview"><Icon name="home" /></a><Link href={demo ? "/preview" : "/wallets"} aria-label="Wallets"><Icon name="wallet" /></Link></nav>
+      <MobileNav demo={demo} />
 
       {panel && wallet && <Modal title={panel === "notifications" ? "You’re all caught up" : panel === "help" ? "A little help with Folio" : panel === "transfer" ? "Transfer between wallets" : panel === "expense" ? "Record an expense" : "Record income"} onClose={() => setPanel(null)}>
         {panel === "expense" || panel === "income" || panel === "transfer" ? (

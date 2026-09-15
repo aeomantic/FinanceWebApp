@@ -1,11 +1,13 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { SignOutButton } from "@/components/auth/sign-out-button";
 import { BrandMark, Icon } from "@/components/ui/icon";
-import { WalletList } from "./wallet-list";
+import { MobileNav } from "./mobile-nav";
 import { WalletCardMenu } from "./wallet-card-menu";
+import { AddWalletDialog } from "./add-wallet-dialog";
 import { WalletDistributionChart } from "./wallet-distribution-chart";
 import { formatMoney, maskMoney } from "@/lib/dashboard/summary";
 import { DEMO_WALLETS } from "@/lib/dashboard/demo";
@@ -23,7 +25,7 @@ interface WalletsViewProps {
 
 export function WalletsView({ wallets: initialWallets, name: fullName, error, demo = false }: WalletsViewProps) {
   const router = useRouter();
-  const wallets = demo ? DEMO_WALLETS : initialWallets;
+  const [wallets, setWallets] = useState(demo ? DEMO_WALLETS : initialWallets);
   const name = fullName.split(" ")[0] || "there";
   const { hiddenIds, toggle } = useHiddenWallets();
   const currencyCounts = new Map<string, number>();
@@ -33,6 +35,10 @@ export function WalletsView({ wallets: initialWallets, name: fullName, error, de
     ?? "SGD";
   const primaryWallets = wallets.filter((wallet) => wallet.currency === primaryCurrency);
   const otherCurrencyCount = wallets.length - primaryWallets.length;
+
+  function handleChanged() {
+    router.refresh();
+  }
 
   return (
     <div className="app-frame">
@@ -70,22 +76,17 @@ export function WalletsView({ wallets: initialWallets, name: fullName, error, de
           {error && <div className="dashboard-alert" role="alert">{error}<button onClick={() => router.refresh()}>Try again</button></div>}
 
           <div className="dashboard-grid">
-            <div style={{ gridColumn: "span 5" }}>
+            <div className="wallets-donut-area">
               <WalletDistributionChart wallets={primaryWallets} currency={primaryCurrency} otherCurrencyCount={otherCurrencyCount} />
             </div>
-            <div style={{ gridColumn: "span 7" }}>
-              <WalletGrid wallets={wallets} demo={demo} hiddenIds={hiddenIds} onToggleHideBalance={toggle} onChanged={() => router.refresh()} />
-            </div>
-            <div style={{ gridColumn: "1 / -1" }}>
-              <WalletList
+            <div className="wallets-grid-area">
+              <WalletGrid
                 wallets={wallets}
-                selectedWalletId={null}
-                onSelect={() => {}}
-                onCreated={() => router.refresh()}
-                onChanged={() => router.refresh()}
-                hiddenWalletIds={hiddenIds}
-                onToggleHideBalance={toggle}
                 demo={demo}
+                hiddenIds={hiddenIds}
+                onToggleHideBalance={toggle}
+                onChanged={handleChanged}
+                onCreated={(wallet) => { setWallets((previous) => [...previous, wallet]); router.refresh(); }}
               />
             </div>
           </div>
@@ -94,21 +95,18 @@ export function WalletsView({ wallets: initialWallets, name: fullName, error, de
         </main>
       </div>
 
-      <nav className="mobile-nav" aria-label="Mobile navigation">
-        <Link href={demo ? "/preview" : "/dashboard"} aria-label="Transactions"><Icon name="transfer" /></Link>
-        <Link href={demo ? "/preview" : "/dashboard"} className="mobile-home" aria-label="Overview"><Icon name="home" /></Link>
-        <Link href={demo ? "/preview" : "/wallets"} aria-label="Wallets"><Icon name="wallet" /></Link>
-      </nav>
+      <MobileNav demo={demo} />
     </div>
   );
 }
 
-function WalletGrid({ wallets, demo, hiddenIds, onToggleHideBalance, onChanged }: {
+function WalletGrid({ wallets, demo, hiddenIds, onToggleHideBalance, onChanged, onCreated }: {
   wallets: Wallet[];
   demo: boolean;
   hiddenIds: Set<string>;
   onToggleHideBalance: (walletId: string) => void;
   onChanged: () => void;
+  onCreated: (wallet: Wallet) => void;
 }) {
   return (
     <section className={`surface-card ${styles.walletGridCard}`} aria-label="All wallets">
@@ -133,6 +131,15 @@ function WalletGrid({ wallets, demo, hiddenIds, onToggleHideBalance, onChanged }
             <p className={styles.walletGridCurrency}>{wallet.currency}{wallet.isDefault ? " · Default" : ""}</p>
           </li>
         ))}
+        <li>
+          <AddWalletDialog demo={demo} onCreated={onCreated}>
+            {(open) => (
+              <button type="button" className={styles.walletGridAdd} onClick={open} disabled={demo} aria-haspopup="dialog">
+                <span aria-hidden="true">+</span> Add wallet
+              </button>
+            )}
+          </AddWalletDialog>
+        </li>
       </ul>
     </section>
   );

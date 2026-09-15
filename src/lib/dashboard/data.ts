@@ -77,10 +77,27 @@ export async function getDashboardData(): Promise<DashboardData> {
   const base: DashboardData = { wallets: [], categories: [], transactions: [], today, periodStart, name, email: user.email ?? "", error: null };
 
   try {
-    const [walletsRes, categoriesRes] = await Promise.all([
+    // Wallets and categories are needed to interpret transaction rows
+    // (wallet names for transfer titles, category names/icons), but the
+    // transactions query itself doesn't depend on either resolving first -
+    // firing all three at once removes a full network round trip from the
+    // critical path instead of waiting for wallets+categories, then asking
+    // for the first page of transactions.
+    const firstTransactionsPage = supabase
+      .from("transactions")
+      .select("id,occurred_on,amount_minor,currency,type,note,wallet_id,destination_wallet_id,category:categories(name,icon)", { count: "exact" })
+      .eq("user_id", user.id)
+      .gte("occurred_on", periodStart)
+      .lte("occurred_on", today)
+      .order("occurred_on", { ascending: false })
+      .order("id", { ascending: false })
+      .range(0, PAGE_SIZE - 1);
+
+    const [walletsRes, categoriesRes, firstPageRes] = await Promise.all([
       supabase.from("wallets").select("id,name,currency,balance_minor,color,is_default").eq("user_id", user.id)
         .order("is_default", { ascending: false }).order("created_at", { ascending: true }),
       supabase.from("categories").select("id,name,type,icon,color").eq("user_id", user.id).eq("is_archived", false).order("created_at", { ascending: true }),
+      firstTransactionsPage,
     ]);
 
     if (walletsRes.error) return { ...base, error: "We couldn't load your wallets. Please try refreshing the page." };
@@ -110,7 +127,8 @@ export async function getDashboardData(): Promise<DashboardData> {
     const transactions: Transaction[] = [];
 
     for (let offset = 0; offset < MAX_TRANSACTIONS;) {
-      const { data, error, count } = await supabase
+      // The first page was already fetched concurrently with wallets/categories above.
+      const { data, error, count } = offset === 0 ? firstPageRes : await supabase
         .from("transactions")
         .select("id,occurred_on,amount_minor,currency,type,note,wallet_id,destination_wallet_id,category:categories(name,icon)", { count: "exact" })
         .eq("user_id", user.id)

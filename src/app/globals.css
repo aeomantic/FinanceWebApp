@@ -96,6 +96,8 @@ button, a, input, select { outline-offset: 4px; }
 .chart-area > section { height: 100%; min-height: 379px; }
 .transactions-area { grid-column: span 7; min-width: 0; position: relative; scroll-margin-top: 22px; }
 .wallets-area { grid-column: span 5; min-width: 0; display: flex; flex-direction: column; gap: 21px; scroll-margin-top: 22px; }
+.wallets-donut-area { grid-column: span 5; min-width: 0; }
+.wallets-grid-area { grid-column: span 7; min-width: 0; }
 .balance-card { padding: 24px 27px 23px; background: #fef38b; border-radius: 28px; position: relative; overflow: hidden; isolation: isolate; min-height: 280px; }
 .balance-topline { display: flex; align-items: center; justify-content: space-between; color: #525238; }
 .balance-topline .eyebrow { font-size: 9px; letter-spacing: 1.25px; }
@@ -205,7 +207,7 @@ button, a, input, select { outline-offset: 4px; }
   .topbar-divider { margin: 0 2px; }
   .user-subtitle { display: none; }
   .dashboard-grid { gap: 20px; }
-  .balance-area, .chart-area, .transactions-area, .wallets-area { grid-column: span 6; }
+  .balance-area, .chart-area, .transactions-area, .wallets-area, .wallets-donut-area, .wallets-grid-area { grid-column: span 6; }
   .cashflow-summary { padding: 14px 12px; gap: 9px; }
   .cashflow-summary > div { gap: 7px; }
   .cashflow-summary > div + div { padding-left: 12px; }
@@ -248,7 +250,7 @@ button, a, input, select { outline-offset: 4px; }
   .status-dot { margin-top: 5px; }
   .demo-banner a { font-size: 9px; gap: 4px; }
   .dashboard-grid { display: flex; flex-direction: column; gap: 22px; }
-  .balance-area, .chart-area, .transactions-area, .wallets-area { width: 100%; }
+  .balance-area, .chart-area, .transactions-area, .wallets-area, .wallets-donut-area, .wallets-grid-area { width: 100%; }
   .balance-area { order: 0; }
   .transactions-area { order: 1; }
   .wallets-area { order: 2; }
@@ -273,7 +275,9 @@ button, a, input, select { outline-offset: 4px; }
   .dashboard-footer > span:nth-child(2) { order: 3; width: 100%; }
   .mobile-nav { position: fixed; display: flex; align-items: center; justify-content: center; gap: 22px; width: 194px; height: 60px; bottom: max(16px, env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); background: #ffffffdc; border: 1px solid white; border-radius: 40px; box-shadow: 0 8px 30px #23432a1a; backdrop-filter: blur(16px); z-index: 20; }
   .mobile-nav a { display: flex; align-items: center; justify-content: center; width: 38px; height: 38px; color: #71796b; border-radius: 50%; }
-  .mobile-nav .mobile-home { background: #141414; color: white; width: 44px; height: 44px; }
+  .mobile-nav .mobile-home { background: #141414; color: white; width: 44px; height: 44px; transition: color .15s; }
+  .mobile-nav .mobile-home.mobile-home-active { color: #fef38b; }
+  .mobile-nav a.mobile-wallets-active { background: #fef38b; color: #141414; }
   .app-modal { padding: 23px; }
   .modal-heading h2 { font-size: 20px; }
 }
