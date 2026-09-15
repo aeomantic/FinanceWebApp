@@ -12,6 +12,7 @@ import { MobileNav } from "./mobile-nav";
 import { BrandMark, Icon } from "@/components/ui/icon";
 import { Modal } from "@/components/ui/modal";
 import { CategoryIcon } from "@/components/ui/category-icon";
+import { IconPicker } from "@/components/ui/icon-picker";
 import { Select } from "@/components/ui/select";
 import { Wallet as WalletIcon } from "lucide-react";
 import { createCategory, recordTransaction } from "@/app/dashboard/actions";
@@ -62,7 +63,7 @@ export function DashboardShell({ data, demo = false }: DashboardShellProps) {
         <Link href={demo ? "/preview" : "/dashboard"} className="rail-brand" aria-label="Folio home"><BrandMark /></Link>
         <nav className="rail-nav">
           <a href="#overview" className="rail-link active" aria-label="Overview" title="Overview"><Icon name="home" /></a>
-          <a href="#transactions" className="rail-link" aria-label="Transactions" title="Transactions"><Icon name="transfer" /></a>
+          <Link href={demo ? "/preview" : "/transactions"} className="rail-link" aria-label="Transactions" title="Transactions"><Icon name="transfer" /></Link>
           <a href="#activity" className="rail-link" aria-label="Activity" title="Activity"><Icon name="activity" /></a>
           <Link href={demo ? "/preview" : "/wallets"} className="rail-link" aria-label="Wallets" title="Wallets"><Icon name="wallet" /></Link>
         </nav>
@@ -73,7 +74,7 @@ export function DashboardShell({ data, demo = false }: DashboardShellProps) {
       <div className="app-content">
         <header className="topbar">
           <Link href={demo ? "/preview" : "/dashboard"} className="wordmark">folio<span>.</span></Link>
-          <nav className="top-nav" aria-label="Dashboard sections"><a href="#overview" className="selected">Overview</a><a href="#transactions">Transactions</a><Link href={demo ? "/preview" : "/wallets"}>Wallets</Link></nav>
+          <nav className="top-nav" aria-label="Dashboard sections"><a href="#overview" className="selected">Overview</a><Link href={demo ? "/preview" : "/transactions"}>Transactions</Link><Link href={demo ? "/preview" : "/wallets"}>Wallets</Link></nav>
           <div className="topbar-actions">
             <button className="icon-button" aria-label="Search transactions" onClick={() => { document.getElementById("transactions")?.scrollIntoView(); searchInput.current?.focus(); }}><Icon name="search" /></button>
             <button className="icon-button" aria-label="Notifications" onClick={() => setPanel("notifications")}><Icon name="bell" /></button>
@@ -247,6 +248,7 @@ function TransactionForm({ action, wallet, wallets, categories, today, demo, onC
 
 function NewCategoryFields({ type, onCreated, onCancel }: { type: "expense" | "income"; onCreated: (category: Category) => void; onCancel: () => void }) {
   const [name, setName] = useState("");
+  const [icon, setIcon] = useState(type === "income" ? "briefcase" : "tag");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
 
@@ -257,7 +259,7 @@ function NewCategoryFields({ type, onCreated, onCancel }: { type: "expense" | "i
     if (pending || !name.trim()) return;
     setPending(true);
     setError("");
-    const result = await createCategory({ name, type });
+    const result = await createCategory({ name, type, icon });
     setPending(false);
     if (!result.success) { setError(result.error); return; }
     onCreated(result.category);
@@ -269,6 +271,8 @@ function NewCategoryFields({ type, onCreated, onCancel }: { type: "expense" | "i
         New {type} category
         <input value={name} onChange={(event) => setName(event.target.value)} maxLength={60} placeholder="e.g. Dining Out" disabled={pending} style={{ width: "100%", background: "#fff", border: "1px solid #e6e9e3", borderRadius: 12, padding: 12, fontSize: 13 }} />
       </label>
+      <p style={{ margin: 0, fontSize: 12, fontWeight: 500 }}>Icon</p>
+      <IconPicker value={icon} onChange={setIcon} aria-label="Choose a category icon" />
       {error && <p className="form-error" role="alert">{error}</p>}
       <div style={{ display: "flex", gap: 8 }}>
         <button type="button" onClick={onCancel} disabled={pending} style={{ flex: 1, padding: "10px 12px", borderRadius: 10, border: "1px solid #e6e9e3", background: "#fff", fontSize: 12 }}>Cancel</button>

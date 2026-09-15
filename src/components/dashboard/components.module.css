@@ -141,3 +141,30 @@
   .walletGridItem { padding: 18px; min-height: 64px; }
   .walletGridAdd { min-height: 64px; }
 }
+
+.summaryPills { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 16px; }
+.summaryPill { display: flex; flex-direction: column; gap: 4px; padding: 14px 18px; border-radius: 18px; background: #fff; border: 1px solid rgba(0, 0, 0, .04); box-shadow: var(--shadow-card); min-width: 160px; }
+.summaryPillLabel { color: #8a8e88; font-size: 10px; font-weight: 600; letter-spacing: .6px; text-transform: uppercase; }
+.summaryPillValue { font-size: 20px; font-weight: 560; letter-spacing: -.5px; font-variant-numeric: tabular-nums; color: var(--color-ink, #141414); }
+.summaryPillValue.positive { color: var(--color-positive, #16a34a); }
+
+.segmented { display: inline-flex; gap: 4px; padding: 4px; border-radius: 12px; background: #f1f3ee; width: fit-content; }
+.segmentedOption { padding: 7px 14px; border: 0; border-radius: 9px; background: none; color: #71717a; font-size: 11px; font-weight: 500; cursor: pointer; white-space: nowrap; }
+.segmentedOptionActive { background: #fff; color: var(--color-ink, #141414); box-shadow: 0 1px 6px rgba(0, 0, 0, .08); }
+
+.categoryBreakdown { display: flex; flex-direction: column; gap: 16px; margin-top: 18px; }
+.categoryRow { display: flex; align-items: center; gap: 12px; }
+.categoryRowInfo { flex: 1; min-width: 0; }
+.categoryRowTop { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; font-size: 12px; }
+.categoryRowName { overflow: hidden; color: var(--color-ink, #141414); font-weight: 500; text-overflow: ellipsis; white-space: nowrap; }
+.categoryRowAmount { flex-shrink: 0; color: #8a8e88; font-size: 11px; font-variant-numeric: tabular-nums; }
+.categoryRowMeter { height: 6px; margin-top: 7px; border-radius: 4px; background: #eef1ec; overflow: hidden; }
+.categoryRowMeterFill { height: 100%; border-radius: 4px; background: #fef38b; }
+.categoryRowPercent { flex-shrink: 0; margin-left: 8px; color: #8a8e88; font-size: 10px; }
+
+.filterToolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin: 18px 0; }
+.filterToolbar .transactionSearch { flex: 1; min-width: 180px; margin-top: 0; }
+.walletFilter { min-width: 160px; }
+
+.ledgerRowEnd { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; }
+.walletBadge { padding: 3px 9px; border-radius: 20px; background: #f1f3ee; color: #71717a; font-size: 9px; font-weight: 500; white-space: nowrap; }

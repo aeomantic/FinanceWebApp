@@ -47,7 +47,7 @@ export function WalletsView({ wallets: initialWallets, name: fullName, error, de
         <Link href={demo ? "/preview" : "/dashboard"} className="rail-brand" aria-label="Folio home"><BrandMark /></Link>
         <nav className="rail-nav">
           <Link href={demo ? "/preview" : "/dashboard"} className="rail-link" aria-label="Overview" title="Overview"><Icon name="home" /></Link>
-          <Link href={demo ? "/preview" : "/dashboard"} className="rail-link" aria-label="Transactions" title="Transactions"><Icon name="transfer" /></Link>
+          <Link href={demo ? "/preview" : "/transactions"} className="rail-link" aria-label="Transactions" title="Transactions"><Icon name="transfer" /></Link>
           <Link href={demo ? "/preview" : "/dashboard"} className="rail-link" aria-label="Activity" title="Activity"><Icon name="activity" /></Link>
           <Link href={demo ? "/preview" : "/wallets"} className="rail-link active" aria-label="Wallets" title="Wallets"><Icon name="wallet" /></Link>
         </nav>
@@ -59,7 +59,7 @@ export function WalletsView({ wallets: initialWallets, name: fullName, error, de
           <Link href={demo ? "/preview" : "/dashboard"} className="wordmark">folio<span>.</span></Link>
           <nav className="top-nav" aria-label="Dashboard sections">
             <Link href={demo ? "/preview" : "/dashboard"}>Overview</Link>
-            <Link href={demo ? "/preview" : "/dashboard"}>Transactions</Link>
+            <Link href={demo ? "/preview" : "/transactions"}>Transactions</Link>
             <Link href={demo ? "/preview" : "/wallets"} className="selected">Wallets</Link>
           </nav>
           <div className="topbar-actions">

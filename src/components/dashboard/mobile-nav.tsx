@@ -7,16 +7,22 @@ import { Icon } from "@/components/ui/icon";
 export function MobileNav({ demo = false }: { demo?: boolean }) {
   const pathname = usePathname();
   const isWallets = pathname === "/wallets";
-  const isHome = !isWallets;
+  const isTransactions = pathname === "/transactions";
+  const isHome = !isWallets && !isTransactions;
   const homeHref = demo ? "/preview" : "/dashboard";
   const walletsHref = demo ? "/preview" : "/wallets";
-  // Same-page anchor when already on the dashboard; navigate there and
-  // scroll once loaded when coming from anywhere else.
-  const transactionsHref = isWallets ? `${homeHref}#transactions` : "#transactions";
+  const transactionsHref = demo ? "/preview" : "/transactions";
 
   return (
     <nav className="mobile-nav" aria-label="Mobile navigation">
-      <Link href={transactionsHref} aria-label="Transactions"><Icon name="transfer" /></Link>
+      <Link
+        href={transactionsHref}
+        className={isTransactions ? "mobile-nav-pill-active" : ""}
+        aria-label="Transactions"
+        aria-current={isTransactions ? "page" : undefined}
+      >
+        <Icon name="transfer" />
+      </Link>
       <Link
         href={homeHref}
         className={`mobile-home ${isHome ? "mobile-home-active" : ""}`}
@@ -27,7 +33,7 @@ export function MobileNav({ demo = false }: { demo?: boolean }) {
       </Link>
       <Link
         href={walletsHref}
-        className={isWallets ? "mobile-wallets-active" : ""}
+        className={isWallets ? "mobile-nav-pill-active" : ""}
         aria-label="Wallets"
         aria-current={isWallets ? "page" : undefined}
       >

@@ -98,6 +98,8 @@ button, a, input, select { outline-offset: 4px; }
 .wallets-area { grid-column: span 5; min-width: 0; display: flex; flex-direction: column; gap: 21px; scroll-margin-top: 22px; }
 .wallets-donut-area { grid-column: span 5; min-width: 0; }
 .wallets-grid-area { grid-column: span 7; min-width: 0; }
+.transactions-analytics-area { grid-column: span 5; min-width: 0; display: flex; flex-direction: column; gap: 21px; }
+.transactions-ledger-area { grid-column: span 7; min-width: 0; }
 .balance-card { padding: 24px 27px 23px; background: #fef38b; border-radius: 28px; position: relative; overflow: hidden; isolation: isolate; min-height: 280px; }
 .balance-topline { display: flex; align-items: center; justify-content: space-between; color: #525238; }
 .balance-topline .eyebrow { font-size: 9px; letter-spacing: 1.25px; }
@@ -182,6 +184,14 @@ button, a, input, select { outline-offset: 4px; }
 .form-information { color: #647443; background: #f4f5db; border-radius: 12px; font-size: 12px; padding: 12px; line-height: 1.7; }
 .form-information a { text-decoration: underline; }
 .form-error { color: #b33b31; padding-top: 12px; font-size: 12px; }
+
+.icon-picker { display: flex; flex-direction: column; gap: 12px; max-height: 260px; overflow-y: auto; margin: 4px 0 2px; padding: 2px; }
+.icon-picker-group { display: flex; flex-direction: column; gap: 8px; }
+.icon-picker-label { margin: 0; color: #9aa39a; font-size: 9px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; }
+.icon-picker-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; }
+.icon-picker-button { display: flex; align-items: center; justify-content: center; aspect-ratio: 1; border: 1px solid #e6e9e3; border-radius: 12px; background: #f7f9f6; color: #71717a; transition: background .15s, border-color .15s, color .15s; }
+.icon-picker-button:hover { border-color: #cdd4c8; }
+.icon-picker-button.icon-picker-button-active { background: #fef38b; border-color: #fef38b; color: #141414; }
 .dashboard-loading { margin: 70px auto; max-width: 1050px; padding: 24px; width: 100%; }
 .loading-logo { font-size: 40px; letter-spacing: -2px; font-weight: 600; }
 .loading-logo span { color: #829b56; }
@@ -207,7 +217,7 @@ button, a, input, select { outline-offset: 4px; }
   .topbar-divider { margin: 0 2px; }
   .user-subtitle { display: none; }
   .dashboard-grid { gap: 20px; }
-  .balance-area, .chart-area, .transactions-area, .wallets-area, .wallets-donut-area, .wallets-grid-area { grid-column: span 6; }
+  .balance-area, .chart-area, .transactions-area, .wallets-area, .wallets-donut-area, .wallets-grid-area, .transactions-analytics-area, .transactions-ledger-area { grid-column: span 6; }
   .cashflow-summary { padding: 14px 12px; gap: 9px; }
   .cashflow-summary > div { gap: 7px; }
   .cashflow-summary > div + div { padding-left: 12px; }
@@ -250,7 +260,7 @@ button, a, input, select { outline-offset: 4px; }
   .status-dot { margin-top: 5px; }
   .demo-banner a { font-size: 9px; gap: 4px; }
   .dashboard-grid { display: flex; flex-direction: column; gap: 22px; }
-  .balance-area, .chart-area, .transactions-area, .wallets-area, .wallets-donut-area, .wallets-grid-area { width: 100%; }
+  .balance-area, .chart-area, .transactions-area, .wallets-area, .wallets-donut-area, .wallets-grid-area, .transactions-analytics-area, .transactions-ledger-area { width: 100%; }
   .balance-area { order: 0; }
   .transactions-area { order: 1; }
   .wallets-area { order: 2; }
@@ -277,7 +287,7 @@ button, a, input, select { outline-offset: 4px; }
   .mobile-nav a { display: flex; align-items: center; justify-content: center; width: 38px; height: 38px; color: #71796b; border-radius: 50%; }
   .mobile-nav .mobile-home { background: #141414; color: white; width: 44px; height: 44px; transition: color .15s; }
   .mobile-nav .mobile-home.mobile-home-active { color: #fef38b; }
-  .mobile-nav a.mobile-wallets-active { background: #fef38b; color: #141414; }
+  .mobile-nav a.mobile-nav-pill-active { background: #fef38b; color: #141414; }
   .app-modal { padding: 23px; }
   .modal-heading h2 { font-size: 20px; }
 }

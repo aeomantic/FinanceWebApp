@@ -23,7 +23,7 @@ export interface TransactionListProps {
   onQueryChange?: (query: string) => void;
 }
 
-function dateHeading(date: string, today: string): string {
+export function dateHeading(date: string, today: string): string {
   if (date === today) return "Today";
   const yesterday = new Date(`${today}T12:00:00.000Z`);
   yesterday.setUTCDate(yesterday.getUTCDate() - 1);
@@ -36,7 +36,7 @@ function dateHeading(date: string, today: string): string {
   }).format(new Date(`${date}T12:00:00.000Z`));
 }
 
-function MerchantAvatar({ type, categoryIcon }: Pick<DashboardTransaction, "type" | "categoryIcon">) {
+export function MerchantAvatar({ type, categoryIcon }: Pick<DashboardTransaction, "type" | "categoryIcon">) {
   if (type === "transfer") {
     return <span className={`${styles.avatar} ${styles.avatarLavender}`} aria-hidden="true"><ArrowLeftRight size={17} strokeWidth={1.8} /></span>;
   }
