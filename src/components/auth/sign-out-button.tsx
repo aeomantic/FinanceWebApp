@@ -30,7 +30,7 @@ export function SignOutButton({ className }: { className?: string }) {
 
   return (
     <div>
-      <button onClick={handleClick} disabled={loading} className={className ?? "rounded-full border border-black/10 px-4 py-2 text-xs font-medium text-[#71717a] transition hover:bg-white disabled:opacity-50"}>
+      <button onClick={handleClick} disabled={loading} className={className ?? "rounded-full border border-black/10 px-4 py-2 text-xs font-medium text-[#71717a] transition hover:bg-white dark:border-white/15 dark:text-zinc-300 dark:hover:bg-white/5 disabled:opacity-50"}>
         {loading ? "Signing out..." : "Sign out"}
       </button>
       {error && <p role="alert" className="mt-2 text-xs text-red-600">{error}</p>}

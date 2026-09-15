@@ -26,6 +26,10 @@ function logDbError(context: string, error: PostgrestError) {
   console.error(context, { code: error.code, message: error.message, details: error.details, hint: error.hint });
 }
 
+function refreshDashboardPages() {
+  for (const path of ["/dashboard", "/settings", "/transactions", "/wallets", "/commitments"]) revalidatePath(path);
+}
+
 /** Record ledger activity. This action never sends money or performs a bank transfer. */
 export async function recordTransaction(input: RecordTransactionInput): Promise<RecordTransactionResult> {
   const parsed = transactionInputSchema.safeParse(input);
@@ -72,7 +76,7 @@ export async function recordTransaction(input: RecordTransactionInput): Promise<
     return { success: false, error: "We couldn't reach your account. Check your connection and try again." };
   }
 
-  revalidatePath("/dashboard");
+  refreshDashboardPages();
   return { success: true };
 }
 
@@ -108,7 +112,7 @@ export async function createWallet(input: CreateWalletInput): Promise<CreateWall
       return { success: false, error: "We couldn't create this wallet. Please try again." };
     }
 
-    revalidatePath("/dashboard");
+    refreshDashboardPages();
     return { success: true, wallet: { id: data.id, name: data.name, currency: data.currency, balanceMinor: data.balance_minor, color: data.color, isDefault: data.is_default } };
   } catch {
     return { success: false, error: "We couldn't reach your account. Check your connection and try again." };
@@ -125,23 +129,13 @@ export async function setDefaultWallet(walletId: string): Promise<SetDefaultWall
       return { success: false, error: "Your session has expired. Please sign in again." };
     }
 
-    // The partial unique index on wallets only allows one is_default = true
-    // row per user, so the old default must be cleared before the new one
-    // is set - clearing first never violates it, since zero defaults is fine.
-    const { error: clearError } = await supabase.from("wallets").update({ is_default: false }).eq("user_id", user.id);
-    if (clearError) {
-      logDbError("Clearing default wallet failed:", clearError);
-      return { success: false, error: "We couldn't update your default wallet. Please try again." };
+    const { error } = await supabase.rpc("set_default_wallet", { p_wallet_id: walletId });
+    if (error) {
+      logDbError("Setting default wallet failed:", error);
+      return { success: false, error: error.code === "P0002" ? "That wallet could not be found." : "We couldn't update your default wallet. Please try again." };
     }
 
-    const { error: setError, count } = await supabase
-      .from("wallets").update({ is_default: true }, { count: "exact" }).eq("id", walletId).eq("user_id", user.id);
-    if (setError || !count) {
-      if (setError) logDbError("Setting default wallet failed:", setError);
-      return { success: false, error: "That wallet could not be found." };
-    }
-
-    revalidatePath("/dashboard");
+    refreshDashboardPages();
     return { success: true };
   } catch {
     return { success: false, error: "We couldn't reach your account. Check your connection and try again." };
@@ -166,8 +160,7 @@ export async function renameWallet(input: RenameWalletInput): Promise<RenameWall
       return { success: false, error: "That wallet could not be found." };
     }
 
-    revalidatePath("/dashboard");
-    revalidatePath("/wallets");
+    refreshDashboardPages();
     return { success: true, name: parsed.data.name };
   } catch {
     return { success: false, error: "We couldn't reach your account. Check your connection and try again." };
@@ -184,44 +177,16 @@ export async function deleteWallet(walletId: string): Promise<DeleteWalletResult
       return { success: false, error: "Your session has expired. Please sign in again." };
     }
 
-    const { data: allWallets, error: listError } = await supabase
-      .from("wallets").select("id,is_default").eq("user_id", user.id).order("created_at", { ascending: true });
-    if (listError) {
-      logDbError("Wallet list failed:", listError);
-      return { success: false, error: "We couldn't delete this wallet. Please try again." };
+    const { error } = await supabase.rpc("delete_managed_wallet", { p_wallet_id: walletId });
+    if (error) {
+      logDbError("Wallet delete failed:", error);
+      return { success: false, error: error.code === "23514"
+        ? "You need at least one wallet. Create another before deleting this one."
+        : error.code === "P0002" ? "That wallet could not be found."
+        : "We couldn't delete this wallet. Check whether a recurring payment still uses it." };
     }
 
-    const target = allWallets?.find((wallet) => wallet.id === walletId);
-    if (!target) return { success: false, error: "That wallet could not be found." };
-    if (allWallets.length === 1) {
-      return { success: false, error: "You need at least one wallet. Create another before deleting this one." };
-    }
-
-    // Deleting the default wallet needs a new one promoted first, since the
-    // app assumes a default always exists once any wallet does.
-    if (target.is_default) {
-      const nextDefault = allWallets.find((wallet) => wallet.id !== walletId);
-      if (nextDefault) {
-        const { error: promoteError } = await supabase.from("wallets").update({ is_default: true }).eq("id", nextDefault.id).eq("user_id", user.id);
-        if (promoteError) {
-          logDbError("Promoting fallback default wallet failed:", promoteError);
-          return { success: false, error: "We couldn't delete this wallet. Please try again." };
-        }
-      }
-    }
-
-    // Cascades to delete every transaction recorded against this wallet
-    // (transactions.wallet_id is ON DELETE CASCADE) - the confirmation UI
-    // must make that permanence clear before calling this.
-    const { error: deleteError, count } = await supabase
-      .from("wallets").delete({ count: "exact" }).eq("id", walletId).eq("user_id", user.id);
-    if (deleteError || !count) {
-      if (deleteError) logDbError("Wallet delete failed:", deleteError);
-      return { success: false, error: "We couldn't delete this wallet. Please try again." };
-    }
-
-    revalidatePath("/dashboard");
-    revalidatePath("/wallets");
+    refreshDashboardPages();
     return { success: true };
   } catch {
     return { success: false, error: "We couldn't reach your account. Check your connection and try again." };
@@ -251,7 +216,7 @@ export async function createCategory(input: CreateCategoryInput): Promise<Create
       return { success: false, error: "We couldn't create this category. Please try again." };
     }
 
-    revalidatePath("/dashboard");
+    refreshDashboardPages();
     return { success: true, category: { id: data.id, name: data.name, type: data.type, icon: data.icon, color: data.color } };
   } catch {
     return { success: false, error: "We couldn't reach your account. Check your connection and try again." };

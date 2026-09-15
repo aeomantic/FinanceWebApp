@@ -103,63 +103,63 @@ export function AuthForm({ mode = "login", initialError }: { mode?: AuthMode; in
     setLoading(false);
   }
 
-  const inputClass = "h-13 w-full rounded-2xl border border-black/10 bg-white px-4 text-sm text-[#141414] outline-none transition placeholder:text-[#a0a5a1] focus:border-[#5c7567] focus:ring-4 focus:ring-[#ebf5f0] aria-invalid:border-red-400 aria-invalid:focus:ring-red-50 disabled:opacity-60";
+  const inputClass = "h-13 w-full rounded-2xl border border-black/10 bg-white dark:border-zinc-700 dark:bg-[#232d26] px-4 text-sm text-[#141414] dark:text-zinc-100 outline-none transition placeholder:text-[#a0a5a1] focus:border-[#5c7567] focus:ring-4 focus:ring-[#ebf5f0] dark:focus:ring-[#324837] aria-invalid:border-red-400 aria-invalid:focus:ring-red-50 disabled:opacity-60";
 
   return (
     <div className="w-full max-w-[390px]">
       {mode !== "login" && (
-        <Link href="/login" className="mb-9 inline-flex items-center gap-2 text-xs font-medium text-[#71717a] hover:text-[#141414]">
+        <Link href="/login" className="mb-9 inline-flex items-center gap-2 text-xs font-medium text-[#71717a] dark:text-zinc-400 hover:text-[#141414] dark:text-zinc-100">
           <span aria-hidden="true">&#8592;</span> Back to sign in
         </Link>
       )}
 
-      <h1 className="text-[34px] leading-tight font-semibold tracking-[-1.5px] text-[#141414]">{content.title}</h1>
-      <p className="mt-3 mb-8 max-w-[340px] text-sm leading-6 text-[#71717a]">{content.description}</p>
+      <h1 className="text-[34px] leading-tight font-semibold tracking-[-1.5px] text-[#141414] dark:text-zinc-100">{content.title}</h1>
+      <p className="mt-3 mb-8 max-w-[340px] text-sm leading-6 text-[#71717a] dark:text-zinc-400">{content.description}</p>
 
       {success ? (
         <div className="space-y-6">
-          <div role="status" className="rounded-2xl border border-emerald-100 bg-[#edf8f0] p-5 text-sm leading-6 text-[#24623c]">
+          <div role="status" className="rounded-2xl border border-emerald-100 bg-[#edf8f0] p-5 text-sm leading-6 text-[#24623c] dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-200">
             <span className="mb-2 block text-lg" aria-hidden="true">&#10003;</span>
             {success}
           </div>
-          <Link href="/login" className="inline-flex h-13 w-full items-center justify-center rounded-full bg-[#141414] text-sm font-medium text-white hover:bg-[#303a34]">Back to sign in</Link>
+          <Link href="/login" className="inline-flex h-13 w-full items-center justify-center rounded-full bg-[#141414] dark:bg-[#fef38b] dark:text-[#141414] text-sm font-medium text-white hover:bg-[#303a34] dark:hover:bg-[#eade76]">Back to sign in</Link>
         </div>
       ) : (
         <form onSubmit={handleSubmit} noValidate className="space-y-5" aria-busy={loading}>
           <fieldset disabled={loading} className="min-w-0 space-y-5">
             {mode !== "reset" && (
               <div>
-                <label htmlFor="email" className="mb-2 block text-xs font-medium text-[#353b37]">Email address</label>
+                <label htmlFor="email" className="mb-2 block text-xs font-medium text-[#353b37] dark:text-zinc-200">Email address</label>
                 <input id="email" name="email" type="email" autoComplete="email" autoCapitalize="none" spellCheck={false} required maxLength={254} value={email} onChange={(event) => setEmail(event.target.value)} onBlur={() => validateField("email")} placeholder="you@example.com" aria-invalid={Boolean(fieldErrors.email)} aria-describedby={fieldErrors.email ? "email-error" : undefined} className={inputClass} />
-                {fieldErrors.email && <p id="email-error" className="mt-2 text-xs text-red-600">{fieldErrors.email}</p>}
+                {fieldErrors.email && <p id="email-error" className="mt-2 text-xs text-red-600 dark:text-red-300">{fieldErrors.email}</p>}
               </div>
             )}
 
             {mode !== "forgot" && (
               <div>
                 <div className="mb-2 flex items-center justify-between">
-                  <label htmlFor="password" className="text-xs font-medium text-[#353b37]">{mode === "reset" ? "New password" : "Password"}</label>
-                  {mode === "login" && <Link href="/forgot-password" className="text-xs text-[#71717a] underline-offset-4 hover:text-[#141414] hover:underline">Forgot password?</Link>}
+                  <label htmlFor="password" className="text-xs font-medium text-[#353b37] dark:text-zinc-200">{mode === "reset" ? "New password" : "Password"}</label>
+                  {mode === "login" && <Link href="/forgot-password" className="text-xs text-[#71717a] dark:text-zinc-400 underline-offset-4 hover:text-[#141414] dark:text-zinc-100 hover:underline">Forgot password?</Link>}
                 </div>
                 <div className="relative">
                   <input id="password" name="password" type={showPassword ? "text" : "password"} autoComplete={mode === "login" ? "current-password" : "new-password"} required minLength={8} maxLength={128} value={password} onChange={(event) => setPassword(event.target.value)} onBlur={() => validateField("password")} placeholder={mode === "login" ? "Enter your password" : "Create a strong password"} aria-invalid={Boolean(fieldErrors.password)} aria-describedby={[fieldErrors.password ? "password-error" : "", needsConfirmation ? "password-help" : ""].filter(Boolean).join(" ") || undefined} className={`${inputClass} pr-12`} />
-                  <button type="button" onClick={() => setShowPassword((value) => !value)} aria-label={showPassword ? "Hide password" : "Show password"} aria-pressed={showPassword} className="absolute top-0 right-1 flex h-13 w-11 items-center justify-center rounded-xl text-[#858b87] hover:text-[#141414]"><EyeIcon visible={showPassword} /></button>
+                  <button type="button" onClick={() => setShowPassword((value) => !value)} aria-label={showPassword ? "Hide password" : "Show password"} aria-pressed={showPassword} className="absolute top-0 right-1 flex h-13 w-11 items-center justify-center rounded-xl text-[#858b87] hover:text-[#141414] dark:text-zinc-100"><EyeIcon visible={showPassword} /></button>
                 </div>
-                {fieldErrors.password && <p id="password-error" className="mt-2 text-xs text-red-600">{fieldErrors.password}</p>}
+                {fieldErrors.password && <p id="password-error" className="mt-2 text-xs text-red-600 dark:text-red-300">{fieldErrors.password}</p>}
                 {needsConfirmation && <p id="password-help" className="mt-2 text-[11px] leading-5 text-[#858b87]">At least 8 characters, with uppercase, lowercase, a number, and a symbol.</p>}
               </div>
             )}
 
             {needsConfirmation && (
               <div>
-                <label htmlFor="confirm-password" className="mb-2 block text-xs font-medium text-[#353b37]">Confirm password</label>
+                <label htmlFor="confirm-password" className="mb-2 block text-xs font-medium text-[#353b37] dark:text-zinc-200">Confirm password</label>
                 <input id="confirm-password" name="confirmPassword" type={showPassword ? "text" : "password"} autoComplete="new-password" required minLength={8} maxLength={128} value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} placeholder="Enter your password again" aria-invalid={Boolean(fieldErrors.confirmPassword)} aria-describedby={fieldErrors.confirmPassword ? "confirm-password-error" : undefined} className={inputClass} />
-                {fieldErrors.confirmPassword && <p id="confirm-password-error" className="mt-2 text-xs text-red-600">{fieldErrors.confirmPassword}</p>}
+                {fieldErrors.confirmPassword && <p id="confirm-password-error" className="mt-2 text-xs text-red-600 dark:text-red-300">{fieldErrors.confirmPassword}</p>}
               </div>
             )}
 
-            {error && <p role="alert" className="rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-xs leading-5 text-red-700">{error}</p>}
-            <button type="submit" disabled={loading} className="flex h-13 w-full items-center justify-center gap-3 rounded-full bg-[#141414] px-6 text-sm font-medium text-white transition hover:bg-[#303a34] disabled:cursor-wait disabled:opacity-60">
+            {error && <p role="alert" className="rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-xs leading-5 text-red-700 dark:border-red-900 dark:bg-red-950/60 dark:text-red-200">{error}</p>}
+            <button type="submit" disabled={loading} className="flex h-13 w-full items-center justify-center gap-3 rounded-full bg-[#141414] dark:bg-[#fef38b] dark:text-[#141414] px-6 text-sm font-medium text-white transition hover:bg-[#303a34] dark:hover:bg-[#eade76] disabled:cursor-wait disabled:opacity-60">
               {loading && <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white motion-reduce:animate-none" aria-hidden="true" />}
               {loading ? content.loading : content.button}
               {!loading && <span aria-hidden="true">&#8599;</span>}

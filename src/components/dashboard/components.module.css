@@ -6,15 +6,16 @@
 .textButton:hover { color: var(--color-ink, #141414); }
 .textButton span { color: var(--color-ink, #141414); font-size: 16px; }
 .smallCount { color: var(--color-muted, #71717a); font-size: 11px; }
-.transactionSearch { display: flex; align-items: center; gap: 9px; margin-top: 21px; padding: 9px 12px; color: var(--color-muted, #71717a); border: 1px solid #ecefec; border-radius: 12px; background: #fafbf9; }
+.transactionSearch { display: flex; align-items: center; gap: 9px; margin-top: 21px; padding: 9px 12px; color: var(--color-muted, #71717a); border: 1px solid var(--border-subtle); border-radius: 12px; background: var(--surface-muted); }
 .transactionSearch input { width: 100%; min-width: 0; border: 0; outline: 0; color: var(--color-ink, #141414); background: transparent; font: inherit; font-size: 12px; }
 .transactionSearch:focus-within { outline: 2px solid #9cafa2; outline-offset: 2px; }
 .transactionGroups { margin-top: 23px; }
 .transactionGroup + .transactionGroup { margin-top: 14px; }
 .dateHeading { margin: 0 0 5px; color: #888d88; font-size: 11px; font-weight: 450; }
 .transactionRows { margin: 0; padding: 0; list-style: none; }
-.transactionRow { display: flex; align-items: center; gap: 12px; min-height: 64px; padding: 10px 0; }
-.transactionRow + .transactionRow { border-top: 1px solid #f1f3f0; }
+.transactionRow { display: flex; align-items: center; gap: 12px; min-height: 74px; padding: 14px 12px; border-radius: 16px; transition: background .15s; }
+.transactionRow:hover { background: var(--surface-muted); }
+.transactionRow + .transactionRow { border-top: 1px solid var(--border-subtle); }
 .avatar { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 40px; width: 40px; height: 40px; border-radius: 50%; font-size: 12px; font-weight: 600; letter-spacing: -.5px; }
 .avatarMint { color: #446857; background: linear-gradient(135deg, #e8f1db, #c7e5d9); }
 .avatarLavender { color: #706384; background: linear-gradient(135deg, #f1eaf5, #e1dcef); }
@@ -25,14 +26,14 @@
 .category { overflow: hidden; padding-left: 4px; text-overflow: ellipsis; white-space: nowrap; }
 .transactionAmount { color: var(--color-ink, #18181b); font-size: 13px; font-weight: 550; letter-spacing: -.25px; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .positive { color: var(--color-positive, #16a34a); }
-.transactionFooter { display: flex; align-items: center; gap: 6px; margin: 16px 0 0; padding-top: 17px; color: #8a8e88; border-top: 1px solid #f1f3f0; font-size: 10px; }
+.transactionFooter { display: flex; align-items: center; gap: 6px; margin: 16px 0 0; padding-top: 17px; color: #8a8e88; border-top: 1px solid var(--border-subtle); font-size: 10px; }
 .statusDot { width: 5px; height: 5px; border-radius: 50%; background: #90a58d; }
 .emptyState { display: flex; min-height: 245px; padding: 25px 10px; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
-.emptyIcon { display: grid; width: 42px; height: 42px; margin-bottom: 16px; place-items: center; border-radius: 50%; background: #edf3ed; font-size: 21px; }
+.emptyIcon { display: grid; width: 42px; height: 42px; margin-bottom: 16px; place-items: center; border-radius: 50%; background: var(--surface-hover); font-size: 21px; }
 .emptyState h3 { margin: 0 0 8px; color: var(--color-ink, #141414); font-size: 15px; font-weight: 550; }
 .emptyState p { max-width: 250px; margin: 0; color: var(--color-muted, #71717a); font-size: 12px; line-height: 1.6; }
 .rangeSelect { display: flex; position: relative; align-items: center; flex-shrink: 0; color: var(--color-muted, #71717a); }
-.rangeSelect select { width: 89px; padding: 8px 21px 8px 10px; appearance: none; border: 1px solid #eef0ec; border-radius: 20px; color: var(--color-muted, #71717a); background: white; font: inherit; font-size: 11px; cursor: pointer; }
+.rangeSelect select { width: 89px; padding: 8px 21px 8px 10px; appearance: none; border: 1px solid var(--border-subtle); border-radius: 20px; color: var(--color-muted, #71717a); background: var(--surface); font: inherit; font-size: 11px; cursor: pointer; }
 .rangeSelect svg { position: absolute; right: 10px; pointer-events: none; }
 .spendSummary { display: flex; align-items: baseline; gap: 10px; margin-top: 14px; }
 .totalSpend { color: var(--color-ink, #141414); font-size: clamp(24px, 2.5vw, 32px); font-weight: 530; letter-spacing: -1.1px; font-variant-numeric: tabular-nums; }
@@ -51,17 +52,17 @@
 .chartLegendDot { width: 5px; height: 5px; border-radius: 50%; background: #b5bba9; }
 .chartEmpty { min-height: 200px; }
 .currencySection { padding-bottom: 20px; }
-.currencyGlobe { display: grid; place-items: center; width: 34px; height: 34px; border: 1px solid #eef0eb; border-radius: 50%; color: #666e62; }
+.currencyGlobe { display: grid; place-items: center; width: 34px; height: 34px; border: 1px solid var(--border-subtle); border-radius: 50%; color: #666e62; }
 .currencyCards { display: flex; gap: 11px; margin: 23px -3px 0; padding: 3px; }
 .currencyScroller { display: flex; flex: 1; min-width: 0; gap: 11px; margin: -3px; padding: 3px; overflow-x: auto; overflow-y: hidden; scrollbar-width: thin; scrollbar-color: #dce4db transparent; }
 .currencyScroller::-webkit-scrollbar { height: 6px; }
 .currencyScroller::-webkit-scrollbar-track { background: transparent; }
 .currencyScroller::-webkit-scrollbar-thumb { border-radius: 10px; background: #dce4db; }
 .currencyScroller::-webkit-scrollbar-button { display: none; width: 0; height: 0; }
-.currencyCard { display: flex; position: relative; flex: 1 0 104px; min-width: 0; flex-direction: column; padding: 14px; border: 1px solid #ebeee7; border-radius: 18px; color: var(--color-ink, #141414); background: #fafcf9; cursor: pointer; text-align: left; transition: border-color .15s, background .15s; }
-.currencyCard:hover { border-color: #bbc8b7; background: #f2f6ed; }
-.selectedCurrency { border-color: #cad5a0; background: #f3f6e9; }
-.defaultLabel { display: inline-flex; margin-left: 6px; padding: 2px 6px; border-radius: 20px; background: #f3f6e9; color: #6c7d3f; font-size: 8px; font-weight: 600; letter-spacing: .3px; text-transform: uppercase; vertical-align: middle; }
+.currencyCard { display: flex; position: relative; flex: 1 0 104px; min-width: 0; flex-direction: column; padding: 14px; border: 1px solid var(--border-subtle); border-radius: 18px; color: var(--color-ink, #141414); background: var(--surface-muted); cursor: pointer; text-align: left; transition: border-color .15s, background .15s; }
+.currencyCard:hover { border-color: #bbc8b7; background: var(--surface-hover); }
+.selectedCurrency { border-color: #cad5a0; background: var(--surface-hover); }
+.defaultLabel { display: inline-flex; margin-left: 6px; padding: 2px 6px; border-radius: 20px; background: var(--surface-hover); color: #6c7d3f; font-size: 8px; font-weight: 600; letter-spacing: .3px; text-transform: uppercase; vertical-align: middle; }
 .currencyTop { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .currencyTopRight { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
 .currencySymbol { display: inline-grid; width: 28px; height: 28px; place-items: center; border-radius: 50%; font-size: 14px; }
@@ -77,15 +78,15 @@
 .addCurrency:disabled { cursor: default; opacity: .65; }
 .addSymbol { color: #e0e4da; font-size: 28px; font-weight: 250; line-height: 1; }
 .currencyNote { margin: 14px 0 0; color: #90958b; font-size: 9px; line-height: 1.5; }
-.currencyDialog { width: min(440px, calc(100vw - 32px)); max-height: calc(100dvh - 40px); margin: auto; padding: 0; overflow: auto; border: 1px solid #e7ebe4; border-radius: 28px; color: #141414; background: white; box-shadow: 0 22px 80px #1d2c2630; }
+.currencyDialog { width: min(440px, calc(100vw - 32px)); max-height: calc(100dvh - 40px); margin: auto; padding: 0; overflow: auto; border: 1px solid var(--border-subtle); border-radius: 28px; color: var(--color-ink); background: var(--surface); box-shadow: 0 22px 80px #1d2c2630; }
 .currencyDialog::backdrop { background: #19352b55; backdrop-filter: blur(5px); }
 .dialogContent { padding: 28px; }
 .dialogHeading { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .dialogHeading h2 { margin: 0; font-size: 24px; font-weight: 550; letter-spacing: -.8px; }
-.closeDialog { display: grid; flex-shrink: 0; width: 30px; height: 30px; padding: 0; place-items: center; border: 0; border-radius: 50%; color: #687162; background: #f0f4ed; font-size: 22px; cursor: pointer; }
+.closeDialog { display: grid; flex-shrink: 0; width: 30px; height: 30px; padding: 0; place-items: center; border: 0; border-radius: 50%; color: #687162; background: var(--surface-hover); font-size: 22px; cursor: pointer; }
 .dialogContent p { margin: 13px 0 24px; color: #737b6d; font-size: 13px; line-height: 1.6; }
 .dialogContent label { display: block; margin-bottom: 8px; color: #535d4e; font-size: 12px; font-weight: 500; }
-.dialogContent select { width: 100%; padding: 13px; border: 1px solid #dfe5da; border-radius: 12px; background: #fafcf8; color: #141414; font: inherit; font-size: 14px; }
+.dialogContent select { width: 100%; padding: 13px; border: 1px solid var(--border-subtle); border-radius: 12px; background: var(--surface-muted); color: var(--color-ink); font: inherit; font-size: 14px; }
 .dialogSubmit { display: flex; align-items: center; justify-content: space-between; width: 100%; margin-top: 22px; padding: 13px 16px; border: 0; border-radius: 14px; background: #141414; color: white; font: inherit; font-size: 13px; cursor: pointer; }
 .dialogSubmit:hover { background: #343b2c; }
 .srOnly { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
@@ -123,17 +124,17 @@
 .donutLegendDot { width: 9px; height: 9px; flex-shrink: 0; border-radius: 50%; }
 .donutLegendName { flex: 1; min-width: 0; overflow: hidden; color: var(--color-ink, #141414); text-overflow: ellipsis; white-space: nowrap; }
 .donutLegendShare { color: #8a8e88; font-variant-numeric: tabular-nums; }
-.donutNote { margin: 16px 0 0; padding-top: 14px; border-top: 1px solid #f1f3f0; color: #8a8e88; font-size: 10px; line-height: 1.6; }
+.donutNote { margin: 16px 0 0; padding-top: 14px; border-top: 1px solid var(--border-subtle); color: #8a8e88; font-size: 10px; line-height: 1.6; }
 
 .walletGridCard { padding: 27px 28px; min-width: 0; }
 .walletGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; margin: 20px 0 0; padding: 0; list-style: none; }
-.walletGridItem { position: relative; padding: 16px; border: 1px solid #ebeee7; border-radius: 18px; background: #fafcf9; }
+.walletGridItem { position: relative; padding: 16px; border: 1px solid var(--border-subtle); border-radius: 18px; background: var(--surface-muted); }
 .walletGridTop { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
 .walletGridName { overflow: hidden; color: var(--color-ink, #141414); font-size: 12px; font-weight: 550; text-overflow: ellipsis; white-space: nowrap; }
 .walletGridBalance { margin: 16px 0 0; color: var(--color-ink, #141414); font-size: 19px; font-weight: 550; letter-spacing: -.5px; font-variant-numeric: tabular-nums; }
 .walletGridCurrency { margin: 4px 0 0; color: #8a8e88; font-size: 10px; }
 .walletGridAdd { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; min-height: 88px; padding: 16px; border: 1px dashed #cad0c6; border-radius: 18px; background: none; color: #5c7567; font-size: 13px; font-weight: 500; }
-.walletGridAdd:hover:not(:disabled) { border-color: #9cafa2; background: #f7faf6; }
+.walletGridAdd:hover:not(:disabled) { border-color: #9cafa2; background: var(--surface-hover); }
 .walletGridAdd span { font-size: 18px; line-height: 1; }
 
 @media (max-width: 520px) {
@@ -142,29 +143,59 @@
   .walletGridAdd { min-height: 64px; }
 }
 
-.summaryPills { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 16px; }
-.summaryPill { display: flex; flex-direction: column; gap: 4px; padding: 14px 18px; border-radius: 18px; background: #fff; border: 1px solid rgba(0, 0, 0, .04); box-shadow: var(--shadow-card); min-width: 160px; }
+.summaryPills { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 0; }
+.summaryPill { display: flex; flex-direction: column; gap: 4px; padding: 20px; border-radius: 24px; background: var(--surface); border: 1px solid rgba(0, 0, 0, .04); box-shadow: var(--shadow-card); min-width: 0; }
 .summaryPillLabel { color: #8a8e88; font-size: 10px; font-weight: 600; letter-spacing: .6px; text-transform: uppercase; }
 .summaryPillValue { font-size: 20px; font-weight: 560; letter-spacing: -.5px; font-variant-numeric: tabular-nums; color: var(--color-ink, #141414); }
 .summaryPillValue.positive { color: var(--color-positive, #16a34a); }
 
-.segmented { display: inline-flex; gap: 4px; padding: 4px; border-radius: 12px; background: #f1f3ee; width: fit-content; }
+.segmented { display: inline-flex; gap: 4px; padding: 4px; border-radius: 12px; background: var(--surface-muted); width: fit-content; }
 .segmentedOption { padding: 7px 14px; border: 0; border-radius: 9px; background: none; color: #71717a; font-size: 11px; font-weight: 500; cursor: pointer; white-space: nowrap; }
-.segmentedOptionActive { background: #fff; color: var(--color-ink, #141414); box-shadow: 0 1px 6px rgba(0, 0, 0, .08); }
+.segmentedOptionActive { background: var(--surface); color: var(--color-ink, #141414); box-shadow: 0 1px 6px rgba(0, 0, 0, .08); }
 
-.categoryBreakdown { display: flex; flex-direction: column; gap: 16px; margin-top: 18px; }
-.categoryRow { display: flex; align-items: center; gap: 12px; }
+.categoryBreakdown { display: flex; flex-direction: column; gap: 20px; margin: 20px 0 0; padding: 0; list-style: none; }
+.categoryRow { min-width: 0; }
 .categoryRowInfo { flex: 1; min-width: 0; }
-.categoryRowTop { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; font-size: 12px; }
-.categoryRowName { overflow: hidden; color: var(--color-ink, #141414); font-weight: 500; text-overflow: ellipsis; white-space: nowrap; }
+.categoryRowTop { display: flex; align-items: center; gap: 10px; font-size: 12px; }
+.categoryRowName { flex: 1; min-width: 0; overflow: hidden; color: var(--color-ink, #141414); font-weight: 500; text-overflow: ellipsis; white-space: nowrap; }
 .categoryRowAmount { flex-shrink: 0; color: #8a8e88; font-size: 11px; font-variant-numeric: tabular-nums; }
-.categoryRowMeter { height: 6px; margin-top: 7px; border-radius: 4px; background: #eef1ec; overflow: hidden; }
-.categoryRowMeterFill { height: 100%; border-radius: 4px; background: #fef38b; }
-.categoryRowPercent { flex-shrink: 0; margin-left: 8px; color: #8a8e88; font-size: 10px; }
+.categoryRowMeter { height: 8px; margin-top: 8px; border-radius: 99px; background: var(--surface-muted); overflow: hidden; }
+.categoryRowMeterFill { height: 100%; border-radius: 99px; background: #fef38b; }
+.categoryRowPercent { flex-shrink: 0; margin-left: 0; color: #8a8e88; font-size: 10px; }
 
-.filterToolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin: 18px 0; }
-.filterToolbar .transactionSearch { flex: 1; min-width: 180px; margin-top: 0; }
-.walletFilter { min-width: 160px; }
+.filterToolbar { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 12px; margin: 22px 0; }
+.filterToolbar .transactionSearch { min-width: 0; margin: 0; min-height: 42px; }
+.walletFilter { grid-column: 1 / -1; width: 100%; min-width: 0; }
 
-.ledgerRowEnd { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; }
-.walletBadge { padding: 3px 9px; border-radius: 20px; background: #f1f3ee; color: #71717a; font-size: 9px; font-weight: 500; white-space: nowrap; }
+.ledgerRowEnd { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; max-width: 48%; min-width: 0; }
+.walletBadge { padding: 3px 9px; border-radius: 20px; background: var(--surface-muted); color: #71717a; font-size: 9px; font-weight: 500; white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+
+.donutCard > .segmented { margin-top: 16px; }
+:global(.dark) .transactionMeta, :global(.dark) .dateHeading, :global(.dark) .categoryRowAmount, :global(.dark) .categoryRowPercent, :global(.dark) .summaryPillLabel, :global(.dark) .currencyName, :global(.dark) .currencyCode, :global(.dark) .currencyNote, :global(.dark) .walletGridCurrency, :global(.dark) .donutLegendShare, :global(.dark) .donutNote, :global(.dark) .chartCaption, :global(.dark) .totalSpendLabel, :global(.dark) .transactionFooter { color: var(--color-muted); }
+:global(.dark) .segmentedOption, :global(.dark) .walletBadge, :global(.dark) .dialogContent label, :global(.dark) .dialogContent p, :global(.dark) .closeDialog { color: var(--color-muted); }
+:global(.dark) .segmentedOptionActive { color: var(--color-ink); background: var(--surface-hover); }
+:global(.dark) .currencyCard, :global(.dark) .walletGridItem, :global(.dark) .currencyDialog, :global(.dark) .dialogContent select, :global(.dark) .rangeSelect select, :global(.dark) .transactionSearch { border-color: var(--border); }
+:global(.dark) .selectedCurrency { border-color: #718459; background: #303c29; }
+:global(.dark) .defaultLabel { color: #d0e1a8; }
+:global(.dark) .addCurrency { border-color: var(--border); }
+:global(.dark) .avatarMint { color: #b7dfc5; background: #2c4636; }
+:global(.dark) .avatarLavender { color: #d1c2e5; background: #3a3246; }
+:global(.dark) .currencyGlobe, :global(.dark) .walletGridAdd { color: #b9cbb4; border-color: var(--border); }
+:global(.dark) .axisLabel { fill: #a8b4a9; }
+:global(.dark) .activeAxisLabel { fill: #e1eace; }
+:global(.dark) .dialogSubmit { background: #fef38b; color: #141414; }
+@media (max-width: 640px) {
+  .summaryPill { padding: 16px; gap: 8px; }
+  .summaryPillValue { font-size: clamp(16px, 4.5vw, 22px); letter-spacing: -.65px; overflow-wrap: anywhere; }
+  .donutCard, .walletGridCard { padding: 22px 20px; }
+  .filterToolbar { gap: 10px; }
+  .filterToolbar .segmented { gap: 2px; padding: 3px; }
+  .filterToolbar .segmentedOption { padding: 9px 7px; font-size: 10px; }
+  .filterToolbar .transactionSearch { padding-inline: 9px; gap: 6px; }
+  .filterToolbar .transactionSearch input { font-size: 11px; }
+  .filterToolbar .transactionSearch svg { flex-shrink: 0; width: 14px; }
+  .transactionRow { padding-inline: 8px; gap: 9px; }
+  .categoryRowTop { gap: 8px; }
+  .categoryRowTop .avatar { width: 32px; height: 32px; flex-basis: 32px; }
+  .categoryRowAmount { font-size: 10px; }
+}

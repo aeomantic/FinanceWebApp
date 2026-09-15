@@ -7,8 +7,9 @@ import { Icon } from "@/components/ui/icon";
 export function MobileNav({ demo = false }: { demo?: boolean }) {
   const pathname = usePathname();
   const isWallets = pathname === "/wallets";
-  const isTransactions = pathname === "/transactions";
-  const isHome = !isWallets && !isTransactions;
+  const isTransactions = pathname === "/transactions" || pathname === "/commitments";
+  const isSettings = pathname === "/settings";
+  const isHome = pathname === "/dashboard" || pathname === "/preview";
   const homeHref = demo ? "/preview" : "/dashboard";
   const walletsHref = demo ? "/preview" : "/wallets";
   const transactionsHref = demo ? "/preview" : "/transactions";
@@ -38,6 +39,9 @@ export function MobileNav({ demo = false }: { demo?: boolean }) {
         aria-current={isWallets ? "page" : undefined}
       >
         <Icon name="wallet" />
+      </Link>
+      <Link href={demo ? "/login" : "/settings"} className={isSettings ? "mobile-nav-pill-active" : ""} aria-label="Settings" aria-current={isSettings ? "page" : undefined}>
+        <Icon name="settings" />
       </Link>
     </nav>
   );

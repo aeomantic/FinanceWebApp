@@ -136,7 +136,7 @@ function DeleteWalletModal({ wallet, onClose, onDeleted }: { wallet: Wallet; onC
       </div>
       {error && <p className="form-error" role="alert">{error}</p>}
       <div style={{ display: "flex", gap: 10, marginTop: 8 }}>
-        <button type="button" onClick={onClose} disabled={pending} style={{ flex: 1, padding: "13px 16px", borderRadius: 14, border: "1px solid #e6e9e3", background: "#fff", fontSize: 13, color: "#141414" }}>Cancel</button>
+        <button type="button" onClick={onClose} disabled={pending} style={{ flex: 1, padding: "13px 16px", borderRadius: 14, border: "1px solid var(--border)", background: "var(--surface)", fontSize: 13, color: "var(--color-ink)" }}>Cancel</button>
         <button type="button" onClick={handleConfirm} disabled={pending} style={{ flex: 1, padding: "13px 16px", borderRadius: 14, border: 0, background: "#b33b31", color: "#fff", fontSize: 13, fontWeight: 500 }}>{pending ? "Deleting..." : "Delete wallet"}</button>
       </div>
     </Modal>

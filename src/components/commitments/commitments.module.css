@@ -1,0 +1,42 @@
+.field { display: flex; flex-direction: column; gap: 8px; font-size: 12px; font-weight: 500; min-width: 0; }
+.input { width: 100%; min-width: 0; border: 1px solid var(--border, #e6e9e3); border-radius: 12px; padding: 11px 12px; background: var(--surface-muted, #f7f9f6); color: var(--color-ink, #141414); font: inherit; font-size: 13px; }
+.hint { margin: 0; font-size: 11px; line-height: 1.6; color: var(--color-muted, #71717a); }
+.formGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.dialogStack { display: flex; flex-direction: column; gap: 18px; }
+.bnplBox { display: flex; flex-direction: column; gap: 14px; padding: 16px; border: 1px solid #f0e3a0; border-radius: 20px; background: #fefaea; }
+:global(.dark) .bnplBox { border-color: #4a4326; background: #2b2712; }
+.iconToggle { align-self: flex-start; padding: 9px 14px; border: 1px solid var(--border, #e6e9e3); border-radius: 100px; background: none; color: var(--color-ink, #141414); font-size: 12px; }
+.disclaimer { margin: 0; padding: 12px 14px; border-radius: 14px; background: var(--surface-muted, #f7f9f6); color: var(--color-muted, #71717a); font-size: 11px; line-height: 1.6; }
+
+.pageActions { display: flex; align-items: center; justify-content: flex-end; margin: 0 0 4px; }
+.addButton { display: inline-flex; align-items: center; gap: 8px; padding: 11px 18px; border: 0; border-radius: 100px; background: #141414; color: #fff; font-size: 12px; font-weight: 500; }
+:global(.dark) .addButton { background: #fef38b; color: #141414; }
+
+.subscriptionsList, .bnplList { padding: 0; margin: 18px 0 0; list-style: none; display: flex; flex-direction: column; gap: 12px; }
+.subscriptionRow, .bnplCard { border: 1px solid var(--border-subtle, rgba(0, 0, 0, .04)); border-radius: 18px; padding: 14px; }
+.subscriptionRow, .bnplTop { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.subscriptionInfo { flex: 1 1 140px; min-width: 0; }
+.subscriptionName { display: block; overflow: hidden; color: var(--color-ink, #141414); font-size: 13px; font-weight: 550; text-overflow: ellipsis; white-space: nowrap; }
+.subscriptionMeta { margin: 3px 0 0; color: var(--color-muted, #71717a); font-size: 11px; }
+.subscriptionEnd { display: flex; align-items: center; gap: 10px; flex-shrink: 0; margin-left: auto; }
+.subscriptionAmount { flex-shrink: 0; color: var(--color-ink, #141414); font-size: 13px; font-weight: 550; font-variant-numeric: tabular-nums; text-align: right; }
+.rowActions { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+.rowAction { display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; flex-shrink: 0; border: 0; border-radius: 50%; background: none; color: var(--color-muted, #71717a); }
+.rowAction:hover { background: var(--surface-hover, #edf3ed); color: var(--color-ink, #141414); }
+.rowActionDanger { color: #b33b31; }
+:global(.dark) .rowActionDanger { color: #ffaca0; }
+
+.bnplTop { display: flex; align-items: center; gap: 12px; }
+.bnplProgress { display: flex; gap: 4px; margin-top: 14px; }
+.bnplSegment { height: 7px; flex: 1; border-radius: 4px; background: var(--surface-muted, #eef1ec); }
+.bnplSegmentPaid { background: #fef38b; }
+.bnplProgressBar { height: 7px; flex: 1; border-radius: 4px; background: var(--surface-muted, #eef1ec); overflow: hidden; }
+.bnplProgressBarFill { height: 100%; border-radius: 4px; background: #fef38b; }
+.bnplFooter { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 11px; color: var(--color-muted, #71717a); font-size: 11px; }
+.bnplOutstanding { color: var(--color-ink, #141414); font-size: 13px; font-weight: 550; }
+
+@media (max-width: 520px) {
+  .formGrid { grid-template-columns: 1fr; }
+  .subscriptionAmount { font-size: 12px; }
+  .subscriptionEnd { flex-basis: 100%; justify-content: space-between; margin-left: 52px; }
+}

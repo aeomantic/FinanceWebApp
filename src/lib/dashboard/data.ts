@@ -5,9 +5,7 @@ import { z } from "zod";
 import { isAllowedEmail } from "@/lib/auth/allowlist";
 import { createClient } from "@/lib/supabase/server";
 import { getPeriodStart, isValidDate, summarizeTransactions, SUPPORTED_CURRENCIES } from "./summary";
-import { DEFAULT_CATEGORIES } from "./default-categories";
 import type { Category, DashboardData, Transaction, Wallet } from "./types";
-import type { SupabaseClient } from "@supabase/supabase-js";
 
 const PAGE_SIZE = 1000;
 const MAX_TRANSACTIONS = 10000;
@@ -42,15 +40,6 @@ const transactionRowSchema = z.object({
   destination_wallet_id: z.string().uuid().nullable(),
   category: z.object({ name: z.string(), icon: z.string().nullable() }).nullable(),
 });
-
-/** A brand-new account has no categories yet; seed the standard taxonomy
- * once so the picker isn't empty on the very first transaction. Idempotent
- * by construction: only called when the user's category list is empty. */
-async function seedDefaultCategories(supabase: SupabaseClient, userId: string) {
-  return supabase.from("categories").insert(
-    DEFAULT_CATEGORIES.map((category) => ({ user_id: userId, name: category.name, type: category.type, icon: category.icon })),
-  ).select("id,name,type,icon,color");
-}
 
 function walletTitle(wallets: Map<string, Wallet>, transaction: z.infer<typeof transactionRowSchema>): string {
   if (transaction.type === "transfer") {
@@ -93,22 +82,22 @@ export async function getDashboardData(): Promise<DashboardData> {
       .order("id", { ascending: false })
       .range(0, PAGE_SIZE - 1);
 
-    const [walletsRes, categoriesRes, firstPageRes] = await Promise.all([
+    const [walletsRes, categoriesRes, firstPageRes, profileRes] = await Promise.all([
       supabase.from("wallets").select("id,name,currency,balance_minor,color,is_default").eq("user_id", user.id)
         .order("is_default", { ascending: false }).order("created_at", { ascending: true }),
       supabase.from("categories").select("id,name,type,icon,color").eq("user_id", user.id).eq("is_archived", false).order("created_at", { ascending: true }),
       firstTransactionsPage,
+      supabase.from("profiles").select("display_name").eq("id", user.id).maybeSingle(),
     ]);
 
     if (walletsRes.error) return { ...base, error: "We couldn't load your wallets. Please try refreshing the page." };
     if (categoriesRes.error) return { ...base, error: "We couldn't load your categories. Please try refreshing the page." };
 
-    let categoryRows = categoriesRes.data;
-    if (categoryRows.length === 0) {
-      const seeded = await seedDefaultCategories(supabase, user.id);
-      // A failed seed isn't fatal: the category picker just starts empty
-      // and the user can add categories by hand, same as before this existed.
-      if (!seeded.error && seeded.data) categoryRows = seeded.data;
+    // User-managed categories stay deleted; page reads never recreate them.
+    const categoryRows = categoriesRes.data;
+    const displayName = profileRes.data?.display_name;
+    if (!profileRes.error && typeof displayName === "string" && displayName.trim()) {
+      base.name = displayName.trim().slice(0, 80);
     }
 
     const parsedWallets = z.array(walletRowSchema).safeParse(walletsRes.data);

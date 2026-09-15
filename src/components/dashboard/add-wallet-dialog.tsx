@@ -65,7 +65,7 @@ export function AddWalletDialog({ demo = false, onCreated, children }: AddWallet
           <div className={styles.dialogHeading}><h2 id={`${instanceId}-dialog-title`}>A new wallet.</h2><button type="button" className={styles.closeDialog} onClick={() => setIsOpen(false)} aria-label="Close add wallet dialog">×</button></div>
           <p>Give it a name and a currency. You can track balances separately for each wallet.</p>
           <label htmlFor={`${instanceId}-wallet-name`}>Name</label>
-          <input id={`${instanceId}-wallet-name`} required maxLength={60} value={name} onChange={(event) => setName(event.target.value)} placeholder="e.g. Food & Groceries" disabled={pending} style={{ width: "100%", padding: 13, border: "1px solid #dfe5da", borderRadius: 12, background: "#fafcf8", font: "inherit", fontSize: 14, marginBottom: 16 }} />
+          <input id={`${instanceId}-wallet-name`} required maxLength={60} value={name} onChange={(event) => setName(event.target.value)} placeholder="e.g. Food & Groceries" disabled={pending} style={{ width: "100%", padding: 13, border: "1px solid var(--border)", borderRadius: 12, background: "var(--surface-muted)", font: "inherit", fontSize: 14, marginBottom: 16 }} />
           <label htmlFor={`${instanceId}-wallet-currency`}>Currency</label>
           <select id={`${instanceId}-wallet-currency`} value={currency} onChange={(event) => setCurrency(event.target.value)} disabled={pending}>
             {SUPPORTED_CURRENCIES.map((code) => <option key={code} value={code}>{code}</option>)}

@@ -68,7 +68,7 @@ export function DashboardShell({ data, demo = false }: DashboardShellProps) {
           <Link href={demo ? "/preview" : "/wallets"} className="rail-link" aria-label="Wallets" title="Wallets"><Icon name="wallet" /></Link>
         </nav>
         <button className="rail-link rail-help" onClick={() => setPanel("help")} aria-label="Help"><Icon name="help" /></button>
-        <span className="rail-avatar" aria-hidden="true">{name.slice(0, 1).toUpperCase()}</span>
+        <Link href={demo ? "/login" : "/settings"} className="rail-avatar" aria-label="Account settings">{name.slice(0, 1).toUpperCase()}</Link>
       </aside>
 
       <div className="app-content">
@@ -79,7 +79,7 @@ export function DashboardShell({ data, demo = false }: DashboardShellProps) {
             <button className="icon-button" aria-label="Search transactions" onClick={() => { document.getElementById("transactions")?.scrollIntoView(); searchInput.current?.focus(); }}><Icon name="search" /></button>
             <button className="icon-button" aria-label="Notifications" onClick={() => setPanel("notifications")}><Icon name="bell" /></button>
             <span className="topbar-divider" />
-            <div className="user-greeting"><span className="user-avatar" aria-hidden="true">{name.slice(0, 1).toUpperCase()}</span><span>Hi, {name}<span className="user-subtitle">{demo ? "Personal account · Demo" : "Personal account"}</span></span></div>
+            <div className="user-greeting"><Link href={demo ? "/login" : "/settings"} className="user-avatar" aria-label="Account settings">{name.slice(0, 1).toUpperCase()}</Link><span>Hi, {name}<span className="user-subtitle">{demo ? "Personal account · Demo" : "Personal account"}</span></span></div>
           </div>
         </header>
 
@@ -266,16 +266,16 @@ function NewCategoryFields({ type, onCreated, onCancel }: { type: "expense" | "i
   }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 9, margin: "12px 0 0", padding: 14, border: "1px solid #e6e9e3", borderRadius: 12, background: "#f7f9f6" }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 9, margin: "12px 0 0", padding: 14, border: "1px solid var(--border)", borderRadius: 12, background: "var(--surface-muted)" }}>
       <label style={{ display: "flex", flexDirection: "column", gap: 9, fontSize: 12, fontWeight: 500 }}>
         New {type} category
-        <input value={name} onChange={(event) => setName(event.target.value)} maxLength={60} placeholder="e.g. Dining Out" disabled={pending} style={{ width: "100%", background: "#fff", border: "1px solid #e6e9e3", borderRadius: 12, padding: 12, fontSize: 13 }} />
+        <input value={name} onChange={(event) => setName(event.target.value)} maxLength={60} placeholder="e.g. Dining Out" disabled={pending} style={{ width: "100%", background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 12, padding: 12, fontSize: 13 }} />
       </label>
       <p style={{ margin: 0, fontSize: 12, fontWeight: 500 }}>Icon</p>
       <IconPicker value={icon} onChange={setIcon} aria-label="Choose a category icon" />
       {error && <p className="form-error" role="alert">{error}</p>}
       <div style={{ display: "flex", gap: 8 }}>
-        <button type="button" onClick={onCancel} disabled={pending} style={{ flex: 1, padding: "10px 12px", borderRadius: 10, border: "1px solid #e6e9e3", background: "#fff", fontSize: 12 }}>Cancel</button>
+        <button type="button" onClick={onCancel} disabled={pending} style={{ flex: 1, padding: "10px 12px", borderRadius: 10, border: "1px solid var(--border)", background: "var(--surface)", fontSize: 12 }}>Cancel</button>
         <button type="button" onClick={handleCreate} disabled={pending || !name.trim()} style={{ flex: 1, padding: "10px 12px", borderRadius: 10, border: 0, background: "#141414", color: "#fff", fontSize: 12 }}>{pending ? "Adding..." : "Add category"}</button>
       </div>
     </div>

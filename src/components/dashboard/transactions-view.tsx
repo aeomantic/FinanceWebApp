@@ -3,7 +3,7 @@
 import { useId, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Wallet as WalletIcon } from "lucide-react";
+import { Wallet as WalletIcon, CalendarClock } from "lucide-react";
 import { SignOutButton } from "@/components/auth/sign-out-button";
 import { BrandMark, Icon } from "@/components/ui/icon";
 import { Select } from "@/components/ui/select";
@@ -131,7 +131,7 @@ export function TransactionsView({ wallets: initialWallets, transactions: initia
   ];
 
   return (
-    <div className="app-frame">
+    <div className="app-frame transactions-frame">
       <a href="#transactions-main" className="skip-link">Skip to transactions</a>
       <aside className="side-rail" aria-label="Main navigation">
         <Link href={demo ? "/preview" : "/dashboard"} className="rail-brand" aria-label="Folio home"><BrandMark /></Link>
@@ -141,7 +141,7 @@ export function TransactionsView({ wallets: initialWallets, transactions: initia
           <Link href={demo ? "/preview" : "/dashboard"} className="rail-link" aria-label="Activity" title="Activity"><Icon name="activity" /></Link>
           <Link href={demo ? "/preview" : "/wallets"} className="rail-link" aria-label="Wallets" title="Wallets"><Icon name="wallet" /></Link>
         </nav>
-        <span className="rail-avatar" aria-hidden="true">{name.slice(0, 1).toUpperCase()}</span>
+        <Link href={demo ? "/login" : "/settings"} className="rail-avatar" aria-label="Account settings">{name.slice(0, 1).toUpperCase()}</Link>
       </aside>
 
       <div className="app-content">
@@ -153,13 +153,14 @@ export function TransactionsView({ wallets: initialWallets, transactions: initia
             <Link href={demo ? "/preview" : "/wallets"}>Wallets</Link>
           </nav>
           <div className="topbar-actions">
-            <div className="user-greeting"><span className="user-avatar" aria-hidden="true">{name.slice(0, 1).toUpperCase()}</span><span>Hi, {name}<span className="user-subtitle">{demo ? "Personal account · Demo" : "Personal account"}</span></span></div>
+            <div className="user-greeting"><Link href={demo ? "/login" : "/settings"} className="user-avatar" aria-label="Account settings">{name.slice(0, 1).toUpperCase()}</Link><span>Hi, {name}<span className="user-subtitle">{demo ? "Personal account · Demo" : "Personal account"}</span></span></div>
           </div>
         </header>
 
-        <main id="transactions-main">
+        <main id="transactions-main" className="transactions-page">
           <div className="page-heading">
             <div><div className="eyebrow page-eyebrow">EVERY DOLLAR, ACCOUNTED FOR</div><h1>Transactions<span className="heading-spark" aria-hidden="true">✳</span></h1><p>Search, filter, and see where your money goes.</p></div>
+            {!demo && <Link href="/commitments" className="commitments-link"><CalendarClock size={16} aria-hidden="true" />Recurring &amp; commitments</Link>}
           </div>
 
           {demo && <div className="demo-banner"><span><span className="status-dot" />You’re exploring Folio. These are sample transactions.</span><Link href="/login">Make it yours<Icon name="arrow-up-right" size={15} /></Link></div>}
@@ -202,22 +203,20 @@ export function TransactionsView({ wallets: initialWallets, transactions: initia
                     <p>{categoryTab === "expense" ? "Expenses" : "Income"} for this period will show up here.</p>
                   </div>
                 ) : (
-                  <ul className={styles.categoryBreakdown} style={{ listStyle: "none", margin: 0, padding: 0 }}>
+                  <ul className={styles.categoryBreakdown}>
                     {breakdown.rows.map((row) => {
                       const percent = breakdown.total > 0 ? Math.round((row.amountMinor / breakdown.total) * 100) : 0;
                       return (
                         <li key={row.name} className={styles.categoryRow}>
-                          <span className={`${styles.avatar} ${categoryTab === "income" ? styles.avatarMint : styles.avatarLavender}`} aria-hidden="true">
-                            <CategoryIcon name={row.icon} size={16} />
-                          </span>
-                          <div className={styles.categoryRowInfo}>
-                            <div className={styles.categoryRowTop}>
-                              <span className={styles.categoryRowName}>{row.name}</span>
-                              <span className={styles.categoryRowAmount}>{formatMoney(row.amountMinor, primaryCurrency)}</span>
-                            </div>
-                            <div className={styles.categoryRowMeter}><div className={styles.categoryRowMeterFill} style={{ width: `${percent}%` }} /></div>
+                          <div className={styles.categoryRowTop}>
+                            <span className={`${styles.avatar} ${categoryTab === "income" ? styles.avatarMint : styles.avatarLavender}`} aria-hidden="true">
+                              <CategoryIcon name={row.icon} size={16} />
+                            </span>
+                            <span className={styles.categoryRowName}>{row.name}</span>
+                            <span className={styles.categoryRowAmount}>{formatMoney(row.amountMinor, primaryCurrency)}</span>
+                            <span className={styles.categoryRowPercent}>{percent}%</span>
                           </div>
-                          <span className={styles.categoryRowPercent}>{percent}%</span>
+                          <div className={styles.categoryRowMeter} role="meter" aria-label={`${row.name} share`} aria-valuenow={percent} aria-valuemin={0} aria-valuemax={100}><div className={styles.categoryRowMeterFill} style={{ width: `${percent}%` }} /></div>
                         </li>
                       );
                     })}

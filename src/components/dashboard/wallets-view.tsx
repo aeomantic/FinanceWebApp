@@ -51,7 +51,7 @@ export function WalletsView({ wallets: initialWallets, name: fullName, error, de
           <Link href={demo ? "/preview" : "/dashboard"} className="rail-link" aria-label="Activity" title="Activity"><Icon name="activity" /></Link>
           <Link href={demo ? "/preview" : "/wallets"} className="rail-link active" aria-label="Wallets" title="Wallets"><Icon name="wallet" /></Link>
         </nav>
-        <span className="rail-avatar" aria-hidden="true">{name.slice(0, 1).toUpperCase()}</span>
+        <Link href={demo ? "/login" : "/settings"} className="rail-avatar" aria-label="Account settings">{name.slice(0, 1).toUpperCase()}</Link>
       </aside>
 
       <div className="app-content">
@@ -63,7 +63,7 @@ export function WalletsView({ wallets: initialWallets, name: fullName, error, de
             <Link href={demo ? "/preview" : "/wallets"} className="selected">Wallets</Link>
           </nav>
           <div className="topbar-actions">
-            <div className="user-greeting"><span className="user-avatar" aria-hidden="true">{name.slice(0, 1).toUpperCase()}</span><span>Hi, {name}<span className="user-subtitle">{demo ? "Personal account · Demo" : "Personal account"}</span></span></div>
+            <div className="user-greeting"><Link href={demo ? "/login" : "/settings"} className="user-avatar" aria-label="Account settings">{name.slice(0, 1).toUpperCase()}</Link><span>Hi, {name}<span className="user-subtitle">{demo ? "Personal account · Demo" : "Personal account"}</span></span></div>
           </div>
         </header>
 
