@@ -4,7 +4,9 @@ import { z } from "zod";
 import { isAllowedEmail } from "@/lib/auth/allowlist";
 import { createClient } from "@/lib/supabase/server";
 import { isValidDate, SUPPORTED_CURRENCIES } from "@/lib/dashboard/summary";
-import type { CommitmentsData } from "./types";
+import type { Commitment, CommitmentsData } from "./types";
+
+const COMMITMENT_COLUMNS = "id,name,amount_minor,currency,wallet_id,category_id,obligation_type,frequency,interval_count,anchor_date,next_due_on,total_installments,paid_installments,end_date,icon,is_active,updated_at";
 
 const walletSchema = z.object({
   id: z.string().uuid(), name: z.string(), currency: z.enum(SUPPORTED_CURRENCIES),
@@ -27,6 +29,38 @@ const rowSchema = z.object({
   end_date: z.string().refine(isValidDate).nullable(), icon: z.string(), is_active: z.boolean(), updated_at: z.string(),
 }).refine((r) => r.obligation_type !== "bnpl" || (r.total_installments !== null && r.paid_installments <= r.total_installments && r.end_date !== null && Number.isSafeInteger(r.amount_minor * r.total_installments)));
 
+function mapCommitmentRow(r: z.infer<typeof rowSchema>): Commitment {
+  return {
+    id: r.id, name: r.name, amountMinor: r.amount_minor, currency: r.currency,
+    walletId: r.wallet_id, categoryId: r.category_id, obligationType: r.obligation_type, frequency: r.frequency,
+    intervalCount: r.interval_count, anchorDate: r.anchor_date, nextDueOn: r.next_due_on, totalInstallments: r.total_installments,
+    paidInstallments: r.paid_installments, endDate: r.end_date, icon: r.icon, isActive: r.is_active, updatedAt: r.updated_at,
+  };
+}
+
+/** A lean read for surfacing upcoming bills on /transactions, without the
+ * wallets/categories getCommitmentsData() also fetches for the full
+ * /commitments page. Fails soft (empty list, no error) since this is a
+ * supplementary card on another page, not the page's main content - a
+ * pending migration or a transient error shouldn't block or alarm there. */
+export async function getUpcomingCommitments(): Promise<{ commitments: Commitment[]; error: string | null }> {
+  const supabase = await createClient();
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  if (authError || !user) redirect("/login");
+  if (!isAllowedEmail(user.email)) redirect("/login?error=unauthorized");
+  try {
+    const { data, error } = await supabase.from("recurring_rules")
+      .select(COMMITMENT_COLUMNS).eq("user_id", user.id).eq("is_active", true).order("next_due_on").limit(50);
+    if (error) {
+      console.error("Upcoming commitments load failed:", { code: error.code, message: error.message });
+      return { commitments: [], error: null };
+    }
+    const parsed = z.array(rowSchema).safeParse(data);
+    if (!parsed.success) return { commitments: [], error: null };
+    return { commitments: parsed.data.map(mapCommitmentRow), error: null };
+  } catch { return { commitments: [], error: null }; }
+}
+
 export async function getCommitmentsData(): Promise<CommitmentsData> {
   const supabase = await createClient();
   const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -39,7 +73,7 @@ export async function getCommitmentsData(): Promise<CommitmentsData> {
   try {
     const [commitmentsRes, walletsRes, categoriesRes] = await Promise.all([
       supabase.from("recurring_rules")
-        .select("id,name,amount_minor,currency,wallet_id,category_id,obligation_type,frequency,interval_count,anchor_date,next_due_on,total_installments,paid_installments,end_date,icon,is_active,updated_at", { count: "exact" })
+        .select(COMMITMENT_COLUMNS, { count: "exact" })
         .eq("user_id", user.id).order("next_due_on").order("id").limit(1000),
       supabase.from("wallets").select("id,name,currency,balance_minor,color,is_default").eq("user_id", user.id)
         .order("is_default", { ascending: false }).order("created_at", { ascending: true }),
@@ -63,10 +97,7 @@ export async function getCommitmentsData(): Promise<CommitmentsData> {
       ...base,
       wallets: parsedWallets.data.map((row) => ({ id: row.id, name: row.name, currency: row.currency, balanceMinor: row.balance_minor, color: row.color, isDefault: row.is_default })),
       categories: parsedCategories.data,
-      commitments: parsed.data.map((r) => ({ id: r.id, name: r.name, amountMinor: r.amount_minor, currency: r.currency,
-        walletId: r.wallet_id, categoryId: r.category_id, obligationType: r.obligation_type, frequency: r.frequency,
-        intervalCount: r.interval_count, anchorDate: r.anchor_date, nextDueOn: r.next_due_on, totalInstallments: r.total_installments,
-        paidInstallments: r.paid_installments, endDate: r.end_date, icon: r.icon, isActive: r.is_active, updatedAt: r.updated_at })),
+      commitments: parsed.data.map(mapCommitmentRow),
     };
   } catch { return { ...base, error: "We couldn't reach your account. Please try again." }; }
 }

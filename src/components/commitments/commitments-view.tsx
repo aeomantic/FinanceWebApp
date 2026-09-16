@@ -90,16 +90,17 @@ export function CommitmentsView({ commitments, wallets, categories, today, name:
 
         <main id="commitments-main" className="transactions-page">
           <div className="page-heading">
-            <div><div className="eyebrow page-eyebrow">PLAN AHEAD</div><h1>Recurring &amp; commitments<span className="heading-spark" aria-hidden="true">✳</span></h1><p>Subscriptions and installment purchases, tracked in one place.</p></div>
-            <Link href="/transactions" className="commitments-link">Back to transactions</Link>
+            <div>
+              <div className="eyebrow page-eyebrow">PLAN AHEAD</div>
+              <h1>Recurring &amp; commitments<span className="heading-spark" aria-hidden="true">✳</span></h1>
+              <p>Subscriptions and installment purchases, tracked in one place.</p>
+              <Link href="/transactions" className="commitments-link">Back to transactions</Link>
+            </div>
+            <button type="button" className={styles.addButton} onClick={() => setDialogTarget("new")} disabled={wallets.length === 0}><Plus size={16} aria-hidden="true" />Add commitment</button>
           </div>
 
           {error && <div className="dashboard-alert" role="alert">{error}<button onClick={() => router.refresh()}>Try again</button></div>}
           {actionError && <div className="dashboard-alert" role="alert">{actionError}<button onClick={() => setActionError("")}>Dismiss</button></div>}
-
-          <div className={styles.pageActions}>
-            <button type="button" className={styles.addButton} onClick={() => setDialogTarget("new")} disabled={wallets.length === 0}><Plus size={16} aria-hidden="true" />Add commitment</button>
-          </div>
 
           <section className={`surface-card ${dashboardStyles.transactions}`} aria-labelledby="subscriptions-title">
             <div className={dashboardStyles.cardHeading}>

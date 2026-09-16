@@ -1,4 +1,4 @@
-.main { max-width: 1120px; margin: auto; padding: 28px 0 144px; color: var(--color-ink); }
+.main { max-width: 1120px; margin: auto; padding: 28px 0 calc(144px + env(safe-area-inset-bottom, 0px)); color: var(--color-ink); }
 .back { display: inline-flex; gap: 8px; align-items: center; font-size: 12px; color: var(--color-muted); text-decoration: none; margin-bottom: 28px; min-height: 36px; }
 .heading { margin-bottom: 26px; }
 .heading h1 { font-size: clamp(28px, 4vw, 38px); font-weight: 550; letter-spacing: -1.4px; margin: 0 0 9px; }
@@ -36,6 +36,8 @@
 .name { display: block; font-size: 13px; font-weight: 550; overflow-wrap: anywhere; }
 .badge { display: flex; align-items: center; justify-content: center; flex-shrink: 0; width: 39px; height: 39px; border-radius: 50%; background: var(--surface-muted, #e9f1e5); color: var(--color-ink); font-size: 14px; }
 .actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 8px; margin-top: 12px; }
+.walletActionsRow { justify-content: space-between; }
+.actionsButtons { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
 .defaultBadge { display: inline-flex; align-items: center; gap: 4px; border-radius: 20px; padding: 7px 10px; background: #fef38b; color: #444021; font-size: 10px; margin-right: auto; }
 .textButton { min-height: 36px; font-size: 11px; color: var(--color-muted); background: transparent; border: 0; padding: 8px 4px; }
 .notice, .error { font-size: 12px; line-height: 1.6; border-radius: 13px; padding: 11px 13px; margin: 14px 0 0; }
@@ -54,4 +56,4 @@
 .skeleton { background: var(--surface-muted, #e9eee9); border-radius: 28px; height: 230px; animation: pulse 1.5s ease-in-out infinite; }
 @keyframes pulse { 50% { opacity: .45; } }
 @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
-@media (max-width: 580px) { .main { padding-top: 18px; padding-bottom: calc(144px + env(safe-area-inset-bottom)); } .card { padding: 21px 18px; border-radius: 25px; } .grid { gap: 18px; } .back { margin-bottom: 20px; } .themeButton { flex-direction: column; gap: 7px; min-height: 66px; } .loadingGrid { grid-template-columns: 1fr; } }
+@media (max-width: 580px) { .main { padding-top: 18px; } .card { padding: 21px 18px; border-radius: 25px; } .grid { gap: 18px; } .back { margin-bottom: 20px; } .themeButton { flex-direction: column; gap: 7px; min-height: 66px; } .loadingGrid { grid-template-columns: 1fr; } }

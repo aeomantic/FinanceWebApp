@@ -8,8 +8,8 @@
 .iconToggle { align-self: flex-start; padding: 9px 14px; border: 1px solid var(--border, #e6e9e3); border-radius: 100px; background: none; color: var(--color-ink, #141414); font-size: 12px; }
 .disclaimer { margin: 0; padding: 12px 14px; border-radius: 14px; background: var(--surface-muted, #f7f9f6); color: var(--color-muted, #71717a); font-size: 11px; line-height: 1.6; }
 
-.pageActions { display: flex; align-items: center; justify-content: flex-end; margin: 0 0 4px; }
-.addButton { display: inline-flex; align-items: center; gap: 8px; padding: 11px 18px; border: 0; border-radius: 100px; background: #141414; color: #fff; font-size: 12px; font-weight: 500; }
+.addButton { display: inline-flex; align-items: center; gap: 8px; flex-shrink: 0; padding: 11px 18px; border: 0; border-radius: 100px; background: #141414; color: #fff; font-size: 12px; font-weight: 500; white-space: nowrap; }
+.addButton:disabled { cursor: not-allowed; opacity: .6; }
 :global(.dark) .addButton { background: #fef38b; color: #141414; }
 
 .subscriptionsList, .bnplList { padding: 0; margin: 18px 0 0; list-style: none; display: flex; flex-direction: column; gap: 12px; }

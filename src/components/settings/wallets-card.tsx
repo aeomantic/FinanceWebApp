@@ -86,21 +86,23 @@ export function WalletsCard({ wallets, disabled = false }: { wallets: Wallet[]; 
                     <span className={styles.hint}>{wallet.currency}</span>
                   </div>
                 </div>
-                <div className={styles.actions}>
+                <div className={`${styles.actions} ${styles.walletActionsRow}`}>
                   {wallet.isDefault ? (
                     <span className={styles.defaultBadge}><Star size={11} aria-hidden="true" />Default</span>
                   ) : (
                     <button type="button" className={styles.textButton} onClick={() => makeDefault(wallet.id)} disabled={disabled || isPending}>Set as default</button>
                   )}
-                  {isEditing ? (
-                    <>
-                      <button type="button" className={styles.iconButton} aria-label="Save name" onClick={() => saveRename(wallet.id)} disabled={isPending || !draftName.trim()}><Check size={16} aria-hidden="true" /></button>
-                      <button type="button" className={styles.iconButton} aria-label="Cancel rename" onClick={() => setEditingId(null)} disabled={isPending}><X size={16} aria-hidden="true" /></button>
-                    </>
-                  ) : (
-                    <button type="button" className={styles.iconButton} aria-label={`Rename ${wallet.name}`} onClick={() => startEdit(wallet)} disabled={disabled}><Pencil size={16} aria-hidden="true" /></button>
-                  )}
-                  <button type="button" className={styles.iconButton} aria-label={`Delete ${wallet.name}`} onClick={() => setDeleteTarget(wallet)} disabled={disabled || wallets.length <= 1}><Trash2 size={16} className={styles.dangerIcon} aria-hidden="true" /></button>
+                  <div className={styles.actionsButtons}>
+                    {isEditing ? (
+                      <>
+                        <button type="button" className={styles.iconButton} aria-label="Save name" onClick={() => saveRename(wallet.id)} disabled={isPending || !draftName.trim()}><Check size={16} aria-hidden="true" /></button>
+                        <button type="button" className={styles.iconButton} aria-label="Cancel rename" onClick={() => setEditingId(null)} disabled={isPending}><X size={16} aria-hidden="true" /></button>
+                      </>
+                    ) : (
+                      <button type="button" className={styles.iconButton} aria-label={`Rename ${wallet.name}`} onClick={() => startEdit(wallet)} disabled={disabled}><Pencil size={16} aria-hidden="true" /></button>
+                    )}
+                    <button type="button" className={styles.iconButton} aria-label={`Delete ${wallet.name}`} onClick={() => setDeleteTarget(wallet)} disabled={disabled || wallets.length <= 1}><Trash2 size={16} className={styles.dangerIcon} aria-hidden="true" /></button>
+                  </div>
                 </div>
               </li>
             );
