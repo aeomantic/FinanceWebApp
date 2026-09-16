@@ -1,8 +1,7 @@
 import "server-only";
 
-import { redirect } from "next/navigation";
 import { z } from "zod";
-import { isAllowedEmail } from "@/lib/auth/allowlist";
+import { getAuthedUser } from "@/lib/auth/current-user";
 import { createClient } from "@/lib/supabase/server";
 import { getPeriodStart, isValidDate, summarizeTransactions, SUPPORTED_CURRENCIES } from "./summary";
 import type { Category, DashboardData, Transaction, Wallet } from "./types";
@@ -51,19 +50,14 @@ function walletTitle(wallets: Map<string, Wallet>, transaction: z.infer<typeof t
 
 /** This read uses the caller's cookie session and remains subject to Supabase RLS. */
 export async function getDashboardData(): Promise<DashboardData> {
-  const supabase = await createClient();
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-  if (authError || !user) redirect("/login");
-  if (!isAllowedEmail(user.email)) redirect("/login?error=unauthorized");
+  const [supabase, user] = await Promise.all([createClient(), getAuthedUser()]);
 
   const today = new Date().toISOString().slice(0, 10);
   const periodStart = getPeriodStart(today);
-  const metadataName: unknown = user.user_metadata?.full_name ?? user.user_metadata?.name;
-  const name = typeof metadataName === "string" && metadataName.trim()
-    ? metadataName.trim().slice(0, 80)
-    : (user.email?.split("@")[0] ?? "there");
-  const base: DashboardData = { wallets: [], categories: [], transactions: [], today, periodStart, name, email: user.email ?? "", error: null };
+  const name = user.name && user.name.trim()
+    ? user.name.trim().slice(0, 80)
+    : (user.email.split("@")[0] || "there");
+  const base: DashboardData = { wallets: [], categories: [], transactions: [], today, periodStart, name, email: user.email, error: null };
 
   try {
     // Wallets and categories are needed to interpret transaction rows

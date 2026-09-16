@@ -1,7 +1,6 @@
 import "server-only";
-import { redirect } from "next/navigation";
 import { z } from "zod";
-import { isAllowedEmail } from "@/lib/auth/allowlist";
+import { getAuthedUser } from "@/lib/auth/current-user";
 import { createClient } from "@/lib/supabase/server";
 import { isValidDate, SUPPORTED_CURRENCIES } from "@/lib/dashboard/summary";
 import type { Commitment, CommitmentsData } from "./types";
@@ -44,10 +43,7 @@ function mapCommitmentRow(r: z.infer<typeof rowSchema>): Commitment {
  * supplementary card on another page, not the page's main content - a
  * pending migration or a transient error shouldn't block or alarm there. */
 export async function getUpcomingCommitments(): Promise<{ commitments: Commitment[]; error: string | null }> {
-  const supabase = await createClient();
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
-  if (authError || !user) redirect("/login");
-  if (!isAllowedEmail(user.email)) redirect("/login?error=unauthorized");
+  const [supabase, user] = await Promise.all([createClient(), getAuthedUser()]);
   try {
     const { data, error } = await supabase.from("recurring_rules")
       .select(COMMITMENT_COLUMNS).eq("user_id", user.id).eq("is_active", true).order("next_due_on").limit(50);
@@ -62,13 +58,9 @@ export async function getUpcomingCommitments(): Promise<{ commitments: Commitmen
 }
 
 export async function getCommitmentsData(): Promise<CommitmentsData> {
-  const supabase = await createClient();
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
-  if (authError || !user) redirect("/login");
-  if (!isAllowedEmail(user.email)) redirect("/login?error=unauthorized");
+  const [supabase, user] = await Promise.all([createClient(), getAuthedUser()]);
   const today = new Date().toISOString().slice(0, 10);
-  const metadataName: unknown = user.user_metadata?.full_name ?? user.user_metadata?.name;
-  const name = typeof metadataName === "string" && metadataName.trim() ? metadataName.trim().slice(0, 80) : (user.email?.split("@")[0] ?? "there");
+  const name = user.name && user.name.trim() ? user.name.trim().slice(0, 80) : (user.email.split("@")[0] || "there");
   const base: CommitmentsData = { commitments: [], wallets: [], categories: [], today, name, error: null };
   try {
     const [commitmentsRes, walletsRes, categoriesRes] = await Promise.all([

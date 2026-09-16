@@ -1,7 +1,6 @@
 import "server-only";
-import { redirect } from "next/navigation";
 import { z } from "zod";
-import { isAllowedEmail } from "@/lib/auth/allowlist";
+import { getAuthedUser } from "@/lib/auth/current-user";
 import { createClient } from "@/lib/supabase/server";
 import { themePreferenceSchema } from "./validation";
 import type { SettingsData } from "./types";
@@ -14,12 +13,8 @@ const categorySchema = z.object({ id: z.string().uuid(), name: z.string(), type:
   icon: z.string().nullable(), color: z.string().nullable(),
 });
 export async function getSettingsData(): Promise<SettingsData> {
-  const supabase = await createClient();
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
-  if (authError || !user) redirect("/login");
-  if (!isAllowedEmail(user.email)) redirect("/login?error=unauthorized");
-  const metadataName: unknown = user.user_metadata?.full_name ?? user.user_metadata?.name;
-  const base: SettingsData = { email: user.email ?? "", displayName: typeof metadataName === "string" ? metadataName.slice(0, 80) : user.email?.split("@")[0] ?? "",
+  const [supabase, user] = await Promise.all([createClient(), getAuthedUser()]);
+  const base: SettingsData = { email: user.email, displayName: user.name ? user.name.slice(0, 80) : (user.email.split("@")[0] || ""),
     themePreference: "system", wallets: [], categories: [], error: null };
   try {
     const [profile, wallets, categories] = await Promise.all([

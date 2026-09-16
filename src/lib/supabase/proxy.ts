@@ -1,4 +1,5 @@
 import { isAllowedEmail } from "@/lib/auth/allowlist";
+import { USER_EMAIL_HEADER, USER_ID_HEADER, USER_NAME_HEADER } from "@/lib/auth/identity-headers";
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
@@ -16,6 +17,14 @@ const PUBLIC_PATHS = new Set([
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
   const authHeaders = new Headers();
+
+  // Identity we forward to Server Components once the JWT is validated below,
+  // so their data loaders skip a second getUser(). Strip any client-supplied
+  // copies first: only this proxy, after validating, may set them.
+  const forwardHeaders = new Headers(request.headers);
+  forwardHeaders.delete(USER_ID_HEADER);
+  forwardHeaders.delete(USER_EMAIL_HEADER);
+  forwardHeaders.delete(USER_NAME_HEADER);
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -56,5 +65,21 @@ export async function updateSession(request: NextRequest) {
   if (user && pathname === "/login") {
     return redirectWithCookies("/dashboard");
   }
-  return supabaseResponse;
+
+  // Reaching here, an authenticated request is being served (or a public path
+  // with no user). Forward the validated identity so page data loaders can
+  // trust it without re-calling the auth server. Carry over the refreshed
+  // cookies (and any SDK cache headers) the session refresh produced.
+  if (user) {
+    forwardHeaders.set(USER_ID_HEADER, user.id);
+    forwardHeaders.set(USER_EMAIL_HEADER, user.email ?? "");
+    const metadataName: unknown = user.user_metadata?.full_name ?? user.user_metadata?.name;
+    if (typeof metadataName === "string" && metadataName.trim()) {
+      forwardHeaders.set(USER_NAME_HEADER, encodeURIComponent(metadataName.trim()));
+    }
+  }
+  const forwarded = NextResponse.next({ request: { headers: forwardHeaders } });
+  authHeaders.forEach((value, name) => forwarded.headers.set(name, value));
+  supabaseResponse.cookies.getAll().forEach((cookie) => forwarded.cookies.set(cookie));
+  return forwarded;
 }
