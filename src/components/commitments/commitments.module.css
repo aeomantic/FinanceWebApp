@@ -12,8 +12,11 @@
 .addButton:disabled { cursor: not-allowed; opacity: .6; }
 :global(.dark) .addButton { background: #fef38b; color: #141414; }
 
+.backLink { display: inline-flex; align-items: center; gap: 6px; margin-bottom: 12px; color: var(--color-muted, #71717a); font-size: 12px; text-decoration: none; }
+.backLink:hover { color: var(--color-ink, #141414); }
+
 .subscriptionsList, .bnplList { padding: 0; margin: 18px 0 0; list-style: none; display: flex; flex-direction: column; gap: 12px; }
-.subscriptionRow, .bnplCard { border: 1px solid var(--border-subtle, rgba(0, 0, 0, .04)); border-radius: 18px; padding: 14px; }
+.subscriptionRow, .bnplCard { position: relative; overflow: hidden; border: 1px solid var(--border-subtle, rgba(0, 0, 0, .04)); border-radius: 18px; padding: 14px; }
 .subscriptionRow, .bnplTop { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .subscriptionInfo { flex: 1 1 140px; min-width: 0; }
 .subscriptionName { display: block; overflow: hidden; color: var(--color-ink, #141414); font-size: 13px; font-weight: 550; text-overflow: ellipsis; white-space: nowrap; }
@@ -38,5 +41,5 @@
 @media (max-width: 520px) {
   .formGrid { grid-template-columns: 1fr; }
   .subscriptionAmount { font-size: 12px; }
-  .subscriptionEnd { flex-basis: 100%; justify-content: space-between; margin-left: 52px; }
+  .subscriptionEnd { flex-basis: 100%; justify-content: space-between; margin-left: 0; }
 }

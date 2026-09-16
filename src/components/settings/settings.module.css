@@ -1,4 +1,4 @@
-.main { max-width: 1120px; margin: auto; padding: 28px 0 calc(144px + env(safe-area-inset-bottom, 0px)); color: var(--color-ink); }
+.main { max-width: 1120px; margin: auto; padding: 28px 0 calc(180px + env(safe-area-inset-bottom, 0px)); color: var(--color-ink); }
 .back { display: inline-flex; gap: 8px; align-items: center; font-size: 12px; color: var(--color-muted); text-decoration: none; margin-bottom: 28px; min-height: 36px; }
 .heading { margin-bottom: 26px; }
 .heading h1 { font-size: clamp(28px, 4vw, 38px); font-weight: 550; letter-spacing: -1.4px; margin: 0 0 9px; }

@@ -325,7 +325,7 @@ button, a, input, select { outline-offset: 4px; }
 }
 
 /* Mobile ledger spacing and persistent navigation clearance. */
-.transactions-page { display: flex; flex-direction: column; gap: 20px; padding-top: 16px; padding-bottom: calc(144px + env(safe-area-inset-bottom, 0px)); min-width: 0; }
+.transactions-page { display: flex; flex-direction: column; gap: 20px; padding-top: 16px; padding-bottom: calc(180px + env(safe-area-inset-bottom, 0px)); min-width: 0; }
 .transactions-page > .page-heading { margin: 14px 0 6px; align-items: flex-start; flex-wrap: wrap; }
 .transactions-page > .demo-banner, .transactions-page > .dashboard-alert { margin: 0; }
 .transactions-page > .dashboard-grid { gap: 20px; }

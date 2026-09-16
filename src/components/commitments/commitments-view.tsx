@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Pause, Pencil, Play, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, Pause, Pencil, Play, Plus, Trash2 } from "lucide-react";
 import { SignOutButton } from "@/components/auth/sign-out-button";
 import { BrandMark, Icon } from "@/components/ui/icon";
 import { CategoryIcon } from "@/components/ui/category-icon";
@@ -91,10 +91,10 @@ export function CommitmentsView({ commitments, wallets, categories, today, name:
         <main id="commitments-main" className="transactions-page">
           <div className="page-heading">
             <div>
+              <Link href="/transactions" className={styles.backLink}><ArrowLeft size={14} aria-hidden="true" />Back to transactions</Link>
               <div className="eyebrow page-eyebrow">PLAN AHEAD</div>
               <h1>Recurring &amp; commitments<span className="heading-spark" aria-hidden="true">✳</span></h1>
               <p>Subscriptions and installment purchases, tracked in one place.</p>
-              <Link href="/transactions" className="commitments-link">Back to transactions</Link>
             </div>
             <button type="button" className={styles.addButton} onClick={() => setDialogTarget("new")} disabled={wallets.length === 0}><Plus size={16} aria-hidden="true" />Add commitment</button>
           </div>
