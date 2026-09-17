@@ -1,10 +1,30 @@
-.main { max-width: 1120px; margin: auto; padding: 28px 0 calc(180px + env(safe-area-inset-bottom, 0px)); color: var(--color-ink); }
-.back { display: inline-flex; gap: 8px; align-items: center; font-size: 12px; color: var(--color-muted); text-decoration: none; margin-bottom: 28px; min-height: 36px; }
-.heading { margin-bottom: 26px; }
-.heading h1 { font-size: clamp(28px, 4vw, 38px); font-weight: 550; letter-spacing: -1.4px; margin: 0 0 9px; }
-.heading p, .description { font-size: 13px; color: var(--color-muted); line-height: 1.7; margin: 7px 0 0; }
-.grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; align-items: start; }
-.card { background: var(--surface, #fff); border: 1px solid var(--border, #e7ece8); border-radius: 28px; padding: 26px; box-shadow: var(--shadow-card); min-width: 0; }
+.main {
+  width: 100%;
+  max-width: 100%;
+  min-height: 100dvh;
+  overflow-x: hidden;
+  overflow-y: auto;
+  margin: 0;
+  padding: 16px max(16px, env(safe-area-inset-right, 0px)) calc(180px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+  color: var(--color-ink);
+}
+.inner {
+  width: 100%;
+  max-width: 1120px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-width: 0;
+}
+.header { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; width: 100%; }
+.back { display: inline-flex; gap: 6px; align-items: center; width: fit-content; font-size: 12px; color: var(--color-muted); text-decoration: none; min-height: 36px; }
+.back:hover { color: var(--color-ink); }
+.header h1 { font-size: clamp(28px, 4vw, 38px); font-weight: 550; letter-spacing: -1.4px; margin: 0; }
+.header p { font-size: 13px; color: var(--color-muted); line-height: 1.7; margin: 0; }
+.description { font-size: 13px; color: var(--color-muted); line-height: 1.7; margin: 7px 0 0; }
+.grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; align-items: start; width: 100%; }
+.card { display: flex; flex-direction: column; width: 100%; background: var(--surface, #fff); border: 1px solid var(--border, #e7ece8); border-radius: 28px; padding: 20px; box-shadow: var(--shadow-card); min-width: 0; }
 .cardHeading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 24px; }
 .cardHeading h2 { font-size: 19px; letter-spacing: -.6px; font-weight: 550; margin: 0; }
 .cardIcon { display: flex; align-items: center; justify-content: center; width: 38px; height: 38px; border-radius: 50%; background: var(--surface-muted, #f1f5f0); color: var(--color-muted); flex-shrink: 0; }
@@ -12,7 +32,8 @@
 .field { display: flex; flex-direction: column; gap: 9px; font-size: 12px; font-weight: 500; min-width: 0; }
 .input { width: 100%; min-width: 0; border: 1px solid var(--border, #e7ece8); border-radius: 13px; padding: 12px 13px; background: var(--surface-muted, #f7f9f6); color: var(--color-ink); font: inherit; font-size: 13px; min-height: 44px; }
 .input[readonly] { color: var(--color-muted); }
-.hint { margin: 0; font-size: 11px; line-height: 1.65; color: var(--color-muted); }
+.hint, .themeHint { margin: 0; font-size: 11px; line-height: 1.65; color: var(--color-muted); }
+.themeHint { margin-top: 16px; }
 .primary, .secondary, .danger { display: inline-flex; justify-content: center; align-items: center; gap: 8px; min-height: 42px; border-radius: 100px; padding: 10px 16px; border: 1px solid transparent; font-size: 12px; font-weight: 500; text-decoration: none; }
 .primary { background: #141414; color: #fff; }
 :global(.dark) .primary { background: #fef38b; color: #141414; }
@@ -30,7 +51,7 @@
 .tabs button { flex: 1; border: 0; padding: 10px 8px; background: transparent; color: var(--color-muted); border-radius: 10px; font-size: 11px; }
 .tabs button[aria-pressed="true"] { background: var(--surface, #fff); color: var(--color-ink); box-shadow: 0 2px 4px #00000008; }
 .list { padding: 0; margin: 0; list-style: none; display: flex; flex-direction: column; gap: 12px; }
-.item { border: 1px solid var(--border, #e7ece8); border-radius: 18px; padding: 13px; min-width: 0; }
+.item { width: 100%; border: 1px solid var(--border, #e7ece8); border-radius: 18px; padding: 13px; min-width: 0; }
 .row { display: flex; align-items: center; gap: 10px; min-width: 0; }
 .rowContent { flex: 1; min-width: 0; }
 .name { display: block; font-size: 13px; font-weight: 550; overflow-wrap: anywhere; }
@@ -49,11 +70,17 @@
 .modalText { margin: 0 0 22px; color: var(--color-muted); font-size: 13px; line-height: 1.8; }
 .modalActions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 22px; }
 .iconWell { border: 1px solid var(--border, #e7ece8); border-radius: 14px; padding: 12px; max-height: 230px; overflow-y: auto; background: var(--surface-muted, #f7f9f6); }
-.alert { margin-bottom: 22px; }
+.alert { margin: 0; }
 .railBottom { margin-top: auto; }
 .loading { max-width: 1000px; margin: 50px auto; padding: 20px; color: var(--color-muted); }
 .loadingGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; margin-top: 28px; }
 .skeleton { background: var(--surface-muted, #e9eee9); border-radius: 28px; height: 230px; animation: pulse 1.5s ease-in-out infinite; }
 @keyframes pulse { 50% { opacity: .45; } }
+@media (min-width: 640px) {
+  .main { padding-left: max(24px, env(safe-area-inset-left, 0px)); padding-right: max(24px, env(safe-area-inset-right, 0px)); }
+}
+@media (min-width: 768px) {
+  .main { padding-top: 28px; padding-left: max(32px, env(safe-area-inset-left, 0px)); padding-right: max(32px, env(safe-area-inset-right, 0px)); }
+}
 @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
-@media (max-width: 580px) { .main { padding-top: 18px; } .card { padding: 21px 18px; border-radius: 25px; } .grid { gap: 18px; } .back { margin-bottom: 20px; } .themeButton { flex-direction: column; gap: 7px; min-height: 66px; } .loadingGrid { grid-template-columns: 1fr; } }
+@media (max-width: 580px) { .card { padding: 20px; border-radius: 24px; } .grid { gap: 18px; } .themeButton { flex-direction: column; gap: 7px; min-height: 66px; } .loadingGrid { grid-template-columns: 1fr; } }

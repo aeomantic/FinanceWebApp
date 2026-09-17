@@ -16,17 +16,19 @@ export function SettingsView({ data }: { data: SettingsData }) {
   return (
     <>
       <main className={styles.main}>
-        <Link href="/dashboard" className={styles.back}><ArrowLeft size={15} aria-hidden="true" />Back to dashboard</Link>
-        <div className={styles.heading}>
-          <h1>Settings</h1>
-          <p>Manage your appearance, profile, wallets, and categories.</p>
-        </div>
-        {data.error && <p className={`${styles.error} ${styles.alert}`} role="alert">{data.error}</p>}
-        <div className={styles.grid}>
-          <AppearanceCard preference={data.themePreference} disabled={disabled} />
-          <ProfileCard email={data.email} displayName={data.displayName} disabled={disabled} />
-          <WalletsCard wallets={data.wallets} disabled={disabled} />
-          <CategoriesCard categories={data.categories} disabled={disabled} />
+        <div className={styles.inner}>
+          <div className={styles.header}>
+            <Link href="/dashboard" className={styles.back}><ArrowLeft size={15} aria-hidden="true" />Back to dashboard</Link>
+            <h1>Settings</h1>
+            <p>Manage your appearance, profile, wallets, and categories.</p>
+          </div>
+          {data.error && <p className={`${styles.error} ${styles.alert}`} role="alert">{data.error}</p>}
+          <div className={styles.grid}>
+            <AppearanceCard preference={data.themePreference} disabled={disabled} />
+            <ProfileCard email={data.email} displayName={data.displayName} disabled={disabled} />
+            <WalletsCard wallets={data.wallets} disabled={disabled} />
+            <CategoriesCard categories={data.categories} disabled={disabled} />
+          </div>
         </div>
       </main>
       <MobileNav />

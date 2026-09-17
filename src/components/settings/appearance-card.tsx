@@ -44,7 +44,7 @@ export function AppearanceCard({ preference, disabled = false }: { preference: T
     <div className={styles.themeButtons} role="group" aria-label="Application theme" aria-busy={pending}>
       {THEMES.map(({ value, label, icon: ThemeIcon }) => <button type="button" key={value} className={styles.themeButton} disabled={pending || disabled || !mounted} aria-pressed={selectedTheme === value} onClick={() => chooseTheme(value)}><ThemeIcon size={18} aria-hidden="true" />{label}</button>)}
     </div>
-    <p className={`${styles.hint} mt-4`}>System follows your device&apos;s appearance setting.</p>
+    <p className={styles.themeHint}>System follows your device&apos;s appearance setting.</p>
     {error && <p className={styles.error} role="alert">{error}</p>}
     {notice && <p className={styles.notice} role="status">{notice}</p>}
   </section>;

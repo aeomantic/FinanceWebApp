@@ -55,9 +55,11 @@
 }
 
 * { box-sizing: border-box; }
-html { scroll-behavior: smooth; }
+html { scroll-behavior: smooth; max-width: 100%; overflow-x: hidden; }
 body {
   min-height: 100dvh;
+  max-width: 100%;
+  overflow-x: hidden;
   background-repeat: no-repeat;
   margin: 0;
   background: radial-gradient(ellipse at 16% 9%, #e4f0ce80, transparent 42%), linear-gradient(125deg, #ebf5f0 8%, #f4f8f6 57%, #e7f2ec);
