@@ -22,6 +22,7 @@ export interface Category {
 export interface Transaction {
   id: string;
   title: string;
+  /** The date-only day the owner assigned to this movement (`occurred_on`). */
   date: string;
   amountMinor: number;
   currency: string;
@@ -31,6 +32,8 @@ export interface Transaction {
   walletId: string;
   destinationWalletId?: string;
   note?: string;
+  /** When the row was actually written (`created_at`). Absent on demo data. */
+  recordedAt?: string;
 }
 
 export interface MonthlySpendPoint {

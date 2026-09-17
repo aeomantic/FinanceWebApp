@@ -3,24 +3,16 @@
 import { useId, useState } from "react";
 import { ArrowLeftRight } from "lucide-react";
 import { CategoryIcon } from "@/components/ui/category-icon";
+import type { Transaction } from "@/lib/dashboard/types";
 import styles from "./components.module.css";
 
-export interface DashboardTransaction {
-  id: string;
-  title: string;
-  date: string;
-  amountMinor: number;
-  currency: string;
-  type: "income" | "expense" | "transfer";
-  category?: string;
-  categoryIcon?: string;
-}
-
 export interface TransactionListProps {
-  transactions: DashboardTransaction[];
+  transactions: Transaction[];
   today: string;
   query?: string;
   onQueryChange?: (query: string) => void;
+  /** When provided, each row becomes a button that opens the detail view. */
+  onSelect?: (transaction: Transaction) => void;
 }
 
 export function dateHeading(date: string, today: string): string {
@@ -36,7 +28,7 @@ export function dateHeading(date: string, today: string): string {
   }).format(new Date(`${date}T12:00:00.000Z`));
 }
 
-export function MerchantAvatar({ type, categoryIcon }: Pick<DashboardTransaction, "type" | "categoryIcon">) {
+export function MerchantAvatar({ type, categoryIcon }: Pick<Transaction, "type" | "categoryIcon">) {
   if (type === "transfer") {
     return <span className={`${styles.avatar} ${styles.avatarLavender}`} aria-hidden="true"><ArrowLeftRight size={17} strokeWidth={1.8} /></span>;
   }
@@ -44,7 +36,7 @@ export function MerchantAvatar({ type, categoryIcon }: Pick<DashboardTransaction
   return <span className={`${styles.avatar} ${palette}`} aria-hidden="true"><CategoryIcon name={categoryIcon} size={18} /></span>;
 }
 
-export function TransactionList({ transactions, today, query = "", onQueryChange }: TransactionListProps) {
+export function TransactionList({ transactions, today, query = "", onQueryChange, onSelect }: TransactionListProps) {
   const [expanded, setExpanded] = useState(false);
   const titleId = useId();
   const searchId = useId();
@@ -54,7 +46,7 @@ export function TransactionList({ transactions, today, query = "", onQueryChange
     .filter((transaction) => `${transaction.title} ${transaction.category ?? ""}`.toLocaleLowerCase("en-US").includes(normalizedQuery))
     .toSorted((a, b) => b.date.localeCompare(a.date));
   const visible = expanded || normalizedQuery ? filtered : filtered.slice(0, 5);
-  const groups = visible.reduce<Map<string, DashboardTransaction[]>>((result, transaction) => {
+  const groups = visible.reduce<Map<string, Transaction[]>>((result, transaction) => {
     const group = result.get(transaction.date) ?? [];
     group.push(transaction);
     result.set(transaction.date, group);
@@ -96,8 +88,8 @@ export function TransactionList({ transactions, today, query = "", onQueryChange
                 const income = transaction.type === "income";
                 const transfer = transaction.type === "transfer";
                 const amount = new Intl.NumberFormat("en-US", { style: "currency", currency: transaction.currency }).format(Math.abs(transaction.amountMinor) / 100);
-                return (
-                  <li key={transaction.id} className={styles.transactionRow}>
+                const content = (
+                  <>
                     <MerchantAvatar type={transaction.type} categoryIcon={transaction.categoryIcon} />
                     <div className={styles.transactionDetails}>
                       <p className={styles.transactionTitle}>{transaction.title}</p>
@@ -107,7 +99,16 @@ export function TransactionList({ transactions, today, query = "", onQueryChange
                       </p>
                     </div>
                     <span className={`${styles.transactionAmount} ${income ? styles.positive : ""}`}>{income ? "+" : "−"}{amount}</span>
+                  </>
+                );
+                return onSelect ? (
+                  <li key={transaction.id} className={styles.transactionRowItem}>
+                    <button type="button" className={`${styles.transactionRow} ${styles.transactionRowButton}`} onClick={() => onSelect(transaction)}>
+                      {content}
+                    </button>
                   </li>
+                ) : (
+                  <li key={transaction.id} className={styles.transactionRow}>{content}</li>
                 );
               })}
             </ul>

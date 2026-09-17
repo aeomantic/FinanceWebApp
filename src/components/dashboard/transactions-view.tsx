@@ -10,6 +10,7 @@ import { Select } from "@/components/ui/select";
 import { CategoryIcon } from "@/components/ui/category-icon";
 import { MobileNav } from "./mobile-nav";
 import { dateHeading, MerchantAvatar } from "./transaction-list";
+import { TransactionDetailDialog } from "./transaction-detail-dialog";
 import { formatMoney } from "@/lib/dashboard/summary";
 import { DEMO_WALLETS, getDemoTransactions } from "@/lib/dashboard/demo";
 import type { Commitment } from "@/lib/commitments/types";
@@ -94,6 +95,7 @@ export function TransactionsView({ wallets: initialWallets, transactions: initia
   const [walletFilter, setWalletFilter] = useState("");
   const [query, setQuery] = useState("");
   const [categoryTab, setCategoryTab] = useState<CategoryTab>("expense");
+  const [detail, setDetail] = useState<Transaction | null>(null);
 
   const periodStart = periodStartFor(period, today, allTimeStart);
   const inPeriod = useMemo(
@@ -320,19 +322,25 @@ export function TransactionsView({ wallets: initialWallets, transactions: initia
                           const amount = formatMoney(transaction.amountMinor, transaction.currency);
                           const walletName = walletsById.get(transaction.walletId)?.name ?? "Wallet";
                           return (
-                            <li key={transaction.id} className={styles.transactionRow}>
-                              <MerchantAvatar type={transaction.type} categoryIcon={transaction.categoryIcon} />
-                              <div className={styles.transactionDetails}>
-                                <p className={styles.transactionTitle}>{transaction.title}</p>
-                                <p className={styles.transactionMeta}>
-                                  {transfer ? "Transferred" : income ? "Received" : "Paid"}
-                                  {transaction.category ? <span className={styles.category}>{transaction.category}</span> : null}
-                                </p>
-                              </div>
-                              <div className={styles.ledgerRowEnd}>
-                                <span className={styles.walletBadge}>{walletName}</span>
-                                <span className={`${styles.transactionAmount} ${income ? styles.positive : ""}`}>{transfer ? "" : income ? "+" : "−"}{amount}</span>
-                              </div>
+                            <li key={transaction.id} className={styles.transactionRowItem}>
+                              <button
+                                type="button"
+                                className={`${styles.transactionRow} ${styles.transactionRowButton}`}
+                                onClick={() => setDetail(transaction)}
+                              >
+                                <MerchantAvatar type={transaction.type} categoryIcon={transaction.categoryIcon} />
+                                <div className={styles.transactionDetails}>
+                                  <p className={styles.transactionTitle}>{transaction.title}</p>
+                                  <p className={styles.transactionMeta}>
+                                    {transfer ? "Transferred" : income ? "Received" : "Paid"}
+                                    {transaction.category ? <span className={styles.category}>{transaction.category}</span> : null}
+                                  </p>
+                                </div>
+                                <div className={styles.ledgerRowEnd}>
+                                  <span className={styles.walletBadge}>{walletName}</span>
+                                  <span className={`${styles.transactionAmount} ${income ? styles.positive : ""}`}>{transfer ? "" : income ? "+" : "−"}{amount}</span>
+                                </div>
+                              </button>
                             </li>
                           );
                         })}
@@ -349,6 +357,8 @@ export function TransactionsView({ wallets: initialWallets, transactions: initia
       </div>
 
       <MobileNav demo={demo} />
+
+      {detail && <TransactionDetailDialog transaction={detail} wallets={wallets} onClose={() => setDetail(null)} />}
     </div>
   );
 }

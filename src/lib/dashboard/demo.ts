@@ -16,10 +16,10 @@ export const DEMO_CATEGORIES: Category[] = [
 ];
 
 export const DEMO_TRANSACTIONS: Transaction[] = [
-  { id: "demo-eva", title: "Salary & Wages", date: "2026-09-13", amountMinor: 571020, currency: "USD", type: "income", category: "Salary & Wages", categoryIcon: "briefcase", walletId: "demo-main" },
-  { id: "demo-binance", title: "Investments & Dividends", date: "2026-09-13", amountMinor: 71400, currency: "USD", type: "income", category: "Investments & Dividends", categoryIcon: "trending-up", walletId: "demo-main" },
+  { id: "demo-eva", title: "Salary & Wages", date: "2026-09-13", amountMinor: 571020, currency: "USD", type: "income", category: "Salary & Wages", categoryIcon: "briefcase", walletId: "demo-main", note: "September payroll" },
+  { id: "demo-binance", title: "Investments & Dividends", date: "2026-09-13", amountMinor: 71400, currency: "USD", type: "income", category: "Investments & Dividends", categoryIcon: "trending-up", walletId: "demo-main", note: "Quarterly dividend payout" },
   { id: "demo-henrik", title: "Salary & Wages", date: "2026-09-12", amountMinor: 42800, currency: "USD", type: "income", category: "Salary & Wages", categoryIcon: "briefcase", walletId: "demo-main" },
-  { id: "demo-multiplex", title: "Entertainment", date: "2026-09-12", amountMinor: 12455, currency: "USD", type: "expense", category: "Entertainment", categoryIcon: "film", walletId: "demo-main" },
+  { id: "demo-multiplex", title: "Entertainment", date: "2026-09-12", amountMinor: 12455, currency: "USD", type: "expense", category: "Entertainment", categoryIcon: "film", walletId: "demo-main", note: "Cinema tickets for two, plus snacks" },
   { id: "demo-spotify", title: "Utilities & Bills", date: "2026-09-12", amountMinor: 1099, currency: "USD", type: "expense", category: "Utilities & Bills", categoryIcon: "zap", walletId: "demo-bills" },
   { id: "demo-coffee", title: "Food & Dining", date: "2026-09-11", amountMinor: 650, currency: "USD", type: "expense", category: "Food & Dining", categoryIcon: "utensils", walletId: "demo-food" },
 ];

@@ -9,6 +9,11 @@ import type { Category, DashboardData, Transaction, Wallet } from "./types";
 const PAGE_SIZE = 1000;
 const MAX_TRANSACTIONS = 10000;
 
+// One definition for both the first-page and pagination-loop reads, so the two
+// can't drift apart. `created_at` is the row's recorded timestamp; `occurred_on`
+// is the date-only day the owner assigned to the money movement.
+const TRANSACTION_COLUMNS = "id,occurred_on,created_at,amount_minor,currency,type,note,wallet_id,destination_wallet_id,category:categories(name,icon)";
+
 const walletRowSchema = z.object({
   id: z.string().uuid(),
   name: z.string(),
@@ -30,6 +35,7 @@ const categoryRowSchema = z.object({
 const transactionRowSchema = z.object({
   id: z.string().uuid(),
   occurred_on: z.string().refine(isValidDate),
+  created_at: z.string(),
   amount_minor: z.union([z.number(), z.string().regex(/^\d+$/).transform(Number)])
     .refine((value) => Number.isSafeInteger(value) && value >= 0),
   currency: z.enum(SUPPORTED_CURRENCIES),
@@ -68,7 +74,7 @@ export async function getDashboardData(): Promise<DashboardData> {
     // for the first page of transactions.
     const firstTransactionsPage = supabase
       .from("transactions")
-      .select("id,occurred_on,amount_minor,currency,type,note,wallet_id,destination_wallet_id,category:categories(name,icon)", { count: "exact" })
+      .select(TRANSACTION_COLUMNS, { count: "exact" })
       .eq("user_id", user.id)
       .gte("occurred_on", periodStart)
       .lte("occurred_on", today)
@@ -113,7 +119,7 @@ export async function getDashboardData(): Promise<DashboardData> {
       // The first page was already fetched concurrently with wallets/categories above.
       const { data, error, count } = offset === 0 ? firstPageRes : await supabase
         .from("transactions")
-        .select("id,occurred_on,amount_minor,currency,type,note,wallet_id,destination_wallet_id,category:categories(name,icon)", { count: "exact" })
+        .select(TRANSACTION_COLUMNS, { count: "exact" })
         .eq("user_id", user.id)
         .gte("occurred_on", periodStart)
         .lte("occurred_on", today)
@@ -145,6 +151,7 @@ export async function getDashboardData(): Promise<DashboardData> {
           walletId: row.wallet_id,
           destinationWalletId: row.destination_wallet_id ?? undefined,
           note: row.note ?? undefined,
+          recordedAt: row.created_at,
         });
       }
 

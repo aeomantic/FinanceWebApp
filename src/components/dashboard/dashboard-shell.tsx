@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { SignOutButton } from "@/components/auth/sign-out-button";
 import { BalanceCard, type BalanceAction } from "./balance-card";
 import { TransactionList } from "./transaction-list";
+import { TransactionDetailDialog } from "./transaction-detail-dialog";
 import { SpendChart } from "./spend-chart";
 import { WalletList } from "./wallet-list";
 import { MobileNav } from "./mobile-nav";
@@ -19,7 +20,7 @@ import { createCategory, recordTransaction } from "@/app/dashboard/actions";
 import { DEMO_MONTHLY_POINTS, DEMO_WALLETS } from "@/lib/dashboard/demo";
 import { formatMoney, summarizeTransactions } from "@/lib/dashboard/summary";
 import { useHiddenWallets } from "@/lib/dashboard/use-hidden-wallets";
-import type { Category, DashboardData, Wallet } from "@/lib/dashboard/types";
+import type { Category, DashboardData, Transaction, Wallet } from "@/lib/dashboard/types";
 
 interface DashboardShellProps { data: DashboardData; demo?: boolean }
 type Panel = BalanceAction | "notifications" | "help" | null;
@@ -32,6 +33,7 @@ export function DashboardShell({ data, demo = false }: DashboardShellProps) {
   const [selectedWalletId, setSelectedWalletId] = useState<string | null>((wallets.find((item) => item.isDefault) ?? wallets[0])?.id ?? null);
   const [query, setQuery] = useState("");
   const [panel, setPanel] = useState<Panel>(null);
+  const [detail, setDetail] = useState<Transaction | null>(null);
   const [notice, setNotice] = useState("");
   const searchInput = useRef<HTMLInputElement>(null);
   const wallet = wallets.find((item) => item.id === selectedWalletId) ?? wallets[0] ?? null;
@@ -104,7 +106,7 @@ export function DashboardShell({ data, demo = false }: DashboardShellProps) {
             <div className="chart-area" id="activity"><SpendChart points={points} currency={currency} /></div>
             <div className="transactions-area" id="transactions">
               <div className="transaction-search"><Icon name="search" size={17} /><input ref={searchInput} aria-label="Filter transactions" placeholder="Find a transaction..." value={query} onChange={(event) => setQuery(event.target.value)} />{query && <button aria-label="Clear search" onClick={() => setQuery("")}><Icon name="close" size={15} /></button>}</div>
-              <TransactionList transactions={transactions} today={data.today} query={query} />
+              <TransactionList transactions={transactions} today={data.today} query={query} onSelect={setDetail} />
             </div>
             <div className="wallets-area" id="wallets">
               <WalletList wallets={wallets} selectedWalletId={selectedWalletId} onSelect={setSelectedWalletId} onCreated={() => router.refresh()} onChanged={() => router.refresh()} hiddenWalletIds={hiddenIds} onToggleHideBalance={toggleHideBalance} demo={demo} />
@@ -129,6 +131,8 @@ export function DashboardShell({ data, demo = false }: DashboardShellProps) {
       </div>
 
       <MobileNav demo={demo} />
+
+      {detail && <TransactionDetailDialog transaction={detail} wallets={wallets} onClose={() => setDetail(null)} />}
 
       {panel && wallet && <Modal title={panel === "notifications" ? "You’re all caught up" : panel === "help" ? "A little help with Folio" : panel === "transfer" ? "Transfer between wallets" : panel === "expense" ? "Record an expense" : "Record income"} onClose={() => setPanel(null)}>
         {panel === "expense" || panel === "income" || panel === "transfer" ? (

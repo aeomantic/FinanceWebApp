@@ -200,3 +200,31 @@
   .categoryRowTop .avatar { width: 32px; height: 32px; flex-basis: 32px; }
   .categoryRowAmount { font-size: 10px; }
 }
+
+/* Interactive transaction rows. The visual/layout rules stay on
+   .transactionRow (still used on non-interactive rows such as the upcoming
+   expenses list); .transactionRowButton only adds the button resets, so a
+   plain row never picks up a misleading pointer cursor. */
+.transactionRowItem { list-style: none; }
+.transactionRowItem + .transactionRowItem { border-top: 1px solid var(--border-subtle); }
+.transactionRowButton { width: 100%; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.transactionRowButton:focus-visible { outline: 2px solid #9cafa2; outline-offset: -2px; }
+
+/* Transaction detail dialog */
+.detailHero { display: flex; align-items: center; gap: 13px; padding-bottom: 19px; border-bottom: 1px solid var(--border-subtle); }
+.detailHeroText { flex: 1; min-width: 0; }
+.detailAmount { display: block; color: var(--color-ink); font-size: clamp(23px, 7vw, 29px); font-weight: 560; letter-spacing: -1px; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.detailAmountPositive { color: var(--color-positive, #16a34a); }
+.detailAmountNeutral { color: var(--color-muted); }
+.detailTitle { margin: 5px 0 0; color: var(--color-muted); font-size: 12px; line-height: 1.5; overflow-wrap: anywhere; }
+.detailRows { display: flex; flex-direction: column; margin: 4px 0 0; padding: 0; list-style: none; }
+.detailRow { display: flex; align-items: center; justify-content: space-between; gap: 14px; min-width: 0; padding: 12px 0; }
+.detailRow + .detailRow { border-top: 1px solid var(--border-subtle); }
+.detailLabel { flex-shrink: 0; color: var(--color-muted); font-size: 11px; font-weight: 500; }
+.detailValue { display: flex; align-items: center; justify-content: flex-end; gap: 7px; min-width: 0; color: var(--color-ink); font-size: 12px; font-weight: 500; text-align: right; overflow-wrap: anywhere; }
+.detailValue svg { flex-shrink: 0; color: var(--color-muted); }
+.typeBadge { display: inline-flex; align-items: center; flex-shrink: 0; padding: 4px 10px; border: 1px solid var(--border-subtle); border-radius: 20px; background: var(--surface-muted); color: var(--color-ink); font-size: 9px; font-weight: 600; letter-spacing: .5px; text-transform: uppercase; }
+.noteCard { display: flex; flex-direction: column; gap: 7px; margin-top: 18px; padding: 15px; border: 1px solid var(--border); border-radius: 18px; background: var(--surface-muted); }
+.noteLabel { color: var(--color-muted); font-size: 9px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; }
+.noteBody { margin: 0; color: var(--color-ink); font-size: 13px; line-height: 1.65; white-space: pre-wrap; overflow-wrap: anywhere; }
+.noteEmpty { color: var(--color-muted); font-style: italic; }

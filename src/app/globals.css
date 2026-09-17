@@ -232,6 +232,7 @@ button, a, input, select { outline-offset: 4px; }
 .error-card h1 { font-size: 22px; font-weight: 550; letter-spacing: -.7px; }
 .error-card p { margin-top: 16px; color: var(--color-muted); font-size: 13px; }
 @keyframes breathe { to { opacity: .4; } }
+@keyframes sheet-rise { from { transform: translateY(16px); opacity: .9; } }
 
 @media (min-width: 1450px) {
   .app-frame { gap: 50px; padding-right: 48px; }
@@ -313,6 +314,17 @@ button, a, input, select { outline-offset: 4px; }
   .dashboard-footer { gap: 14px; padding-top: 23px; font-size: 9px; line-height: 1.7; }
   .dashboard-footer > span:nth-child(2) { order: 3; width: 100%; }
   .app-modal { padding: 23px; }
+  /* Detail dialogs read better as a thumb-reachable bottom sheet on a phone.
+     Two classes so this reliably wins over .app-modal's centred margin. */
+  .app-modal.modal-sheet {
+    width: 100%;
+    max-width: none;
+    margin: auto auto 0;
+    border-radius: 26px 26px 0 0;
+    max-height: min(86dvh, calc(100dvh - 24px));
+    padding-bottom: calc(23px + env(safe-area-inset-bottom, 0px));
+    animation: sheet-rise .22s ease-out;
+  }
   .modal-heading h2 { font-size: 20px; }
 }
 @media (max-width: 360px) {
