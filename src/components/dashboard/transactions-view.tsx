@@ -11,10 +11,12 @@ import { CategoryIcon } from "@/components/ui/category-icon";
 import { MobileNav } from "./mobile-nav";
 import { dateHeading, MerchantAvatar } from "./transaction-list";
 import { TransactionDetailDialog } from "./transaction-detail-dialog";
+import { TransactionForm } from "./transaction-form";
+import { Modal } from "@/components/ui/modal";
 import { formatMoney } from "@/lib/dashboard/summary";
-import { DEMO_WALLETS, getDemoTransactions } from "@/lib/dashboard/demo";
+import { DEMO_CATEGORIES, DEMO_WALLETS, getDemoTransactions } from "@/lib/dashboard/demo";
 import type { Commitment } from "@/lib/commitments/types";
-import type { Transaction, Wallet } from "@/lib/dashboard/types";
+import type { Category, Transaction, Wallet } from "@/lib/dashboard/types";
 import styles from "./components.module.css";
 
 type Period = "month" | "30d" | "all";
@@ -24,6 +26,8 @@ type CategoryTab = "expense" | "income";
 interface TransactionsViewProps {
   wallets: Wallet[];
   transactions: Transaction[];
+  /** Needed by the edit form's category picker; feed rendering works without it. */
+  categories?: Category[];
   commitments?: Commitment[];
   today: string;
   periodStart: string;
@@ -76,10 +80,11 @@ function SegmentedControl<T extends string>({ value, onChange, options, "aria-la
   );
 }
 
-export function TransactionsView({ wallets: initialWallets, transactions: initialTransactions, commitments = [], today, periodStart: allTimeStart, name: fullName, error, demo = false }: TransactionsViewProps) {
+export function TransactionsView({ wallets: initialWallets, transactions: initialTransactions, categories: initialCategories, commitments = [], today, periodStart: allTimeStart, name: fullName, error, demo = false }: TransactionsViewProps) {
   const router = useRouter();
   const wallets = demo ? DEMO_WALLETS : initialWallets;
   const transactions = demo ? getDemoTransactions(today) : initialTransactions;
+  const [categories, setCategories] = useState<Category[]>(demo ? DEMO_CATEGORIES : initialCategories ?? []);
   const name = fullName.split(" ")[0] || "there";
   const searchId = useId();
 
@@ -96,6 +101,8 @@ export function TransactionsView({ wallets: initialWallets, transactions: initia
   const [query, setQuery] = useState("");
   const [categoryTab, setCategoryTab] = useState<CategoryTab>("expense");
   const [detail, setDetail] = useState<Transaction | null>(null);
+  const [editing, setEditing] = useState<Transaction | null>(null);
+  const [notice, setNotice] = useState("");
 
   const periodStart = periodStartFor(period, today, allTimeStart);
   const inPeriod = useMemo(
@@ -187,6 +194,7 @@ export function TransactionsView({ wallets: initialWallets, transactions: initia
 
           {demo && <div className="demo-banner"><span><span className="status-dot" />You’re exploring Folio. These are sample transactions.</span><Link href="/login">Make it yours<Icon name="arrow-up-right" size={15} /></Link></div>}
           {error && <div className="dashboard-alert" role="alert">{error}<button onClick={() => router.refresh()}>Try again</button></div>}
+          {notice && <div className="success-notice" role="status"><Icon name="check" size={17} />{notice}<button aria-label="Dismiss notification" onClick={() => setNotice("")}><Icon name="close" size={16} /></button></div>}
 
           <SegmentedControl
             value={period}
@@ -358,7 +366,33 @@ export function TransactionsView({ wallets: initialWallets, transactions: initia
 
       <MobileNav demo={demo} />
 
-      {detail && <TransactionDetailDialog transaction={detail} wallets={wallets} onClose={() => setDetail(null)} />}
+      {detail && (
+        <TransactionDetailDialog
+          transaction={detail}
+          wallets={wallets}
+          onClose={() => setDetail(null)}
+          onEdit={() => { setEditing(detail); setDetail(null); }}
+        />
+      )}
+
+      {editing && (() => {
+        const editingWallet = wallets.find((item) => item.id === editing.walletId) ?? wallets[0];
+        return editingWallet ? (
+          <Modal title="Edit transaction" onClose={() => setEditing(null)}>
+            <TransactionForm
+              action={editing.type}
+              wallet={editingWallet}
+              wallets={wallets}
+              categories={categories}
+              today={today}
+              demo={demo}
+              existing={editing}
+              onCategoryCreated={(category) => setCategories((previous) => [...previous, category])}
+              onSaved={() => { setEditing(null); setNotice("Transaction updated. Balances are refreshed."); router.refresh(); }}
+            />
+          </Modal>
+        ) : null;
+      })()}
     </div>
   );
 }

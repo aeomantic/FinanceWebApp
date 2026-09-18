@@ -8,6 +8,7 @@ export default async function TransactionsPage() {
     <TransactionsView
       wallets={data.wallets}
       transactions={data.transactions}
+      categories={data.categories}
       commitments={upcoming.commitments}
       today={data.today}
       periodStart={data.periodStart}

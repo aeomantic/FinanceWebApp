@@ -28,6 +28,7 @@ export interface Transaction {
   currency: string;
   type: TransactionType;
   category?: string;
+  categoryId?: string;
   categoryIcon?: string;
   walletId: string;
   destinationWalletId?: string;
@@ -74,6 +75,10 @@ export interface RecordTransactionInput {
 export type RecordTransactionResult =
   | { success: true }
   | { success: false; error: string };
+
+export interface UpdateTransactionInput extends RecordTransactionInput {
+  id: string;
+}
 
 export interface CreateWalletInput {
   name: string;

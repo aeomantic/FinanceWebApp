@@ -26,10 +26,12 @@ function formatRecordedAt(value: string): string | null {
   return `${day} · ${time}`;
 }
 
-export function TransactionDetailDialog({ transaction, wallets, onClose }: {
+export function TransactionDetailDialog({ transaction, wallets, onClose, onEdit }: {
   transaction: Transaction;
   wallets: Wallet[];
   onClose: () => void;
+  /** When provided, the dialog offers an Edit action (hosts open the prefilled form). */
+  onEdit?: () => void;
 }) {
   const income = transaction.type === "income";
   const transfer = transaction.type === "transfer";
@@ -90,6 +92,12 @@ export function TransactionDetailDialog({ transaction, wallets, onClose }: {
           {transaction.note ? transaction.note : <span className={styles.noteEmpty}>No note added</span>}
         </p>
       </div>
+
+      {onEdit && (
+        <button type="button" className="primary-button" onClick={onEdit}>
+          Edit transaction<Icon name="pencil" size={16} />
+        </button>
+      )}
     </Modal>
   );
 }

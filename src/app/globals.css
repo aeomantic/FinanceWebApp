@@ -163,6 +163,8 @@ button, a, input, select { outline-offset: 4px; }
 .insight-card p { max-width: 225px; font-size: 10px; line-height: 1.8; color: #738069; position: relative; z-index: 1; }
 .text-action { display: flex; align-items: center; gap: 13px; border: none; padding: 0; background: none; font-size: 10px; font-weight: 550; margin-top: 21px; position: relative; z-index: 1; }
 .text-action:hover { text-decoration: underline; }
+a.text-action { color: inherit; text-decoration: none; }
+.text-action + .text-action { margin-top: 10px; }
 .insight-art { position: absolute; right: -3px; bottom: -16px; display: flex; gap: 7px; align-items: flex-end; height: 150px; transform: rotate(-19deg); opacity: .6; }
 .insight-art span { background: #cfddc2; border: 1px solid #c7d7b8; height: 70%; width: 24px; border-radius: 14px; }
 .insight-art span:nth-child(2) { height: 82%; }

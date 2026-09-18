@@ -1,10 +1,11 @@
 "use client";
 
-import { useId, useRef, useState, useTransition, type FormEvent } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { SignOutButton } from "@/components/auth/sign-out-button";
 import { BalanceCard, type BalanceAction } from "./balance-card";
+import { TransactionForm } from "./transaction-form";
 import { TransactionList } from "./transaction-list";
 import { TransactionDetailDialog } from "./transaction-detail-dialog";
 import { SpendChart } from "./spend-chart";
@@ -12,15 +13,10 @@ import { WalletList } from "./wallet-list";
 import { MobileNav } from "./mobile-nav";
 import { BrandMark, Icon } from "@/components/ui/icon";
 import { Modal } from "@/components/ui/modal";
-import { CategoryIcon } from "@/components/ui/category-icon";
-import { IconPicker } from "@/components/ui/icon-picker";
-import { Select } from "@/components/ui/select";
-import { Wallet as WalletIcon } from "lucide-react";
-import { createCategory, recordTransaction } from "@/app/dashboard/actions";
 import { DEMO_MONTHLY_POINTS, DEMO_WALLETS } from "@/lib/dashboard/demo";
 import { formatMoney, summarizeTransactions } from "@/lib/dashboard/summary";
 import { useHiddenWallets } from "@/lib/dashboard/use-hidden-wallets";
-import type { Category, DashboardData, Transaction, Wallet } from "@/lib/dashboard/types";
+import type { Category, DashboardData, Transaction } from "@/lib/dashboard/types";
 
 interface DashboardShellProps { data: DashboardData; demo?: boolean }
 type Panel = BalanceAction | "notifications" | "help" | null;
@@ -34,6 +30,7 @@ export function DashboardShell({ data, demo = false }: DashboardShellProps) {
   const [query, setQuery] = useState("");
   const [panel, setPanel] = useState<Panel>(null);
   const [detail, setDetail] = useState<Transaction | null>(null);
+  const [editing, setEditing] = useState<Transaction | null>(null);
   const [notice, setNotice] = useState("");
   const searchInput = useRef<HTMLInputElement>(null);
   const wallet = wallets.find((item) => item.id === selectedWalletId) ?? wallets[0] ?? null;
@@ -115,6 +112,7 @@ export function DashboardShell({ data, demo = false }: DashboardShellProps) {
                 <h2>Good habits start<br />with a clear view.</h2>
                 <p>Take a moment to see where your money goes. Your future self will thank you.</p>
                 <button className="text-action" onClick={downloadStatement}>Download statement<Icon name="arrow-up-right" size={17} /></button>
+                <Link className="text-action" href="/goals">Plan your goals<Icon name="arrow-right" size={17} /></Link>
                 <span className="insight-art" aria-hidden="true"><span /><span /><span /><span /><span /></span>
               </section>
             </div>
@@ -132,7 +130,33 @@ export function DashboardShell({ data, demo = false }: DashboardShellProps) {
 
       <MobileNav demo={demo} />
 
-      {detail && <TransactionDetailDialog transaction={detail} wallets={wallets} onClose={() => setDetail(null)} />}
+      {detail && (
+        <TransactionDetailDialog
+          transaction={detail}
+          wallets={wallets}
+          onClose={() => setDetail(null)}
+          onEdit={() => { setEditing(detail); setDetail(null); }}
+        />
+      )}
+
+      {editing && (() => {
+        const editingWallet = wallets.find((item) => item.id === editing.walletId) ?? wallets[0];
+        return editingWallet ? (
+          <Modal title="Edit transaction" onClose={() => setEditing(null)}>
+            <TransactionForm
+              action={editing.type}
+              wallet={editingWallet}
+              wallets={wallets}
+              categories={categories}
+              today={data.today}
+              demo={demo}
+              existing={editing}
+              onCategoryCreated={(category) => setCategories((previous) => [...previous, category])}
+              onSaved={() => { setEditing(null); setNotice("Transaction updated. Balances are refreshed."); router.refresh(); }}
+            />
+          </Modal>
+        ) : null;
+      })()}
 
       {panel && wallet && <Modal title={panel === "notifications" ? "You’re all caught up" : panel === "help" ? "A little help with Folio" : panel === "transfer" ? "Transfer between wallets" : panel === "expense" ? "Record an expense" : "Record income"} onClose={() => setPanel(null)}>
         {panel === "expense" || panel === "income" || panel === "transfer" ? (
@@ -148,140 +172,6 @@ export function DashboardShell({ data, demo = false }: DashboardShellProps) {
           />
         ) : panel === "notifications" ? <div className="modal-copy"><span className="modal-feature-icon"><Icon name="check" size={26} /></span><p>No new notifications. A little peace of mind looks good on you.</p></div> : <div className="modal-copy"><p>Folio is your personal money journal. Record expenses and income against a wallet, and transfer between wallets when you move money around.</p><p>Use the balance card to add a transaction, or choose a wallet below to see its own activity.</p><p>{demo ? "You’re viewing sample data. Sign in to start your own money journal." : "Your overview shows each wallet's recorded balance. Bank accounts and live exchange rates are not connected."}</p></div>}
       </Modal>}
-    </div>
-  );
-}
-
-function TransactionForm({ action, wallet, wallets, categories, today, demo, onCategoryCreated, onSaved }: {
-  action: "expense" | "income" | "transfer";
-  wallet: Wallet;
-  wallets: Wallet[];
-  categories: Category[];
-  today: string;
-  demo: boolean;
-  onCategoryCreated: (category: Category) => void;
-  onSaved: () => void;
-}) {
-  const [error, setError] = useState("");
-  const [categoryId, setCategoryId] = useState("");
-  const [destinationWalletId, setDestinationWalletId] = useState(wallets.find((item) => item.id !== wallet.id)?.id ?? "");
-  const [showNewCategory, setShowNewCategory] = useState(false);
-  const [pending, startTransition] = useTransition();
-  const otherWallets = wallets.filter((item) => item.id !== wallet.id);
-  const relevantCategories = categories.filter((category) => category.type === (action === "income" ? "income" : "expense"));
-  const formId = useId();
-
-  function submit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (pending || demo) return;
-    const form = new FormData(event.currentTarget);
-    setError("");
-    startTransition(async () => {
-      try {
-        const result = await recordTransaction({
-          walletId: wallet.id,
-          destinationWalletId: action === "transfer" ? destinationWalletId : undefined,
-          categoryId: action !== "transfer" && categoryId ? categoryId : undefined,
-          amount: String(form.get("amount") ?? ""),
-          date: String(form.get("date") ?? ""),
-          type: action,
-          note: String(form.get("note") ?? "").trim() || undefined,
-        });
-        if (!result.success) setError(result.error ?? "Could not save this transaction. Please try again.");
-        else onSaved();
-      } catch { setError("Could not connect. Please try again."); }
-    });
-  }
-
-  return <form className="transaction-form" onSubmit={submit}>
-    <p className="modal-description">
-      {action === "expense" ? `Record money spent from ${wallet.name}.` : action === "income" ? `Record money received into ${wallet.name}.` : `Move money from ${wallet.name} to another wallet.`}
-      {" "}This records activity and does not move real money.
-    </p>
-    {demo && <p className="form-information">This is a preview. <Link href="/login">Sign in</Link> to record your own transactions.</p>}
-
-    {action === "transfer" ? (
-      otherWallets.length === 0 ? (
-        <p className="form-information">You need at least one other wallet to transfer money. Add a wallet first.</p>
-      ) : (
-        <label>To wallet
-          <Select
-            aria-label="To wallet"
-            value={destinationWalletId}
-            onChange={setDestinationWalletId}
-            disabled={pending}
-            options={otherWallets.map((item) => ({ value: item.id, label: `${item.name} (${item.currency})`, icon: <WalletIcon size={16} /> }))}
-          />
-        </label>
-      )
-    ) : (
-      <label>Category
-        <Select
-          aria-label="Category"
-          value={categoryId}
-          onChange={setCategoryId}
-          disabled={pending}
-          placeholder="No category"
-          options={[
-            { value: "", label: "No category", icon: <CategoryIcon name={null} size={16} /> },
-            ...relevantCategories.map((category) => ({ value: category.id, label: category.name, icon: <CategoryIcon name={category.icon} size={16} /> })),
-          ]}
-          onCreateNew={() => setShowNewCategory(true)}
-          createNewLabel="New category"
-        />
-      </label>
-    )}
-
-    {showNewCategory && (
-      <NewCategoryFields
-        type={action === "income" ? "income" : "expense"}
-        onCreated={(category) => { onCategoryCreated(category); setCategoryId(category.id); setShowNewCategory(false); }}
-        onCancel={() => setShowNewCategory(false)}
-      />
-    )}
-
-    <div className="form-columns">
-      <label>Amount ({wallet.currency})<input name="amount" type="text" inputMode="decimal" pattern="[0-9]+(\.[0-9]{1,2})?" placeholder="0.00" required maxLength={14} disabled={pending} /></label>
-      <label>Date<input name="date" type="date" defaultValue={today} max={today} required disabled={pending} /></label>
-    </div>
-    <label htmlFor={`${formId}-note`}>Note (optional)<input id={`${formId}-note`} name="note" placeholder="e.g. Coffee with a friend" maxLength={120} disabled={pending} /></label>
-    {error && <p className="form-error" role="alert">{error}</p>}
-    <button className="primary-button" type="submit" disabled={pending || demo || (action === "transfer" && otherWallets.length === 0)}>{pending ? "Saving..." : "Save transaction"}<Icon name="arrow-right" size={18} /></button>
-  </form>;
-}
-
-function NewCategoryFields({ type, onCreated, onCancel }: { type: "expense" | "income"; onCreated: (category: Category) => void; onCancel: () => void }) {
-  const [name, setName] = useState("");
-  const [icon, setIcon] = useState(type === "income" ? "briefcase" : "tag");
-  const [pending, setPending] = useState(false);
-  const [error, setError] = useState("");
-
-  // This renders inside the transaction form's own <form>, so it cannot be
-  // a nested <form> itself (invalid HTML) or a type="submit" button (which
-  // would submit the outer form). Plain buttons with a click handler instead.
-  async function handleCreate() {
-    if (pending || !name.trim()) return;
-    setPending(true);
-    setError("");
-    const result = await createCategory({ name, type, icon });
-    setPending(false);
-    if (!result.success) { setError(result.error); return; }
-    onCreated(result.category);
-  }
-
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 9, margin: "12px 0 0", padding: 14, border: "1px solid var(--border)", borderRadius: 12, background: "var(--surface-muted)" }}>
-      <label style={{ display: "flex", flexDirection: "column", gap: 9, fontSize: 12, fontWeight: 500 }}>
-        New {type} category
-        <input value={name} onChange={(event) => setName(event.target.value)} maxLength={60} placeholder="e.g. Dining Out" disabled={pending} style={{ width: "100%", background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 12, padding: 12, fontSize: 13 }} />
-      </label>
-      <p style={{ margin: 0, fontSize: 12, fontWeight: 500 }}>Icon</p>
-      <IconPicker value={icon} onChange={setIcon} aria-label="Choose a category icon" />
-      {error && <p className="form-error" role="alert">{error}</p>}
-      <div style={{ display: "flex", gap: 8 }}>
-        <button type="button" onClick={onCancel} disabled={pending} style={{ flex: 1, padding: "10px 12px", borderRadius: 10, border: "1px solid var(--border)", background: "var(--surface)", fontSize: 12 }}>Cancel</button>
-        <button type="button" onClick={handleCreate} disabled={pending || !name.trim()} style={{ flex: 1, padding: "10px 12px", borderRadius: 10, border: 0, background: "#141414", color: "#fff", fontSize: 12 }}>{pending ? "Adding..." : "Add category"}</button>
-      </div>
     </div>
   );
 }

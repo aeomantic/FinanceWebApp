@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { isAllowedEmail } from "@/lib/auth/allowlist";
 import { createClient } from "@/lib/supabase/server";
-import { categoryInputSchema, parseAmountMinor, renameWalletInputSchema, transactionInputSchema, uuidSchema, walletInputSchema } from "@/lib/dashboard/validation";
+import { categoryInputSchema, parseAmountMinor, renameWalletInputSchema, transactionInputSchema, updateTransactionInputSchema, uuidSchema, walletInputSchema } from "@/lib/dashboard/validation";
 import type {
   CreateCategoryInput,
   CreateCategoryResult,
@@ -15,6 +15,7 @@ import type {
   RenameWalletInput,
   RenameWalletResult,
   SetDefaultWalletResult,
+  UpdateTransactionInput,
 } from "@/lib/dashboard/types";
 import type { PostgrestError } from "@supabase/supabase-js";
 
@@ -72,6 +73,59 @@ export async function recordTransaction(input: RecordTransactionInput): Promise<
       logDbError("Transaction insert failed:", error);
       return { success: false, error: "We couldn't save this transaction. Please try again." };
     }
+  } catch {
+    return { success: false, error: "We couldn't reach your account. Check your connection and try again." };
+  }
+
+  refreshDashboardPages();
+  return { success: true };
+}
+
+/** Correct an existing ledger entry. The sync_wallet_balance trigger reverses
+ * the old row's effect and applies the new one on UPDATE, so amount, date,
+ * wallet, and destination changes rebalance every touched wallet without any
+ * client-side delta arithmetic. */
+export async function updateTransaction(input: UpdateTransactionInput): Promise<RecordTransactionResult> {
+  const parsed = updateTransactionInputSchema.safeParse(input);
+  if (!parsed.success) return { success: false, error: parsed.error.issues[0]?.message ?? "Check the transaction details." };
+  if (parsed.data.date > new Date().toISOString().slice(0, 10)) {
+    return { success: false, error: "Choose today or an earlier transaction date." };
+  }
+
+  const amountMinor = parseAmountMinor(parsed.data.amount);
+  if (amountMinor === null) return { success: false, error: "Enter a valid transaction amount." };
+
+  try {
+    const supabase = await createClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user || !isAllowedEmail(user.email)) {
+      return { success: false, error: "Your session has expired. Please sign in again." };
+    }
+
+    // Currency always follows the (possibly reassigned) source wallet, the
+    // same rule recordTransaction applies on insert.
+    const { data: wallet, error: walletError } = await supabase
+      .from("wallets").select("id,currency").eq("id", parsed.data.walletId).single();
+    if (walletError || !wallet) {
+      if (walletError) logDbError("Wallet lookup failed:", walletError);
+      return { success: false, error: "That wallet could not be found." };
+    }
+
+    const { error, count } = await supabase.from("transactions").update({
+      wallet_id: parsed.data.walletId,
+      destination_wallet_id: parsed.data.destinationWalletId ?? null,
+      category_id: parsed.data.categoryId ?? null,
+      amount_minor: amountMinor,
+      currency: wallet.currency,
+      occurred_on: parsed.data.date,
+      type: parsed.data.type,
+      note: parsed.data.note ?? null,
+    }, { count: "exact" }).eq("id", parsed.data.id).eq("user_id", user.id);
+    if (error) {
+      logDbError("Transaction update failed:", error);
+      return { success: false, error: "We couldn't save your changes. Please try again." };
+    }
+    if (!count) return { success: false, error: "That transaction could not be found. Refresh and try again." };
   } catch {
     return { success: false, error: "We couldn't reach your account. Check your connection and try again." };
   }
@@ -180,10 +234,13 @@ export async function deleteWallet(walletId: string): Promise<DeleteWalletResult
     const { error } = await supabase.rpc("delete_managed_wallet", { p_wallet_id: walletId });
     if (error) {
       logDbError("Wallet delete failed:", error);
+      // P0001 raises come from our own triggers/functions with messages
+      // already written for people, so surface them instead of a shrug.
       return { success: false, error: error.code === "23514"
         ? "You need at least one wallet. Create another before deleting this one."
         : error.code === "P0002" ? "That wallet could not be found."
-        : "We couldn't delete this wallet. Check whether a recurring payment still uses it." };
+        : error.code === "P0001" && error.message ? error.message
+        : "We couldn't delete this wallet. Please refresh and try again." };
     }
 
     refreshDashboardPages();

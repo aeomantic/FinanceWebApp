@@ -22,7 +22,9 @@ const baseTransactionSchema = z.object({
   note: z.string().trim().max(120, "Keep the note under 120 characters.").optional(),
 });
 
-export const transactionInputSchema = baseTransactionSchema.check((ctx) => {
+// Shared between the record and update schemas so the transfer rules can
+// never drift between the two write paths.
+function checkTransferWallets(ctx: z.core.ParsePayload<z.infer<typeof baseTransactionSchema>>) {
   const { type, destinationWalletId, walletId } = ctx.value;
   if (type === "transfer") {
     if (!destinationWalletId) {
@@ -31,7 +33,11 @@ export const transactionInputSchema = baseTransactionSchema.check((ctx) => {
       ctx.issues.push({ code: "custom", message: "Choose a different destination wallet.", path: ["destinationWalletId"], input: ctx.value });
     }
   }
-});
+}
+
+export const transactionInputSchema = baseTransactionSchema.check(checkTransferWallets);
+
+export const updateTransactionInputSchema = baseTransactionSchema.extend({ id: uuidSchema }).check(checkTransferWallets);
 
 export const walletNameSchema = z.string().trim().min(1, "Enter a wallet name.").max(60, "Keep the name under 60 characters.");
 
