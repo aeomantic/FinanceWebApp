@@ -10,6 +10,11 @@ const PUBLIC_PATHS = new Set([
   "/auth/reset-password",
   "/api/auth/password",
   "/preview",
+  // The PWA manifest is fetched by the browser without a session (e.g. on the
+  // login screen, before install); it must never redirect to /login or the
+  // install prompt and home-screen icon break. Its icons already bypass the
+  // proxy via the static-asset matcher.
+  "/manifest.webmanifest",
 ]);
 
 // Refresh and authorize every request. Redirects must carry rotated or

@@ -11,19 +11,34 @@ import { TransactionDetailDialog } from "./transaction-detail-dialog";
 import { SpendChart } from "./spend-chart";
 import { WalletList } from "./wallet-list";
 import { MobileNav } from "./mobile-nav";
+import { GoalsSummaryCard, WishlistPreviewCard } from "./goals-preview";
 import { BrandMark, Icon } from "@/components/ui/icon";
 import { Modal } from "@/components/ui/modal";
 import { DEMO_MONTHLY_POINTS, DEMO_WALLETS } from "@/lib/dashboard/demo";
 import { formatMoney, summarizeTransactions } from "@/lib/dashboard/summary";
 import { useHiddenWallets } from "@/lib/dashboard/use-hidden-wallets";
 import type { Category, DashboardData, Transaction } from "@/lib/dashboard/types";
+import type { GoalsSummary } from "@/lib/goals/types";
 
-interface DashboardShellProps { data: DashboardData; demo?: boolean }
+const DEMO_GOALS_SUMMARY: GoalsSummary = {
+  primaryCurrency: "USD",
+  goals: [
+    { id: "demo-goal-1", title: "Emergency fund", targetMinor: 500000, savedMinor: 320000, currency: "USD", deadline: null, icon: "piggy-bank", updatedAt: "" },
+    { id: "demo-goal-2", title: "Japan trip", targetMinor: 300000, savedMinor: 90000, currency: "USD", deadline: null, icon: "sparkles", updatedAt: "" },
+  ],
+  wishes: [
+    { id: "demo-wish-1", name: "Standing desk", priceMinor: 45000, url: null, note: null, icon: "sparkles", convertedGoalId: null },
+    { id: "demo-wish-2", name: "Noise-cancelling headphones", priceMinor: 38000, url: null, note: null, icon: "sparkles", convertedGoalId: null },
+  ],
+};
+
+interface DashboardShellProps { data: DashboardData; goalsSummary?: GoalsSummary; demo?: boolean }
 type Panel = BalanceAction | "notifications" | "help" | null;
 
-export function DashboardShell({ data, demo = false }: DashboardShellProps) {
+export function DashboardShell({ data, goalsSummary, demo = false }: DashboardShellProps) {
   const router = useRouter();
   const wallets = demo ? DEMO_WALLETS : data.wallets;
+  const goalsPreview = demo ? DEMO_GOALS_SUMMARY : (goalsSummary ?? { goals: [], wishes: [], primaryCurrency: "SGD" });
   const [categories, setCategories] = useState<Category[]>(data.categories);
   const { hiddenIds, toggle: toggleHideBalance } = useHiddenWallets();
   const [selectedWalletId, setSelectedWalletId] = useState<string | null>((wallets.find((item) => item.isDefault) ?? wallets[0])?.id ?? null);
@@ -64,6 +79,7 @@ export function DashboardShell({ data, demo = false }: DashboardShellProps) {
           <a href="#overview" className="rail-link active" aria-label="Overview" title="Overview"><Icon name="home" /></a>
           <Link href={demo ? "/preview" : "/transactions"} className="rail-link" aria-label="Transactions" title="Transactions"><Icon name="transfer" /></Link>
           <a href="#activity" className="rail-link" aria-label="Activity" title="Activity"><Icon name="activity" /></a>
+          <Link href={demo ? "/login" : "/goals"} className="rail-link" aria-label="Goals" title="Goals"><Icon name="target" /></Link>
           <Link href={demo ? "/preview" : "/wallets"} className="rail-link" aria-label="Wallets" title="Wallets"><Icon name="wallet" /></Link>
         </nav>
         <button className="rail-link rail-help" onClick={() => setPanel("help")} aria-label="Help"><Icon name="help" /></button>
@@ -73,7 +89,7 @@ export function DashboardShell({ data, demo = false }: DashboardShellProps) {
       <div className="app-content">
         <header className="topbar">
           <Link href={demo ? "/preview" : "/dashboard"} className="wordmark">folio<span>.</span></Link>
-          <nav className="top-nav" aria-label="Dashboard sections"><a href="#overview" className="selected">Overview</a><Link href={demo ? "/preview" : "/transactions"}>Transactions</Link><Link href={demo ? "/preview" : "/wallets"}>Wallets</Link></nav>
+          <nav className="top-nav" aria-label="Dashboard sections"><a href="#overview" className="selected">Overview</a><Link href={demo ? "/preview" : "/transactions"}>Transactions</Link><Link href={demo ? "/login" : "/goals"}>Goals</Link><Link href={demo ? "/preview" : "/wallets"}>Wallets</Link></nav>
           <div className="topbar-actions">
             <button className="icon-button" aria-label="Search transactions" onClick={() => { document.getElementById("transactions")?.scrollIntoView(); searchInput.current?.focus(); }}><Icon name="search" /></button>
             <button className="icon-button" aria-label="Notifications" onClick={() => setPanel("notifications")}><Icon name="bell" /></button>
@@ -112,9 +128,10 @@ export function DashboardShell({ data, demo = false }: DashboardShellProps) {
                 <h2>Good habits start<br />with a clear view.</h2>
                 <p>Take a moment to see where your money goes. Your future self will thank you.</p>
                 <button className="text-action" onClick={downloadStatement}>Download statement<Icon name="arrow-up-right" size={17} /></button>
-                <Link className="text-action" href="/goals">Plan your goals<Icon name="arrow-right" size={17} /></Link>
                 <span className="insight-art" aria-hidden="true"><span /><span /><span /><span /><span /></span>
               </section>
+              <GoalsSummaryCard goals={goalsPreview.goals} demo={demo} />
+              <WishlistPreviewCard wishes={goalsPreview.wishes} primaryCurrency={goalsPreview.primaryCurrency} demo={demo} />
             </div>
           </div>}
           {!data.error && !wallet && (

@@ -168,6 +168,7 @@ export function TransactionsView({ wallets: initialWallets, transactions: initia
           <Link href={demo ? "/preview" : "/dashboard"} className="rail-link" aria-label="Overview" title="Overview"><Icon name="home" /></Link>
           <Link href={demo ? "/preview" : "/transactions"} className="rail-link active" aria-label="Transactions" title="Transactions"><Icon name="transfer" /></Link>
           <Link href={demo ? "/preview" : "/dashboard"} className="rail-link" aria-label="Activity" title="Activity"><Icon name="activity" /></Link>
+          <Link href={demo ? "/login" : "/goals"} className="rail-link" aria-label="Goals" title="Goals"><Icon name="target" /></Link>
           <Link href={demo ? "/preview" : "/wallets"} className="rail-link" aria-label="Wallets" title="Wallets"><Icon name="wallet" /></Link>
         </nav>
         <Link href={demo ? "/login" : "/settings"} className="rail-avatar" aria-label="Account settings">{name.slice(0, 1).toUpperCase()}</Link>
@@ -179,6 +180,7 @@ export function TransactionsView({ wallets: initialWallets, transactions: initia
           <nav className="top-nav" aria-label="Dashboard sections">
             <Link href={demo ? "/preview" : "/dashboard"}>Overview</Link>
             <Link href={demo ? "/preview" : "/transactions"} className="selected">Transactions</Link>
+            <Link href={demo ? "/login" : "/goals"}>Goals</Link>
             <Link href={demo ? "/preview" : "/wallets"}>Wallets</Link>
           </nav>
           <div className="topbar-actions">

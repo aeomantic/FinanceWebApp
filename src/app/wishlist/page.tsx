@@ -1,13 +1,12 @@
-import { GoalsView } from "@/components/goals/goals-view";
+import { WishlistView } from "@/components/goals/wishlist-view";
 import { getGoalsData } from "@/lib/goals/data";
 
-export default async function GoalsPage() {
+export default async function WishlistPage() {
   const data = await getGoalsData();
   return (
-    <GoalsView
-      goals={data.goals}
+    <WishlistView
+      wishes={data.wishes}
       primaryCurrency={data.primaryCurrency}
-      today={data.today}
       name={data.name}
       error={data.error}
     />

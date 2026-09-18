@@ -70,6 +70,7 @@ export function CommitmentsView({ commitments, wallets, categories, today, name:
           <Link href="/dashboard" className="rail-link" aria-label="Overview" title="Overview"><Icon name="home" /></Link>
           <Link href="/transactions" className="rail-link active" aria-label="Transactions" title="Transactions"><Icon name="transfer" /></Link>
           <Link href="/dashboard" className="rail-link" aria-label="Activity" title="Activity"><Icon name="activity" /></Link>
+          <Link href="/goals" className="rail-link" aria-label="Goals" title="Goals"><Icon name="target" /></Link>
           <Link href="/wallets" className="rail-link" aria-label="Wallets" title="Wallets"><Icon name="wallet" /></Link>
         </nav>
         <Link href="/settings" className="rail-avatar" aria-label="Account settings">{name.slice(0, 1).toUpperCase()}</Link>
@@ -81,6 +82,7 @@ export function CommitmentsView({ commitments, wallets, categories, today, name:
           <nav className="top-nav" aria-label="Dashboard sections">
             <Link href="/dashboard">Overview</Link>
             <Link href="/transactions" className="selected">Transactions</Link>
+            <Link href="/goals">Goals</Link>
             <Link href="/wallets">Wallets</Link>
           </nav>
           <div className="topbar-actions">

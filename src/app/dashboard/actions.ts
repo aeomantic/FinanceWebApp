@@ -236,7 +236,9 @@ export async function deleteWallet(walletId: string): Promise<DeleteWalletResult
       logDbError("Wallet delete failed:", error);
       // P0001 raises come from our own triggers/functions with messages
       // already written for people, so surface them instead of a shrug.
-      return { success: false, error: error.code === "23514"
+      // code/detail ride along so the client can log the exact failure when
+      // the mapped message is the generic fallback.
+      return { success: false, code: error.code, detail: error.message, error: error.code === "23514"
         ? "You need at least one wallet. Create another before deleting this one."
         : error.code === "P0002" ? "That wallet could not be found."
         : error.code === "P0001" && error.message ? error.message

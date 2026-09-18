@@ -30,6 +30,13 @@ export interface GoalsData {
   error: string | null;
 }
 
+/** Compact goals + wishlist preview for the dashboard bento cards. */
+export interface GoalsSummary {
+  goals: Goal[];
+  wishes: WishlistItem[];
+  primaryCurrency: string;
+}
+
 export type GoalsResult = { success: true } | { success: false; error: string };
 
 export interface CreateGoalInput { title: string; target: string; saved?: string; currency: string; deadline?: string; icon?: string }

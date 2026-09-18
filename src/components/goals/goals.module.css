@@ -55,3 +55,6 @@
   .cardActions { align-items: stretch; }
   .pillButton { flex: 1 1 auto; justify-content: center; }
 }
+
+.inlineLink { color: var(--color-ink, #141414); text-decoration: underline; text-underline-offset: 2px; }
+.inlineLink:hover { opacity: .75; }

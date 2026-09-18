@@ -123,7 +123,11 @@ function DeleteWalletModal({ wallet, onClose, onDeleted }: { wallet: Wallet; onC
     setError("");
     const result = await deleteWallet(wallet.id);
     setPending(false);
-    if (!result.success) { setError(result.error); return; }
+    if (!result.success) {
+      if (result.code || result.detail) console.error("Delete wallet error:", { code: result.code, message: result.detail });
+      setError(result.error);
+      return;
+    }
     onDeleted();
     onClose();
   }

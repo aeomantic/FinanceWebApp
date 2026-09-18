@@ -115,7 +115,11 @@ export function WalletsCard({ wallets, disabled = false }: { wallets: Wallet[]; 
         <ConfirmationDialog
           title={`Delete ${deleteTarget.name}?`}
           description={`This permanently deletes ${deleteTarget.name} and every transaction recorded against it. This can't be undone.${deleteTarget.isDefault ? " Since this is your default wallet, another wallet will be promoted to default." : ""}`}
-          onConfirm={() => deleteWallet(deleteTarget.id)}
+          onConfirm={async () => {
+            const result = await deleteWallet(deleteTarget.id);
+            if (!result.success && (result.code || result.detail)) console.error("Delete wallet error:", { code: result.code, message: result.detail });
+            return result;
+          }}
           onClose={() => setDeleteTarget(null)}
           onSuccess={() => {
             setNotice(`${deleteTarget.name} deleted.`);
