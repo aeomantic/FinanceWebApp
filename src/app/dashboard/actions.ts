@@ -231,18 +231,23 @@ export async function deleteWallet(walletId: string): Promise<DeleteWalletResult
       return { success: false, error: "Your session has expired. Please sign in again." };
     }
 
-    const { error } = await supabase.rpc("delete_managed_wallet", { p_wallet_id: walletId });
+    // Atomic, SECURITY DEFINER RPC: does all unlinking, transaction cleanup,
+    // deletion, and default promotion in one transaction (see
+    // 20260918030000_delete_wallet_safely.sql). Returns jsonb {success,error}
+    // for handled cases (e.g. only-wallet) and raises for auth/ownership.
+    const { data, error } = await supabase.rpc("delete_wallet_safely", { target_wallet_id: walletId });
     if (error) {
       logDbError("Wallet delete failed:", error);
-      // P0001 raises come from our own triggers/functions with messages
-      // already written for people, so surface them instead of a shrug.
-      // code/detail ride along so the client can log the exact failure when
-      // the mapped message is the generic fallback.
-      return { success: false, code: error.code, detail: error.message, error: error.code === "23514"
-        ? "You need at least one wallet. Create another before deleting this one."
-        : error.code === "P0002" ? "That wallet could not be found."
-        : error.code === "P0001" && error.message ? error.message
-        : "We couldn't delete this wallet. Please refresh and try again." };
+      // Surface the exact database error. If a constraint or RLS block ever
+      // remains, its message (e.g. the offending constraint name in a 23503)
+      // reaches the UI and the console instead of being hidden behind a shrug.
+      return { success: false, code: error.code, detail: error.message,
+        error: error.message?.trim() || "We couldn't delete this wallet. Please refresh and try again." };
+    }
+    // Handled, non-raising failures come back as {success:false,error} jsonb.
+    const result = (data ?? null) as { success?: boolean; error?: string } | null;
+    if (result && result.success === false) {
+      return { success: false, error: result.error?.trim() || "We couldn't delete this wallet. Please refresh and try again." };
     }
 
     refreshDashboardPages();
