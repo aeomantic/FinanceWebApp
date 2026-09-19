@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { SignOutButton } from "@/components/auth/sign-out-button";
@@ -25,7 +24,7 @@ interface WalletsViewProps {
 
 export function WalletsView({ wallets: initialWallets, name: fullName, error, demo = false }: WalletsViewProps) {
   const router = useRouter();
-  const [wallets, setWallets] = useState(demo ? DEMO_WALLETS : initialWallets);
+  const wallets = demo ? DEMO_WALLETS : initialWallets;
   const name = fullName.split(" ")[0] || "there";
   const { hiddenIds, toggle } = useHiddenWallets();
   const currencyCounts = new Map<string, number>();
@@ -86,7 +85,7 @@ export function WalletsView({ wallets: initialWallets, name: fullName, error, de
                 hiddenIds={hiddenIds}
                 onToggleHideBalance={toggle}
                 onChanged={handleChanged}
-                onCreated={(wallet) => { setWallets((previous) => [...previous, wallet]); router.refresh(); }}
+                onCreated={handleChanged}
               />
             </div>
           </div>

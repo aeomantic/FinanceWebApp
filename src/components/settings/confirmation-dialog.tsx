@@ -30,7 +30,7 @@ export function ConfirmationDialog({ title, description, onConfirm, onClose, onS
     }
   }
 
-  return <Modal title={title} onClose={() => { if (!pending) onClose(); }}>
+  return <Modal title={title} busy={pending} onClose={() => { if (!pending) onClose(); }}>
     <p className={styles.modalText}>{description}</p>
     {error && <p className={styles.error} role="alert">{error}</p>}
     <div className={styles.modalActions}>

@@ -223,37 +223,69 @@ export async function renameWallet(input: RenameWalletInput): Promise<RenameWall
 
 export async function deleteWallet(walletId: string): Promise<DeleteWalletResult> {
   if (!uuidSchema.safeParse(walletId).success) return { success: false, error: "That wallet could not be found." };
-
+  let cleanupStarted = false;
+  const failure = (): DeleteWalletResult => ({ success: false, error: cleanupStarted
+    ? "We couldn't finish deleting this wallet. Some changes may already be saved. Refresh and try again."
+    : "We couldn't delete this wallet. Please refresh and try again." });
   try {
     const supabase = await createClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user || !isAllowedEmail(user.email)) {
       return { success: false, error: "Your session has expired. Please sign in again." };
     }
+    // The old RPC's empty search_path was inherited by sync_wallet_balance's
+    // unqualified SQL. Use the public schema with the caller's JWT and RLS.
+    const db = supabase.schema("public");
+    const linkedTransactions = "wallet_id.eq." + walletId + ",destination_wallet_id.eq." + walletId;
+    const { data: wallet, error: lookupError } = await db.from("wallets")
+      .select("id,is_default").eq("user_id", user.id).eq("id", walletId).maybeSingle();
+    if (lookupError) { logDbError("Wallet deletion lookup failed:", lookupError); return failure(); }
+    if (!wallet) return { success: false, error: "That wallet no longer exists. Refresh your wallets." };
+    const { data: replacement, error: replacementError } = await db.from("wallets")
+      .select("id").eq("user_id", user.id).neq("id", walletId)
+      .order("created_at").order("id").limit(1).maybeSingle();
+    if (replacementError) { logDbError("Replacement wallet lookup failed:", replacementError); return failure(); }
+    if (!replacement) return { success: false, error: "Keep at least one wallet. Create another before deleting this one." };
 
-    // Atomic, SECURITY DEFINER RPC: does all unlinking, transaction cleanup,
-    // deletion, and default promotion in one transaction (see
-    // 20260918030000_delete_wallet_safely.sql). Returns jsonb {success,error}
-    // for handled cases (e.g. only-wallet) and raises for auth/ownership.
-    const { data, error } = await supabase.rpc("delete_wallet_safely", { target_wallet_id: walletId });
-    if (error) {
-      logDbError("Wallet delete failed:", error);
-      // Surface the exact database error. If a constraint or RLS block ever
-      // remains, its message (e.g. the offending constraint name in a 23503)
-      // reaches the UI and the console instead of being hidden behind a shrug.
-      return { success: false, code: error.code, detail: error.message,
-        error: error.message?.trim() || "We couldn't delete this wallet. Please refresh and try again." };
+    // Promote before cleanup so a later failure cannot leave no default.
+    // This existing RPC only changes flags and never fires the balance trigger.
+    if (wallet.is_default) {
+      const { error } = await supabase.rpc("set_default_wallet", { p_wallet_id: replacement.id });
+      if (error) { logDbError("Replacement default failed:", error); return failure(); }
+      cleanupStarted = true;
     }
-    // Handled, non-raising failures come back as {success:false,error} jsonb.
-    const result = (data ?? null) as { success?: boolean; error?: string } | null;
-    if (result && result.success === false) {
-      return { success: false, error: result.error?.trim() || "We couldn't delete this wallet. Please refresh and try again." };
-    }
-
-    refreshDashboardPages();
+    // Each request is atomic, but the sequence is not a database transaction.
+    // Delete whole transfers in both directions, never null their destination.
+    // The existing trigger reverses balances; FK SET NULL detaches history links.
+    cleanupStarted = true;
+    const { error: transactionsError } = await db.from("transactions").delete()
+      .eq("user_id", user.id).or(linkedTransactions);
+    if (transactionsError) { logDbError("Wallet transaction cleanup failed:", transactionsError); return failure(); }
+    // RLS can silently filter a DELETE: verify cleanup before removing the wallet.
+    const { count, error: remainingError } = await db.from("transactions")
+      .select("id", { count: "exact", head: true }).eq("user_id", user.id).or(linkedTransactions);
+    if (remainingError) { logDbError("Wallet cleanup verification failed:", remainingError); return failure(); }
+    if (count !== 0) return failure();
+    // Preserve commitment plans for reassignment to another billing wallet.
+    const { error: rulesError } = await db.from("recurring_rules").update({ wallet_id: null })
+      .eq("user_id", user.id).eq("wallet_id", walletId);
+    if (rulesError) { logDbError("Wallet commitment cleanup failed:", rulesError); return failure(); }
+    const { count: others, error: othersError } = await db.from("wallets")
+      .select("id", { count: "exact", head: true }).eq("user_id", user.id).neq("id", walletId);
+    if (othersError) { logDbError("Remaining wallets lookup failed:", othersError); return failure(); }
+    if (others === null || others < 1) return failure();
+    const { data: deleted, error: deleteError } = await db.from("wallets").delete()
+      .eq("user_id", user.id).eq("id", walletId).select("id").maybeSingle();
+    if (deleteError) { logDbError("Wallet delete failed:", deleteError); return failure(); }
+    if (!deleted) return failure();
     return { success: true };
-  } catch {
-    return { success: false, error: "We couldn't reach your account. Check your connection and try again." };
+  } catch (error) {
+    console.error("Wallet deletion request failed:", error);
+    return failure();
+  } finally {
+    // Refresh partial progress too. Retries remove existing rows, so the
+    // database trigger cannot reverse the same transaction's balance twice.
+    if (cleanupStarted) refreshDashboardPages();
   }
 }
 

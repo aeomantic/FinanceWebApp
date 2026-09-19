@@ -48,7 +48,7 @@ export function DashboardShell({ data, goalsSummary, demo = false }: DashboardSh
   const [editing, setEditing] = useState<Transaction | null>(null);
   const [notice, setNotice] = useState("");
   const searchInput = useRef<HTMLInputElement>(null);
-  const wallet = wallets.find((item) => item.id === selectedWalletId) ?? wallets[0] ?? null;
+  const wallet = wallets.find((item) => item.id === selectedWalletId) ?? wallets.find((item) => item.isDefault) ?? wallets[0] ?? null;
   const currency = wallet?.currency ?? "SGD";
   const walletTransactions = wallet ? data.transactions.filter((transaction) => transaction.walletId === wallet.id) : [];
   const transactions = demo ? data.transactions.filter((transaction) => transaction.walletId === wallet?.id) : walletTransactions;
@@ -122,7 +122,7 @@ export function DashboardShell({ data, goalsSummary, demo = false }: DashboardSh
               <TransactionList transactions={transactions} today={data.today} query={query} onSelect={setDetail} />
             </div>
             <div className="wallets-area" id="wallets">
-              <WalletList wallets={wallets} selectedWalletId={selectedWalletId} onSelect={setSelectedWalletId} onCreated={() => router.refresh()} onChanged={() => router.refresh()} hiddenWalletIds={hiddenIds} onToggleHideBalance={toggleHideBalance} demo={demo} />
+              <WalletList wallets={wallets} selectedWalletId={wallet?.id ?? null} onSelect={setSelectedWalletId} onCreated={() => router.refresh()} onChanged={() => router.refresh()} hiddenWalletIds={hiddenIds} onToggleHideBalance={toggleHideBalance} demo={demo} />
               <section className="insight-card">
                 <div className="insight-top"><span className="eyebrow">SMALL STEPS. BIG PICTURE.</span><span className="insight-icon"><Icon name="activity" size={18} /></span></div>
                 <h2>Good habits start<br />with a clear view.</h2>
@@ -137,7 +137,7 @@ export function DashboardShell({ data, goalsSummary, demo = false }: DashboardSh
           {!data.error && !wallet && (
             <div className="dashboard-grid">
               <div className="wallets-area" id="wallets" style={{ gridColumn: "1 / -1" }}>
-                <WalletList wallets={wallets} selectedWalletId={selectedWalletId} onSelect={setSelectedWalletId} onCreated={() => router.refresh()} onChanged={() => router.refresh()} hiddenWalletIds={hiddenIds} onToggleHideBalance={toggleHideBalance} demo={demo} />
+                <WalletList wallets={wallets} selectedWalletId={null} onSelect={setSelectedWalletId} onCreated={() => router.refresh()} onChanged={() => router.refresh()} hiddenWalletIds={hiddenIds} onToggleHideBalance={toggleHideBalance} demo={demo} />
               </div>
             </div>
           )}

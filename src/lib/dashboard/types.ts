@@ -105,10 +105,7 @@ export type RenameWalletResult =
 
 export type DeleteWalletResult =
   | { success: true }
-  // code/detail carry the raw Postgres error (safe schema-level data, never a
-  // payload or token) so the delete dialog can log it for diagnosis when the
-  // friendly message is not enough.
-  | { success: false; error: string; code?: string; detail?: string };
+  | { success: false; error: string };
 
 export interface CreateCategoryInput {
   name: string;

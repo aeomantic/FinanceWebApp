@@ -121,21 +121,26 @@ function DeleteWalletModal({ wallet, onClose, onDeleted }: { wallet: Wallet; onC
     if (pending) return;
     setPending(true);
     setError("");
-    const result = await deleteWallet(wallet.id);
-    setPending(false);
-    if (!result.success) {
-      if (result.code || result.detail) console.error("Delete wallet error:", { code: result.code, message: result.detail });
-      setError(result.error);
-      return;
+    try {
+      const result = await deleteWallet(wallet.id);
+      if (!result.success) {
+        setError(result.error);
+        onDeleted(); // Refresh partial cleanup while keeping the dialog open.
+        return;
+      }
+      onDeleted();
+      onClose();
+    } catch {
+      setError("We couldn't finish deleting this wallet. Refresh and try again.");
+    } finally {
+      setPending(false);
     }
-    onDeleted();
-    onClose();
   }
 
   return (
-    <Modal title="Delete this wallet?" onClose={onClose}>
+    <Modal title="Delete this wallet?" onClose={onClose} busy={pending}>
       <div className="modal-copy">
-        <p>This permanently deletes <strong>{wallet.name}</strong> and every transaction recorded against it. This can&apos;t be undone.</p>
+        <p>This permanently deletes <strong>{wallet.name}</strong> and every transaction recorded against it, including transfers involving other wallets. Their balances will be recalculated. Commitments are kept without a billing wallet. This can&apos;t be undone.</p>
         {wallet.isDefault && <p>Since this is your default wallet, another wallet will be promoted to default.</p>}
       </div>
       {error && <p className="form-error" role="alert">{error}</p>}
