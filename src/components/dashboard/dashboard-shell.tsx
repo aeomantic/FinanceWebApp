@@ -119,7 +119,7 @@ export function DashboardShell({ data, goalsSummary, demo = false }: DashboardSh
             <div className="chart-area" id="activity"><SpendChart points={points} currency={currency} /></div>
             <div className="transactions-area" id="transactions">
               <div className="transaction-search"><Icon name="search" size={17} /><input ref={searchInput} aria-label="Filter transactions" placeholder="Find a transaction..." value={query} onChange={(event) => setQuery(event.target.value)} />{query && <button aria-label="Clear search" onClick={() => setQuery("")}><Icon name="close" size={15} /></button>}</div>
-              <TransactionList transactions={transactions} today={data.today} query={query} onSelect={setDetail} />
+              <TransactionList transactions={transactions} today={data.today} query={query} onSelect={setDetail} demo={demo} />
             </div>
             <div className="wallets-area" id="wallets">
               <WalletList wallets={wallets} selectedWalletId={wallet?.id ?? null} onSelect={setSelectedWalletId} onCreated={() => router.refresh()} onChanged={() => router.refresh()} hiddenWalletIds={hiddenIds} onToggleHideBalance={toggleHideBalance} demo={demo} />
@@ -150,6 +150,7 @@ export function DashboardShell({ data, goalsSummary, demo = false }: DashboardSh
       {detail && (
         <TransactionDetailDialog
           transaction={detail}
+          demo={demo}
           wallets={wallets}
           onClose={() => setDetail(null)}
           onEdit={() => { setEditing(detail); setDetail(null); }}

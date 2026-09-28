@@ -1,7 +1,8 @@
 "use client";
 
 import { useId, useState } from "react";
-import { ArrowLeftRight } from "lucide-react";
+import { ArrowLeftRight, Trash2 } from "lucide-react";
+import { DeleteTransactionsDialog } from "./delete-transactions-dialog";
 import { CategoryIcon } from "@/components/ui/category-icon";
 import type { Transaction } from "@/lib/dashboard/types";
 import styles from "./components.module.css";
@@ -13,6 +14,7 @@ export interface TransactionListProps {
   onQueryChange?: (query: string) => void;
   /** When provided, each row becomes a button that opens the detail view. */
   onSelect?: (transaction: Transaction) => void;
+  demo?: boolean;
 }
 
 export function dateHeading(date: string, today: string): string {
@@ -36,7 +38,8 @@ export function MerchantAvatar({ type, categoryIcon }: Pick<Transaction, "type" 
   return <span className={`${styles.avatar} ${palette}`} aria-hidden="true"><CategoryIcon name={categoryIcon} size={18} /></span>;
 }
 
-export function TransactionList({ transactions, today, query = "", onQueryChange, onSelect }: TransactionListProps) {
+export function TransactionList({ transactions, today, query = "", onQueryChange, onSelect, demo = false }: TransactionListProps) {
+  const [deleteId, setDeleteId] = useState<string | null>(null);
   const [expanded, setExpanded] = useState(false);
   const titleId = useId();
   const searchId = useId();
@@ -44,7 +47,7 @@ export function TransactionList({ transactions, today, query = "", onQueryChange
   const normalizedQuery = query.trim().toLocaleLowerCase("en-US");
   const filtered = transactions
     .filter((transaction) => `${transaction.title} ${transaction.category ?? ""}`.toLocaleLowerCase("en-US").includes(normalizedQuery))
-    .toSorted((a, b) => b.date.localeCompare(a.date));
+    .toSorted((a, b) => b.date.localeCompare(a.date) || (b.recordedAt ?? "").localeCompare(a.recordedAt ?? ""));
   const visible = expanded || normalizedQuery ? filtered : filtered.slice(0, 5);
   const groups = visible.reduce<Map<string, Transaction[]>>((result, transaction) => {
     const group = result.get(transaction.date) ?? [];
@@ -102,10 +105,11 @@ export function TransactionList({ transactions, today, query = "", onQueryChange
                   </>
                 );
                 return onSelect ? (
-                  <li key={transaction.id} className={styles.transactionRowItem}>
+                  <li key={transaction.id} className={`${styles.transactionRowItem} flex items-center gap-2`}>
                     <button type="button" className={`${styles.transactionRow} ${styles.transactionRowButton}`} onClick={() => onSelect(transaction)}>
                       {content}
                     </button>
+                    {!demo && <button type="button" className="rounded-lg p-2 text-rose-400 hover:bg-rose-950/30" aria-label={`Delete ${transaction.title}`} onClick={() => setDeleteId(transaction.id)}><Trash2 size={16} aria-hidden="true" /></button>}
                   </li>
                 ) : (
                   <li key={transaction.id} className={styles.transactionRow}>{content}</li>
@@ -116,6 +120,7 @@ export function TransactionList({ transactions, today, query = "", onQueryChange
         ))}
       </div>
       {groups.size > 0 ? <p className={styles.transactionFooter}><span className={styles.statusDot} />All your activity, in one place</p> : null}
+      {deleteId && <DeleteTransactionsDialog ids={[deleteId]} onClose={() => setDeleteId(null)} onDeleted={() => setDeleteId(null)} />}
     </section>
   );
 }

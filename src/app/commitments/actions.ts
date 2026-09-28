@@ -11,6 +11,28 @@ function refreshCommitments() {
   revalidatePath("/commitments");
   revalidatePath("/transactions");
   revalidatePath("/dashboard");
+  revalidatePath("/wallets");
+  revalidatePath("/settings");
+  revalidatePath("/transactions/recurring");
+}
+
+export async function markCommitmentPaid(input: { id: string; updatedAt: string }): Promise<CommitmentResult> {
+  const parsed = commitmentMutationSchema.safeParse(input);
+  if (!parsed.success) return { success: false, error: "Choose a valid commitment." };
+  try {
+    const supabase = await createClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user || !isAllowedEmail(user.email)) return { success: false, error: "Your session has expired. Please sign in again." };
+    const { error } = await supabase.rpc("mark_commitment_paid", { p_id: parsed.data.id, p_updated_at: parsed.data.updatedAt });
+    if (error) {
+      console.error("Commitment payment failed:", { code: error.code, message: error.message });
+      return { success: false, error: error.code === "P0002"
+        ? "This commitment changed or was already paid. Refresh before recording another payment."
+        : "We couldn't record this payment. Check the assigned wallet and try again." };
+    }
+    refreshCommitments();
+    return { success: true };
+  } catch { return { success: false, error: "We couldn't reach your account. Please try again." }; }
 }
 
 /** Saves a planned obligation. Paid counts are manual records, never wallet debits. */

@@ -28,7 +28,35 @@ function logDbError(context: string, error: PostgrestError) {
 }
 
 function refreshDashboardPages() {
-  for (const path of ["/dashboard", "/settings", "/transactions", "/wallets", "/commitments"]) revalidatePath(path);
+  for (const path of ["/dashboard", "/settings", "/transactions", "/wallets", "/commitments", "/transactions/recurring", "/goals", "/wishlist"]) revalidatePath(path);
+}
+
+/** One DELETE statement: the existing balance trigger reverses each row in the
+ * same database transaction. Never also patch wallet balances from the client. */
+export async function deleteTransactions(ids: string[]): Promise<RecordTransactionResult> {
+  if (!Array.isArray(ids) || ids.length === 0 || ids.length > 10000 || ids.some((id) => !uuidSchema.safeParse(id).success)) {
+    return { success: false, error: "Select valid transactions to delete." };
+  }
+  try {
+    const supabase = await createClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user || !isAllowedEmail(user.email)) return { success: false, error: "Your session has expired. Please sign in again." };
+    const uniqueIds = [...new Set(ids)];
+    // PostgREST places .in() filters in the URL. Send large selections in an
+    // RPC body to avoid URL length limits while retaining one atomic DELETE.
+    const query = supabase.from("transactions").delete().eq("user_id", user.id);
+    const { error } = uniqueIds.length > 100
+      ? await supabase.rpc("delete_transactions", { p_ids: uniqueIds })
+      : uniqueIds.length === 1 ? await query.eq("id", uniqueIds[0]) : await query.in("id", uniqueIds);
+    if (error) {
+      logDbError("Transaction deletion failed:", error);
+      return { success: false, error: "We couldn't delete these transactions. Please try again." };
+    }
+    refreshDashboardPages();
+    return { success: true };
+  } catch {
+    return { success: false, error: "We couldn't reach your account. Check your connection and try again." };
+  }
 }
 
 /** Record ledger activity. This action never sends money or performs a bank transfer. */

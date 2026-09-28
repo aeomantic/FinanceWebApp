@@ -3,7 +3,9 @@
 import { useId, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Wallet as WalletIcon, CalendarClock } from "lucide-react";
+import { Wallet as WalletIcon, CalendarClock, Trash2, Check } from "lucide-react";
+import { DeleteTransactionsDialog } from "./delete-transactions-dialog";
+import { PaidButton, PaymentNotice } from "@/components/commitments/paid-button";
 import { SignOutButton } from "@/components/auth/sign-out-button";
 import { BrandMark, Icon } from "@/components/ui/icon";
 import { Select } from "@/components/ui/select";
@@ -103,6 +105,14 @@ export function TransactionsView({ wallets: initialWallets, transactions: initia
   const [detail, setDetail] = useState<Transaction | null>(null);
   const [editing, setEditing] = useState<Transaction | null>(null);
   const [notice, setNotice] = useState("");
+  const [paymentNotice, setPaymentNotice] = useState(false);
+  const [isSelectMode, setIsSelectMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [deleteIds, setDeleteIds] = useState<string[] | null>(null);
+  function toggleSelection(id: string) {
+    setSelectedIds((ids) => ids.includes(id) ? ids.filter((value) => value !== id) : [...ids, id]);
+  }
+  function clearSelection() { setSelectedIds([]); setIsSelectMode(false); }
 
   const periodStart = periodStartFor(period, today, allTimeStart);
   const inPeriod = useMemo(
@@ -144,7 +154,7 @@ export function TransactionsView({ wallets: initialWallets, transactions: initia
     .filter((transaction) => typeFilter === "all" || transaction.type === typeFilter)
     .filter((transaction) => !walletFilter || transaction.walletId === walletFilter || transaction.destinationWalletId === walletFilter)
     .filter((transaction) => `${transaction.title} ${transaction.category ?? ""}`.toLocaleLowerCase("en-US").includes(normalizedQuery))
-    .toSorted((a, b) => b.date.localeCompare(a.date));
+    .toSorted((a, b) => b.date.localeCompare(a.date) || (b.recordedAt ?? "").localeCompare(a.recordedAt ?? ""));
 
   const groups = ledger.reduce<Map<string, Transaction[]>>((result, transaction) => {
     const group = result.get(transaction.date) ?? [];
@@ -197,10 +207,11 @@ export function TransactionsView({ wallets: initialWallets, transactions: initia
           {demo && <div className="demo-banner"><span><span className="status-dot" />You’re exploring Folio. These are sample transactions.</span><Link href="/login">Make it yours<Icon name="arrow-up-right" size={15} /></Link></div>}
           {error && <div className="dashboard-alert" role="alert">{error}<button onClick={() => router.refresh()}>Try again</button></div>}
           {notice && <div className="success-notice" role="status"><Icon name="check" size={17} />{notice}<button aria-label="Dismiss notification" onClick={() => setNotice("")}><Icon name="close" size={16} /></button></div>}
+          {paymentNotice && <PaymentNotice onDismiss={() => setPaymentNotice(false)} />}
 
           <SegmentedControl
             value={period}
-            onChange={setPeriod}
+            onChange={(value) => { setPeriod(value); clearSelection(); }}
             aria-label="Time period"
             options={[{ value: "month", label: "This month" }, { value: "30d", label: "Last 30 days" }, { value: "all", label: "All time" }]}
           />
@@ -238,6 +249,7 @@ export function TransactionsView({ wallets: initialWallets, transactions: initia
                         <p className={styles.transactionMeta}><span className={styles.walletBadge}>{dueLabel(commitment.nextDueOn, today)}</span></p>
                       </div>
                       <span className={styles.transactionAmount}>&minus;{formatMoney(commitment.amountMinor, commitment.currency)}</span>
+                      <PaidButton commitment={commitment} onPaid={() => setPaymentNotice(true)} />
                     </li>
                   ))}
                 </ul>
@@ -296,22 +308,23 @@ export function TransactionsView({ wallets: initialWallets, transactions: initia
                 <div className={styles.cardHeading}>
                   <div><p className={styles.eyebrow}>FULL LEDGER</p><h2 id="ledger-heading">All transactions</h2></div>
                   <span className={styles.smallCount}>{ledger.length} total</span>
+                  {!demo && <button type="button" className={styles.textButton} aria-pressed={isSelectMode} onClick={() => { setSelectedIds([]); setIsSelectMode(!isSelectMode); }}>{isSelectMode ? "Done" : "Select"}</button>}
                 </div>
 
                 <div className={styles.filterToolbar}>
                   <div className={styles.transactionSearch}>
                     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true"><circle cx="10.7" cy="10.7" r="6.7" /><path d="m16 16 4 4" /></svg>
                     <label htmlFor={searchId} className={styles.srOnly}>Search transactions</label>
-                    <input id={searchId} type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search by note or category" />
+                    <input id={searchId} type="search" value={query} onChange={(event) => { setQuery(event.target.value); clearSelection(); }} placeholder="Search by note or category" />
                   </div>
                   <SegmentedControl
                     value={typeFilter}
-                    onChange={setTypeFilter}
+                    onChange={(value) => { setTypeFilter(value); clearSelection(); }}
                     aria-label="Filter by type"
                     options={[{ value: "all", label: "All" }, { value: "income", label: "Income" }, { value: "expense", label: "Expense" }]}
                   />
                   <div className={styles.walletFilter}>
-                    <Select aria-label="Filter by wallet" value={walletFilter} onChange={setWalletFilter} options={walletOptions} />
+                    <Select aria-label="Filter by wallet" value={walletFilter} onChange={(value) => { setWalletFilter(value); clearSelection(); }} options={walletOptions} />
                   </div>
                 </div>
 
@@ -332,12 +345,15 @@ export function TransactionsView({ wallets: initialWallets, transactions: initia
                           const amount = formatMoney(transaction.amountMinor, transaction.currency);
                           const walletName = walletsById.get(transaction.walletId)?.name ?? "Wallet";
                           return (
-                            <li key={transaction.id} className={styles.transactionRowItem}>
+                            <li key={transaction.id} className={`${styles.transactionRowItem} flex items-center gap-2`}>
                               <button
                                 type="button"
                                 className={`${styles.transactionRow} ${styles.transactionRowButton}`}
-                                onClick={() => setDetail(transaction)}
+                                role={isSelectMode ? "checkbox" : undefined}
+                                aria-checked={isSelectMode ? selectedIds.includes(transaction.id) : undefined}
+                                onClick={() => isSelectMode ? toggleSelection(transaction.id) : setDetail(transaction)}
                               >
+                                {isSelectMode && <span aria-hidden="true" className="flex h-5 w-5 shrink-0 items-center justify-center rounded-lg border border-zinc-700">{selectedIds.includes(transaction.id) && <Check className="h-4 w-4 text-emerald-400" />}</span>}
                                 <MerchantAvatar type={transaction.type} categoryIcon={transaction.categoryIcon} />
                                 <div className={styles.transactionDetails}>
                                   <p className={styles.transactionTitle}>{transaction.title}</p>
@@ -351,6 +367,7 @@ export function TransactionsView({ wallets: initialWallets, transactions: initia
                                   <span className={`${styles.transactionAmount} ${income ? styles.positive : ""}`}>{transfer ? "" : income ? "+" : "−"}{amount}</span>
                                 </div>
                               </button>
+                              {!demo && !isSelectMode && <button type="button" aria-label={`Delete ${transaction.title}`} onClick={() => setDeleteIds([transaction.id])} className="rounded-lg p-2 text-rose-400 hover:bg-rose-950/30"><Trash2 size={16} aria-hidden="true" /></button>}
                             </li>
                           );
                         })}
@@ -367,10 +384,17 @@ export function TransactionsView({ wallets: initialWallets, transactions: initia
       </div>
 
       <MobileNav demo={demo} />
+      {isSelectMode && selectedIds.length > 0 && <div className="fixed bottom-24 left-1/2 z-40 flex -translate-x-1/2 items-center gap-3 whitespace-nowrap rounded-full border border-zinc-700/80 bg-zinc-900 px-4 py-2.5 shadow-2xl">
+        <span className="text-xs font-semibold text-zinc-200">{selectedIds.length} selected</span>
+        <button type="button" onClick={() => setSelectedIds(ledger.map((transaction) => transaction.id))} className="text-xs text-zinc-400 hover:text-zinc-200">Select all</button>
+        <button type="button" onClick={() => setDeleteIds([...selectedIds])} className="flex items-center gap-1.5 rounded-full bg-rose-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-rose-700"><Trash2 className="h-3.5 w-3.5" />Delete ({selectedIds.length})</button>
+      </div>}
+      {deleteIds && <DeleteTransactionsDialog ids={deleteIds} onClose={() => setDeleteIds(null)} onDeleted={() => { setDeleteIds(null); clearSelection(); setNotice("Transactions deleted. Wallet balances updated."); }} />}
 
       {detail && (
         <TransactionDetailDialog
           transaction={detail}
+          demo={demo}
           wallets={wallets}
           onClose={() => setDetail(null)}
           onEdit={() => { setEditing(detail); setDetail(null); }}

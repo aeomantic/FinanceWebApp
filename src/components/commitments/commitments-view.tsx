@@ -11,6 +11,7 @@ import { MobileNav } from "@/components/dashboard/mobile-nav";
 import { formatMoney } from "@/lib/dashboard/summary";
 import { changeCommitmentStatus, deleteCommitment } from "@/app/commitments/actions";
 import { CommitmentDialog } from "./commitment-dialog";
+import { PaidButton, PaymentNotice } from "./paid-button";
 import type { Commitment } from "@/lib/commitments/types";
 import type { Category, Wallet } from "@/lib/dashboard/types";
 import dashboardStyles from "@/components/dashboard/components.module.css";
@@ -35,6 +36,7 @@ export function CommitmentsView({ commitments, wallets, categories, today, name:
   const [dialogTarget, setDialogTarget] = useState<Commitment | "new" | null>(null);
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [actionError, setActionError] = useState("");
+  const [paymentNotice, setPaymentNotice] = useState(false);
 
   const subscriptions = commitments.filter((commitment) => commitment.obligationType === "subscription");
   const installments = commitments.filter((commitment) => commitment.obligationType === "bnpl");
@@ -103,6 +105,7 @@ export function CommitmentsView({ commitments, wallets, categories, today, name:
 
           {error && <div className="dashboard-alert" role="alert">{error}<button onClick={() => router.refresh()}>Try again</button></div>}
           {actionError && <div className="dashboard-alert" role="alert">{actionError}<button onClick={() => setActionError("")}>Dismiss</button></div>}
+          {paymentNotice && <PaymentNotice onDismiss={() => setPaymentNotice(false)} />}
 
           <section className={`surface-card ${dashboardStyles.transactions}`} aria-labelledby="subscriptions-title">
             <div className={dashboardStyles.cardHeading}>
@@ -127,6 +130,7 @@ export function CommitmentsView({ commitments, wallets, categories, today, name:
                     <div className={styles.subscriptionEnd}>
                       <span className={styles.subscriptionAmount}>{formatMoney(commitment.amountMinor, commitment.currency)}</span>
                       <div className={styles.rowActions}>
+                        <PaidButton commitment={commitment} disabled={pendingId !== null} onPaid={() => setPaymentNotice(true)} />
                         <button type="button" className={styles.rowAction} aria-label={commitment.isActive ? `Pause ${commitment.name}` : `Resume ${commitment.name}`} onClick={() => toggleActive(commitment)} disabled={pendingId === commitment.id}>
                           {commitment.isActive ? <Pause size={15} aria-hidden="true" /> : <Play size={15} aria-hidden="true" />}
                         </button>
@@ -168,6 +172,7 @@ export function CommitmentsView({ commitments, wallets, categories, today, name:
                         </div>
                         <div className={styles.subscriptionEnd}>
                           <div className={styles.rowActions}>
+                            <PaidButton commitment={commitment} disabled={pendingId !== null} onPaid={() => setPaymentNotice(true)} />
                             <button type="button" className={styles.rowAction} aria-label={`Edit ${commitment.name}`} onClick={() => setDialogTarget(commitment)}><Pencil size={15} aria-hidden="true" /></button>
                             <button type="button" className={`${styles.rowAction} ${styles.rowActionDanger}`} aria-label={`Delete ${commitment.name}`} onClick={() => remove(commitment)} disabled={pendingId === commitment.id}><Trash2 size={15} aria-hidden="true" /></button>
                           </div>
@@ -189,7 +194,7 @@ export function CommitmentsView({ commitments, wallets, categories, today, name:
             )}
           </section>
 
-          <footer className="dashboard-footer"><span><span className="footer-leaf">✳</span> A calmer way to money.</span><span>Planning records only. Log real payments as expenses.</span><div><SignOutButton /></div></footer>
+          <footer className="dashboard-footer"><span><span className="footer-leaf">✳</span> A calmer way to money.</span><span>Mark a payment as paid to record its expense.</span><div><SignOutButton /></div></footer>
         </main>
       </div>
 
