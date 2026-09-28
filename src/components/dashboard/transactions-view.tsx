@@ -2,6 +2,7 @@
 
 import { useId, useMemo, useState } from "react";
 import Link from "next/link";
+import { InvestmentsNavLink } from "@/components/dashboard/investments-nav-link";
 import { useRouter } from "next/navigation";
 import { Wallet as WalletIcon, CalendarClock, Trash2, Check } from "lucide-react";
 import { DeleteTransactionsDialog } from "./delete-transactions-dialog";
@@ -175,6 +176,7 @@ export function TransactionsView({ wallets: initialWallets, transactions: initia
       <aside className="side-rail" aria-label="Main navigation">
         <Link href={demo ? "/preview" : "/dashboard"} className="rail-brand" aria-label="Folio home"><BrandMark /></Link>
         <nav className="rail-nav">
+          <InvestmentsNavLink demo={demo} />
           <Link href={demo ? "/preview" : "/dashboard"} className="rail-link" aria-label="Overview" title="Overview"><Icon name="home" /></Link>
           <Link href={demo ? "/preview" : "/transactions"} className="rail-link active" aria-label="Transactions" title="Transactions"><Icon name="transfer" /></Link>
           <Link href={demo ? "/preview" : "/dashboard"} className="rail-link" aria-label="Activity" title="Activity"><Icon name="activity" /></Link>

@@ -204,6 +204,8 @@ a.text-action { color: inherit; text-decoration: none; }
 .success-notice { background: #e3efdd; color: #355927; }
 .success-notice button { margin-left: auto; }
 .mobile-nav { display: none; }
+.mobile-nav.investments-mobile-nav { width: min(310px, calc(100vw - 24px)); gap: 4px; }
+.mobile-nav.investments-mobile-nav a { flex-shrink: 0; }
 .app-modal { border: 1px solid #14141408; padding: 28px; border-radius: 28px; background: var(--surface); width: min(470px, calc(100vw - 32px)); max-height: calc(100dvh - 48px); overflow-y: auto; box-shadow: 0 30px 100px #192b2040; margin: auto; color: var(--color-ink); }
 .app-modal::backdrop { background: #14251b55; backdrop-filter: blur(5px); }
 .modal-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 22px; }

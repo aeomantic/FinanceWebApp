@@ -28,7 +28,7 @@ function logDbError(context: string, error: PostgrestError) {
 }
 
 function refreshDashboardPages() {
-  for (const path of ["/dashboard", "/settings", "/transactions", "/wallets", "/commitments", "/transactions/recurring", "/goals", "/wishlist"]) revalidatePath(path);
+  for (const path of ["/dashboard", "/settings", "/transactions", "/wallets", "/commitments", "/transactions/recurring", "/goals", "/wishlist", "/investments"]) revalidatePath(path);
 }
 
 /** One DELETE statement: the existing balance trigger reverses each row in the

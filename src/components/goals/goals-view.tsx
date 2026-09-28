@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { InvestmentsNavLink } from "@/components/dashboard/investments-nav-link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Plus, Trash2 } from "lucide-react";
 import { SignOutButton } from "@/components/auth/sign-out-button";
@@ -56,6 +57,7 @@ export function GoalsView({ goals, primaryCurrency, today, name: fullName, error
       <aside className="side-rail" aria-label="Main navigation">
         <Link href="/dashboard" className="rail-brand" aria-label="Folio home"><BrandMark /></Link>
         <nav className="rail-nav">
+          <InvestmentsNavLink />
           <Link href="/dashboard" className="rail-link" aria-label="Overview" title="Overview"><Icon name="home" /></Link>
           <Link href="/transactions" className="rail-link" aria-label="Transactions" title="Transactions"><Icon name="transfer" /></Link>
           <Link href="/goals" className="rail-link active" aria-label="Goals" title="Goals"><Icon name="target" /></Link>

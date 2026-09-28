@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import Link from "next/link";
+import { InvestmentsNavLink } from "@/components/dashboard/investments-nav-link";
 import { useRouter } from "next/navigation";
 import { SignOutButton } from "@/components/auth/sign-out-button";
 import { BalanceCard, type BalanceAction } from "./balance-card";
@@ -76,6 +77,7 @@ export function DashboardShell({ data, goalsSummary, demo = false }: DashboardSh
       <aside className="side-rail" aria-label="Main navigation">
         <Link href={demo ? "/preview" : "/dashboard"} className="rail-brand" aria-label="Folio home"><BrandMark /></Link>
         <nav className="rail-nav">
+          <InvestmentsNavLink demo={demo} />
           <a href="#overview" className="rail-link active" aria-label="Overview" title="Overview"><Icon name="home" /></a>
           <Link href={demo ? "/preview" : "/transactions"} className="rail-link" aria-label="Transactions" title="Transactions"><Icon name="transfer" /></Link>
           <a href="#activity" className="rail-link" aria-label="Activity" title="Activity"><Icon name="activity" /></a>
