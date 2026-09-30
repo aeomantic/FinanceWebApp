@@ -50,8 +50,8 @@ export function UpcomingExpensesCard({ bills, commitments, wallets, categories, 
   </section>;
 }
 
-export function BillsOverview(props: { bills: Bill[]; commitments: Commitment[]; wallets: Wallet[]; categories: Category[]; transactions: Transaction[]; today: string; currency: string; error?: string | null }) {
-  return <div className="my-5 grid min-w-0 gap-4 lg:grid-cols-2">
+export function BillsOverview(props: { stacked?: boolean; bills: Bill[]; commitments: Commitment[]; wallets: Wallet[]; categories: Category[]; transactions: Transaction[]; today: string; currency: string; error?: string | null }) {
+  return <div className={`my-5 grid min-w-0 gap-4 ${props.stacked ? "" : "lg:grid-cols-2"}`}>
     {props.error ? <div className="surface-card rounded-3xl p-5" role="alert">Forecast unavailable. {props.error}</div> : <MonthlySpendCard forecast={calculateMonthlySpend(props.transactions, props.bills, props.commitments, props.today, props.currency)} today={props.today} currency={props.currency} />}
     <UpcomingExpensesCard {...props} />
   </div>;

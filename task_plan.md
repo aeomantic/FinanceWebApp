@@ -12,3 +12,8 @@
 7. Implement bill schema, atomic payments, forecast and shared UI (complete).
 8. Verify month boundaries, payment safety, typecheck and mobile layout (complete).
 9. Deliver SQL for user to execute in Supabase (user chose manual deployment).
+
+## Dashboard hierarchy and forecast meter
+- Explore existing grid and screenshot (complete).
+- Lead with wallet hero and switcher; stack forecast and upcoming expenses; add proportional segmented meter (complete).
+- Verify TypeScript, zero-value meter and mobile layout (complete).
