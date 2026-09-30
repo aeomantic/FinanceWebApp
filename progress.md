@@ -13,3 +13,5 @@ Bills implemented on dashboard and transactions, including edit/delete schedules
 Dashboard hierarchy updated: hero, wallet carousel, stacked forecasts/upcoming, recent ledger. Meter uses proportional flex weights, gaps, exact yellow/orange/red accents and percentage labels. Typecheck and lint passed. Browser checked 390px hero fully above fold, 320px without horizontal overflow, 176px bottom padding, zero and spent-only states.
 
 Footer normalization complete in shared globals.css: removed dashboard inner padding, reused Wallets 120px safe clearance on Transactions, compensated footer flex gap. Typecheck passed. Nine mobile page/width combinations all measured 120px bottom clearance, 44px footer-to-nav gap, no horizontal overflow.
+
+Hero containment fixed with minmax(0,1fr) leading grid, shrinkable card children, three equal action columns, full mobile labels and hidden mobile decorative badge. Caption has internal bottom spacing. Typecheck/lint pass. Browser at 360/375/393/430/768px confirms hero/eye contained, all action labels untruncated on one row, no horizontal overflow. Preview startup approval timed out once; permitted retry succeeded.

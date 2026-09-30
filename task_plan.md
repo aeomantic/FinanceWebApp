@@ -22,3 +22,7 @@
 - Reference inspected: Wallets uses 120px outer clearance and 23px mobile footer spacing.
 - Remove Home double padding, share Transactions clearance and offset its flex gap (complete).
 - Check three pages at 375/390/412px and typecheck (complete).
+
+## Hero responsive containment
+- Inspect and constrain grid minimum width; use equal action columns and mobile badge hiding (complete).
+- Verify mobile/tablet dimensions, visible labels and typecheck (complete).
