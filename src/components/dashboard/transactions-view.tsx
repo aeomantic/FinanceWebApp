@@ -6,7 +6,8 @@ import { InvestmentsNavLink } from "@/components/dashboard/investments-nav-link"
 import { useRouter } from "next/navigation";
 import { Wallet as WalletIcon, CalendarClock, Trash2, Check } from "lucide-react";
 import { DeleteTransactionsDialog } from "./delete-transactions-dialog";
-import { PaidButton, PaymentNotice } from "@/components/commitments/paid-button";
+import { BillsOverview } from "@/components/bills/UpcomingExpensesCard";
+import type { Bill } from "@/lib/bills/types";
 import { SignOutButton } from "@/components/auth/sign-out-button";
 import { BrandMark, Icon } from "@/components/ui/icon";
 import { Select } from "@/components/ui/select";
@@ -32,6 +33,8 @@ interface TransactionsViewProps {
   /** Needed by the edit form's category picker; feed rendering works without it. */
   categories?: Category[];
   commitments?: Commitment[];
+  bills?: Bill[];
+  forecastError?: string | null;
   today: string;
   periodStart: string;
   name: string;
@@ -47,17 +50,6 @@ function periodStartFor(period: Period, today: string, allTimeStart: string): st
     return date.toISOString().slice(0, 10);
   }
   return allTimeStart;
-}
-
-/** "Overdue" for a past-due next_due_on, otherwise days-until phrased like the
- * rest of the app's relative date labels (dateHeading's Today/Yesterday). */
-function dueLabel(nextDueOn: string, today: string): string {
-  const days = Math.round((Date.parse(`${nextDueOn}T00:00:00.000Z`) - Date.parse(`${today}T00:00:00.000Z`)) / 86400000);
-  if (days < 0) return "Overdue";
-  if (days === 0) return "Due today";
-  if (days === 1) return "Due tomorrow";
-  if (days <= 13) return `Due in ${days} days`;
-  return `Due ${new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: nextDueOn.slice(0, 4) !== today.slice(0, 4) ? "numeric" : undefined, timeZone: "UTC" }).format(new Date(`${nextDueOn}T00:00:00.000Z`))}`;
 }
 
 function SegmentedControl<T extends string>({ value, onChange, options, "aria-label": ariaLabel }: {
@@ -83,20 +75,13 @@ function SegmentedControl<T extends string>({ value, onChange, options, "aria-la
   );
 }
 
-export function TransactionsView({ wallets: initialWallets, transactions: initialTransactions, categories: initialCategories, commitments = [], today, periodStart: allTimeStart, name: fullName, error, demo = false }: TransactionsViewProps) {
+export function TransactionsView({ wallets: initialWallets, transactions: initialTransactions, categories: initialCategories, commitments = [], bills = [], forecastError, today, periodStart: allTimeStart, name: fullName, error, demo = false }: TransactionsViewProps) {
   const router = useRouter();
   const wallets = demo ? DEMO_WALLETS : initialWallets;
   const transactions = demo ? getDemoTransactions(today) : initialTransactions;
   const [categories, setCategories] = useState<Category[]>(demo ? DEMO_CATEGORIES : initialCategories ?? []);
   const name = fullName.split(" ")[0] || "there";
   const searchId = useId();
-
-  const upcoming = commitments
-    .filter((commitment) => commitment.isActive)
-    .filter((commitment) => commitment.obligationType === "subscription" || (commitment.totalInstallments !== null && commitment.paidInstallments < commitment.totalInstallments))
-    .filter((commitment) => Date.parse(`${commitment.nextDueOn}T00:00:00.000Z`) - Date.parse(`${today}T00:00:00.000Z`) <= 30 * 86400000)
-    .toSorted((a, b) => a.nextDueOn.localeCompare(b.nextDueOn))
-    .slice(0, 3);
 
   const [period, setPeriod] = useState<Period>("month");
   const [typeFilter, setTypeFilter] = useState<TypeFilter>("all");
@@ -106,7 +91,6 @@ export function TransactionsView({ wallets: initialWallets, transactions: initia
   const [detail, setDetail] = useState<Transaction | null>(null);
   const [editing, setEditing] = useState<Transaction | null>(null);
   const [notice, setNotice] = useState("");
-  const [paymentNotice, setPaymentNotice] = useState(false);
   const [isSelectMode, setIsSelectMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [deleteIds, setDeleteIds] = useState<string[] | null>(null);
@@ -209,7 +193,6 @@ export function TransactionsView({ wallets: initialWallets, transactions: initia
           {demo && <div className="demo-banner"><span><span className="status-dot" />You’re exploring Folio. These are sample transactions.</span><Link href="/login">Make it yours<Icon name="arrow-up-right" size={15} /></Link></div>}
           {error && <div className="dashboard-alert" role="alert">{error}<button onClick={() => router.refresh()}>Try again</button></div>}
           {notice && <div className="success-notice" role="status"><Icon name="check" size={17} />{notice}<button aria-label="Dismiss notification" onClick={() => setNotice("")}><Icon name="close" size={16} /></button></div>}
-          {paymentNotice && <PaymentNotice onDismiss={() => setPaymentNotice(false)} />}
 
           <SegmentedControl
             value={period}
@@ -229,35 +212,7 @@ export function TransactionsView({ wallets: initialWallets, transactions: initia
             </div>
           </div>
 
-          {!demo && (
-            <section className={`surface-card ${styles.transactions}`} aria-labelledby="upcoming-title">
-              <div className={styles.cardHeading}>
-                <div><p className={styles.eyebrow}>PLAN AHEAD</p><h2 id="upcoming-title">Upcoming expenses</h2></div>
-                <Link href="/commitments" className={styles.textButton}>View all<span aria-hidden="true">↗</span></Link>
-              </div>
-              {upcoming.length === 0 ? (
-                <div className={styles.emptyState}>
-                  <span className={styles.emptyIcon} aria-hidden="true">↗</span>
-                  <h3>All caught up</h3>
-                  <p>No upcoming payments due this month.</p>
-                </div>
-              ) : (
-                <ul className={styles.transactionRows}>
-                  {upcoming.map((commitment) => (
-                    <li key={commitment.id} className={styles.transactionRow}>
-                      <span className={`${styles.avatar} ${styles.avatarLavender}`} aria-hidden="true"><CategoryIcon name={commitment.icon} size={18} /></span>
-                      <div className={styles.transactionDetails}>
-                        <p className={styles.transactionTitle}>{commitment.name}</p>
-                        <p className={styles.transactionMeta}><span className={styles.walletBadge}>{dueLabel(commitment.nextDueOn, today)}</span></p>
-                      </div>
-                      <span className={styles.transactionAmount}>&minus;{formatMoney(commitment.amountMinor, commitment.currency)}</span>
-                      <PaidButton commitment={commitment} onPaid={() => setPaymentNotice(true)} />
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </section>
-          )}
+          {!demo && <BillsOverview bills={bills} commitments={commitments} wallets={wallets} categories={categories} transactions={transactions} today={today} currency={primaryCurrency} error={error || forecastError} />}
 
           <div className="dashboard-grid">
             <div className="transactions-analytics-area">

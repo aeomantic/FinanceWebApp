@@ -167,7 +167,7 @@ export function CommitmentsView({ commitments, wallets, categories, today, name:
                   return (
                     <li key={commitment.id} className={styles.bnplCard}>
                       <div className={styles.bnplTop}>
-                        <span className={`${dashboardStyles.avatar} ${dashboardStyles.avatarMint}`} aria-hidden="true"><CategoryIcon name={commitment.icon} size={18} /></span>
+                        <span className={`${dashboardStyles.avatar} ${styles.bnplIcon}`} aria-hidden="true"><CategoryIcon name={commitment.icon} size={18} /></span>
                         <div className={styles.subscriptionInfo}>
                           <span className={styles.subscriptionName}>{commitment.name}</span>
                           <p className={styles.subscriptionMeta}>{commitment.paidInstallments} of {total} paid &middot; {remaining} remaining</p>

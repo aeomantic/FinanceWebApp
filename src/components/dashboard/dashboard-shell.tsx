@@ -33,10 +33,14 @@ const DEMO_GOALS_SUMMARY: GoalsSummary = {
   ],
 };
 
-interface DashboardShellProps { data: DashboardData; goalsSummary?: GoalsSummary; demo?: boolean }
+import { BillsOverview } from "@/components/bills/UpcomingExpensesCard";
+import type { Bill } from "@/lib/bills/types";
+import type { Commitment } from "@/lib/commitments/types";
+
+interface DashboardShellProps { data: DashboardData; bills?: Bill[]; commitments?: Commitment[]; forecastError?: string | null; goalsSummary?: GoalsSummary; demo?: boolean }
 type Panel = BalanceAction | "notifications" | "help" | null;
 
-export function DashboardShell({ data, goalsSummary, demo = false }: DashboardShellProps) {
+export function DashboardShell({ data, goalsSummary, bills = [], commitments = [], forecastError, demo = false }: DashboardShellProps) {
   const router = useRouter();
   const wallets = demo ? DEMO_WALLETS : data.wallets;
   const goalsPreview = demo ? DEMO_GOALS_SUMMARY : (goalsSummary ?? { goals: [], wishes: [], primaryCurrency: "SGD" });
@@ -110,6 +114,7 @@ export function DashboardShell({ data, goalsSummary, demo = false }: DashboardSh
           {data.error && <div className="dashboard-alert" role="alert">{data.error}<button onClick={() => router.refresh()}>Try again</button></div>}
           {notice && <div className="success-notice" role="status"><Icon name="check" size={17} />{notice}<button aria-label="Dismiss notification" onClick={() => setNotice("")}><Icon name="close" size={16} /></button></div>}
 
+          {!demo && <BillsOverview bills={bills} commitments={commitments} wallets={wallets} categories={categories} transactions={data.transactions} today={data.today} currency={currency} error={data.error || forecastError} />}
           {!data.error && wallet && <div className="dashboard-grid">
             <div className="balance-area">
               <BalanceCard currency={currency} balanceMinor={wallet.balanceMinor} deltaMinor={deltaMinor} demo={demo} onAction={setPanel} />

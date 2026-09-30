@@ -34,7 +34,7 @@ export function PaidButton({ commitment, disabled = false, onPaid }: {
   return <div>
     <button type="button" onClick={() => startTransition(pay)} disabled={disabled || pending || !commitment.walletId || paidVersion === commitment.updatedAt}
       aria-label={`Mark ${commitment.name} as paid`} title={!commitment.walletId ? "Assign a wallet before recording payment" : undefined}
-      className="flex items-center gap-1.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 text-xs font-semibold text-emerald-400 transition-all hover:bg-emerald-500/20 active:scale-95 disabled:opacity-50">
+      className={`flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-semibold transition-all active:scale-95 disabled:opacity-50 ${commitment.obligationType === "bnpl" ? "border-rose-500/20 dark:border-rose-400/20 bg-rose-500/10 dark:bg-rose-400/10 text-rose-600 dark:text-rose-400 hover:bg-rose-500/20" : "border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20"}`}>
       <Check className="h-3.5 w-3.5" aria-hidden="true" />{pending ? "Recording…" : "Paid"}
     </button>
     {error && <p role="alert" className="mt-2 max-w-64 text-xs text-rose-400">{error}<button type="button" className="ml-2 underline" onClick={() => router.refresh()}>Refresh</button></p>}

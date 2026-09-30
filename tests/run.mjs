@@ -18,6 +18,7 @@ const tests = spawnSync(process.execPath, [
   "tests/wallet-deletion.test.mjs",
   "tests/ledger-actions.test.mjs",
   "tests/investments.test.mjs",
+  "tests/monthly-expense.test.mjs",
   "tests/auth-callback.test.mjs",
   "tests/auth-server.test.mjs",
   ".tmp/tests/lib/dashboard/summary.test.js",

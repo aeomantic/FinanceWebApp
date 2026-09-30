@@ -37,24 +37,20 @@ function mapCommitmentRow(r: z.infer<typeof rowSchema>): Commitment {
   };
 }
 
-/** A lean read for surfacing upcoming bills on /transactions, without the
- * wallets/categories getCommitmentsData() also fetches for the full
- * /commitments page. Fails soft (empty list, no error) since this is a
- * supplementary card on another page, not the page's main content - a
- * pending migration or a transient error shouldn't block or alarm there. */
+/** Complete active rules, with explicit failure rather than partial forecasts. */
 export async function getUpcomingCommitments(): Promise<{ commitments: Commitment[]; error: string | null }> {
   const [supabase, user] = await Promise.all([createClient(), getAuthedUser()]);
   try {
-    const { data, error } = await supabase.from("recurring_rules")
-      .select(COMMITMENT_COLUMNS).eq("user_id", user.id).eq("is_active", true).order("next_due_on").limit(50);
-    if (error) {
-      console.error("Upcoming commitments load failed:", { code: error.code, message: error.message });
-      return { commitments: [], error: null };
+    const { data, error, count } = await supabase.from("recurring_rules")
+      .select(COMMITMENT_COLUMNS, { count: "exact" }).eq("user_id", user.id).eq("is_active", true).order("next_due_on").order("id").limit(1000);
+    if (error || count === null || count !== data?.length) {
+      console.error("Upcoming commitments load failed:", { code: error?.code, message: error?.message });
+      return { commitments: [], error: "Commitments could not be loaded completely. Please refresh." };
     }
     const parsed = z.array(rowSchema).safeParse(data);
-    if (!parsed.success) return { commitments: [], error: null };
+    if (!parsed.success) return { commitments: [], error: "Commitments could not be loaded completely. Please refresh." };
     return { commitments: parsed.data.map(mapCommitmentRow), error: null };
-  } catch { return { commitments: [], error: null }; }
+  } catch { return { commitments: [], error: "Commitments could not be loaded completely. Please refresh." }; }
 }
 
 export async function getCommitmentsData(): Promise<CommitmentsData> {
