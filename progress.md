@@ -11,3 +11,5 @@ Final investments verification: 57 tests pass, including smallest supported deci
 Bills implemented on dashboard and transactions, including edit/delete schedules, atomic payment RPC, currency-specific forecast, and orange/red UI. Typecheck/lint and 60 tests passed; local SQL ran twice and payment/RLS/date tests passed. Mobile sample preview checked at 375px and 320px; hosted migration left for user.
 
 Dashboard hierarchy updated: hero, wallet carousel, stacked forecasts/upcoming, recent ledger. Meter uses proportional flex weights, gaps, exact yellow/orange/red accents and percentage labels. Typecheck and lint passed. Browser checked 390px hero fully above fold, 320px without horizontal overflow, 176px bottom padding, zero and spent-only states.
+
+Footer normalization complete in shared globals.css: removed dashboard inner padding, reused Wallets 120px safe clearance on Transactions, compensated footer flex gap. Typecheck passed. Nine mobile page/width combinations all measured 120px bottom clearance, 44px footer-to-nav gap, no horizontal overflow.

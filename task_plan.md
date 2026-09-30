@@ -17,3 +17,8 @@
 - Explore existing grid and screenshot (complete).
 - Lead with wallet hero and switcher; stack forecast and upcoming expenses; add proportional segmented meter (complete).
 - Verify TypeScript, zero-value meter and mobile layout (complete).
+
+## Footer spacing
+- Reference inspected: Wallets uses 120px outer clearance and 23px mobile footer spacing.
+- Remove Home double padding, share Transactions clearance and offset its flex gap (complete).
+- Check three pages at 375/390/412px and typecheck (complete).
