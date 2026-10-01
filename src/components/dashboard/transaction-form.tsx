@@ -2,6 +2,8 @@
 
 import { useId, useState, useTransition, type FormEvent } from "react";
 import Link from "next/link";
+import { MerchantPicker } from "@/components/transactions/MerchantPicker";
+import type { Merchant } from "@/lib/merchants/model";
 import { Wallet as WalletIcon } from "lucide-react";
 import { Icon } from "@/components/ui/icon";
 import { CategoryIcon } from "@/components/ui/category-icon";
@@ -31,7 +33,9 @@ export interface TransactionFormProps {
 
 export function TransactionForm({ action, wallet, wallets, categories, today, demo, existing, onCategoryCreated, onSaved }: TransactionFormProps) {
   const [error, setError] = useState("");
+  const [merchantPending, setMerchantPending] = useState(false);
   const [sourceWalletId, setSourceWalletId] = useState(wallet.id);
+  const [merchant, setMerchant] = useState<Merchant | null>(existing?.merchant ?? null);
   const [categoryId, setCategoryId] = useState(existing?.categoryId ?? "");
   const [destinationWalletId, setDestinationWalletId] = useState(
     existing?.destinationWalletId ?? wallets.find((item) => item.id !== wallet.id)?.id ?? "",
@@ -52,7 +56,7 @@ export function TransactionForm({ action, wallet, wallets, categories, today, de
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (pending || demo) return;
+    if (pending || merchantPending || demo) return;
     const form = new FormData(event.currentTarget);
     setError("");
     startTransition(async () => {
@@ -61,6 +65,7 @@ export function TransactionForm({ action, wallet, wallets, categories, today, de
           walletId: sourceWallet.id,
           destinationWalletId: action === "transfer" ? destinationWalletId : undefined,
           categoryId: action !== "transfer" && categoryId ? categoryId : undefined,
+          merchantId: action !== "transfer" ? merchant?.id : undefined,
           amount: String(form.get("amount") ?? ""),
           date: String(form.get("date") ?? ""),
           type: action,
@@ -90,7 +95,7 @@ export function TransactionForm({ action, wallet, wallets, categories, today, de
           aria-label={action === "transfer" ? "From wallet" : "Wallet"}
           value={sourceWallet.id}
           onChange={changeSourceWallet}
-          disabled={pending}
+          disabled={pending || merchantPending}
           options={wallets.map((item) => ({ value: item.id, label: `${item.name} (${item.currency})`, icon: <WalletIcon size={16} /> }))}
         />
       </label>
@@ -105,7 +110,7 @@ export function TransactionForm({ action, wallet, wallets, categories, today, de
             aria-label="To wallet"
             value={destinationWalletId}
             onChange={setDestinationWalletId}
-            disabled={pending}
+            disabled={pending || merchantPending}
             options={otherWallets.map((item) => ({ value: item.id, label: `${item.name} (${item.currency})`, icon: <WalletIcon size={16} /> }))}
           />
         </label>
@@ -115,8 +120,8 @@ export function TransactionForm({ action, wallet, wallets, categories, today, de
         <Select
           aria-label="Category"
           value={categoryId}
-          onChange={setCategoryId}
-          disabled={pending}
+          onChange={(value) => { setCategoryId(value); setMerchant(null); }}
+          disabled={pending || merchantPending}
           placeholder="No category"
           options={[
             { value: "", label: "No category", icon: <CategoryIcon name={null} size={16} /> },
@@ -131,18 +136,22 @@ export function TransactionForm({ action, wallet, wallets, categories, today, de
     {showNewCategory && (
       <NewCategoryFields
         type={action === "income" ? "income" : "expense"}
-        onCreated={(category) => { onCategoryCreated(category); setCategoryId(category.id); setShowNewCategory(false); }}
+        onCreated={(category) => { onCategoryCreated(category); setCategoryId(category.id); setMerchant(null); setShowNewCategory(false); }}
         onCancel={() => setShowNewCategory(false)}
       />
     )}
 
+    {action !== "transfer" && <MerchantPicker selectedCategoryId={categoryId || null} selectedMerchantId={merchant?.id ?? null}
+      categoryName={categories.find((category) => category.id === categoryId)?.name} initialMerchant={existing?.merchant}
+      onSelect={setMerchant} onPendingChange={setMerchantPending} disabled={pending} demo={demo} />}
+
     <div className="form-columns">
-      <label>Amount ({sourceWallet.currency})<input name="amount" type="text" inputMode="decimal" pattern="[0-9]+(\.[0-9]{1,2})?" placeholder="0.00" defaultValue={existing ? minorToAmount(existing.amountMinor) : undefined} required maxLength={14} disabled={pending} /></label>
-      <label>Date<input name="date" type="date" defaultValue={existing?.date ?? today} max={today} required disabled={pending} /></label>
+      <label>Amount ({sourceWallet.currency})<input name="amount" type="text" inputMode="decimal" pattern="[0-9]+(\.[0-9]{1,2})?" placeholder="0.00" defaultValue={existing ? minorToAmount(existing.amountMinor) : undefined} required maxLength={14} disabled={pending || merchantPending} /></label>
+      <label>Date<input name="date" type="date" defaultValue={existing?.date ?? today} max={today} required disabled={pending || merchantPending} /></label>
     </div>
-    <label htmlFor={`${formId}-note`}>Note (optional)<input id={`${formId}-note`} name="note" placeholder="e.g. Coffee with a friend" defaultValue={existing?.note ?? ""} maxLength={120} disabled={pending} /></label>
+    <label htmlFor={`${formId}-note`}>Note (optional)<input id={`${formId}-note`} name="note" placeholder="e.g. Coffee with a friend" defaultValue={existing?.note ?? ""} maxLength={120} disabled={pending || merchantPending} /></label>
     {error && <p className="form-error" role="alert">{error}</p>}
-    <button className="primary-button" type="submit" disabled={pending || demo || (action === "transfer" && otherWallets.length === 0)}>{pending ? "Saving..." : existing ? "Save changes" : "Save transaction"}<Icon name="arrow-right" size={18} /></button>
+    <button className="primary-button" type="submit" disabled={pending || merchantPending || demo || (action === "transfer" && otherWallets.length === 0)}>{pending ? "Saving..." : existing ? "Save changes" : "Save transaction"}<Icon name="arrow-right" size={18} /></button>
   </form>;
 }
 

@@ -2,6 +2,7 @@
 
 import { useId, useMemo, useState } from "react";
 import Link from "next/link";
+import { TransactionItem } from "@/components/transactions/TransactionItem";
 import { useRouter } from "next/navigation";
 import { Wallet as WalletIcon, CalendarClock } from "lucide-react";
 import { SignOutButton } from "@/components/auth/sign-out-button";
@@ -9,7 +10,7 @@ import { BrandMark, Icon } from "@/components/ui/icon";
 import { Select } from "@/components/ui/select";
 import { CategoryIcon } from "@/components/ui/category-icon";
 import { MobileNav } from "./mobile-nav";
-import { dateHeading, MerchantAvatar } from "./transaction-list";
+import { dateHeading } from "./transaction-list";
 import { TransactionDetailDialog } from "./transaction-detail-dialog";
 import { TransactionForm } from "./transaction-form";
 import { Modal } from "@/components/ui/modal";
@@ -143,7 +144,7 @@ export function TransactionsView({ wallets: initialWallets, transactions: initia
   const ledger = inPeriod
     .filter((transaction) => typeFilter === "all" || transaction.type === typeFilter)
     .filter((transaction) => !walletFilter || transaction.walletId === walletFilter || transaction.destinationWalletId === walletFilter)
-    .filter((transaction) => `${transaction.title} ${transaction.category ?? ""}`.toLocaleLowerCase("en-US").includes(normalizedQuery))
+    .filter((transaction) => `${transaction.title} ${transaction.category ?? ""} ${transaction.note ?? ""}`.toLocaleLowerCase("en-US").includes(normalizedQuery))
     .toSorted((a, b) => b.date.localeCompare(a.date));
 
   const groups = ledger.reduce<Map<string, Transaction[]>>((result, transaction) => {
@@ -326,34 +327,7 @@ export function TransactionsView({ wallets: initialWallets, transactions: initia
                     <div key={date} className={styles.transactionGroup}>
                       <h3 className={styles.dateHeading}>{dateHeading(date, today)}</h3>
                       <ul className={styles.transactionRows}>
-                        {rows.map((transaction) => {
-                          const income = transaction.type === "income";
-                          const transfer = transaction.type === "transfer";
-                          const amount = formatMoney(transaction.amountMinor, transaction.currency);
-                          const walletName = walletsById.get(transaction.walletId)?.name ?? "Wallet";
-                          return (
-                            <li key={transaction.id} className={styles.transactionRowItem}>
-                              <button
-                                type="button"
-                                className={`${styles.transactionRow} ${styles.transactionRowButton}`}
-                                onClick={() => setDetail(transaction)}
-                              >
-                                <MerchantAvatar type={transaction.type} categoryIcon={transaction.categoryIcon} />
-                                <div className={styles.transactionDetails}>
-                                  <p className={styles.transactionTitle}>{transaction.title}</p>
-                                  <p className={styles.transactionMeta}>
-                                    {transfer ? "Transferred" : income ? "Received" : "Paid"}
-                                    {transaction.category ? <span className={styles.category}>{transaction.category}</span> : null}
-                                  </p>
-                                </div>
-                                <div className={styles.ledgerRowEnd}>
-                                  <span className={styles.walletBadge}>{walletName}</span>
-                                  <span className={`${styles.transactionAmount} ${income ? styles.positive : ""}`}>{transfer ? "" : income ? "+" : "−"}{amount}</span>
-                                </div>
-                              </button>
-                            </li>
-                          );
-                        })}
+                        {rows.map((transaction) => <TransactionItem key={transaction.id} transaction={transaction} walletName={walletsById.get(transaction.walletId)?.name ?? "Wallet"} onSelect={setDetail} />)}
                       </ul>
                     </div>
                   ))}

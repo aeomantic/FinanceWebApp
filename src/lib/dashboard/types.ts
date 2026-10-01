@@ -1,3 +1,4 @@
+import type { Merchant } from "../merchants/model";
 export type TransactionType = "income" | "expense" | "transfer";
 
 export interface Wallet {
@@ -30,6 +31,8 @@ export interface Transaction {
   category?: string;
   categoryId?: string;
   categoryIcon?: string;
+  merchantId?: string;
+  merchant?: Merchant;
   walletId: string;
   destinationWalletId?: string;
   note?: string;
@@ -66,6 +69,7 @@ export interface RecordTransactionInput {
   walletId: string;
   destinationWalletId?: string;
   categoryId?: string;
+  merchantId?: string;
   amount: string;
   date: string;
   type: TransactionType;

@@ -228,3 +228,4 @@
 .noteLabel { color: var(--color-muted); font-size: 9px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; }
 .noteBody { margin: 0; color: var(--color-ink); font-size: 13px; line-height: 1.65; white-space: pre-wrap; overflow-wrap: anywhere; }
 .noteEmpty { color: var(--color-muted); font-style: italic; }
+.merchantSubtitle { margin: 0; font-size: 11px; line-height: 1.5; color: var(--color-muted); overflow-wrap: anywhere; }

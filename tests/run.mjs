@@ -5,6 +5,7 @@ const root = fileURLToPath(new URL("../", import.meta.url));
 const compile = spawnSync(process.execPath, [
   "node_modules/typescript/bin/tsc",
   "src/lib/auth/validation.ts",
+  "src/lib/merchants/model.ts",
   "src/lib/supabase/cache.ts",
   "src/lib/dashboard/summary.test.ts",
   "src/lib/dashboard/validation.test.ts",
@@ -16,6 +17,7 @@ if (compile.status !== 0) process.exit(compile.status ?? 1);
 const tests = spawnSync(process.execPath, [
   "--test", "tests/auth-validation.test.mjs",
   "tests/wallet-deletion.test.mjs",
+  "tests/merchants.test.mjs",
   "tests/auth-callback.test.mjs",
   "tests/auth-server.test.mjs",
   ".tmp/tests/lib/dashboard/summary.test.js",

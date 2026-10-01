@@ -1,4 +1,5 @@
 import "server-only";
+import { MERCHANT_COLUMNS, merchantSchema } from "../merchants/model";
 
 import { z } from "zod";
 import { getAuthedUser } from "@/lib/auth/current-user";
@@ -12,7 +13,7 @@ const MAX_TRANSACTIONS = 10000;
 // One definition for both the first-page and pagination-loop reads, so the two
 // can't drift apart. `created_at` is the row's recorded timestamp; `occurred_on`
 // is the date-only day the owner assigned to the money movement.
-const TRANSACTION_COLUMNS = "id,occurred_on,created_at,amount_minor,currency,type,note,wallet_id,destination_wallet_id,category:categories(id,name,icon)";
+const TRANSACTION_COLUMNS = `id,occurred_on,created_at,amount_minor,currency,type,note,wallet_id,destination_wallet_id,merchant_id,merchant:merchants(${MERCHANT_COLUMNS}),category:categories(id,name,icon)`;
 
 const walletRowSchema = z.object({
   id: z.string().uuid(),
@@ -43,6 +44,8 @@ const transactionRowSchema = z.object({
   note: z.string().nullable(),
   wallet_id: z.string().uuid(),
   destination_wallet_id: z.string().uuid().nullable(),
+  merchant_id: z.string().uuid().nullable(),
+  merchant: merchantSchema.nullable(),
   category: z.object({ id: z.string().uuid(), name: z.string(), icon: z.string().nullable() }).nullable(),
 });
 
@@ -51,7 +54,7 @@ function walletTitle(wallets: Map<string, Wallet>, transaction: z.infer<typeof t
     const destination = transaction.destination_wallet_id ? wallets.get(transaction.destination_wallet_id) : undefined;
     return destination ? `Transfer to ${destination.name}` : "Transfer";
   }
-  return transaction.category?.name ?? (transaction.type === "income" ? "Income" : "Expense");
+  return transaction.merchant?.name ?? transaction.category?.name ?? (transaction.type === "income" ? "Income" : "Expense");
 }
 
 /** This read uses the caller's cookie session and remains subject to Supabase RLS. */
@@ -149,6 +152,8 @@ export async function getDashboardData(): Promise<DashboardData> {
           category: row.category?.name,
           categoryId: row.category?.id,
           categoryIcon: row.category?.icon ?? undefined,
+          merchantId: row.merchant_id ?? undefined,
+          merchant: row.merchant ?? undefined,
           walletId: row.wallet_id,
           destinationWalletId: row.destination_wallet_id ?? undefined,
           note: row.note ?? undefined,

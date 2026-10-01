@@ -1,8 +1,8 @@
 "use client";
 
 import { useId, useState } from "react";
-import { ArrowLeftRight } from "lucide-react";
-import { CategoryIcon } from "@/components/ui/category-icon";
+import { TransactionItem } from "@/components/transactions/TransactionItem";
+export { MerchantAvatar } from "@/components/transactions/TransactionItem";
 import type { Transaction } from "@/lib/dashboard/types";
 import styles from "./components.module.css";
 
@@ -28,14 +28,6 @@ export function dateHeading(date: string, today: string): string {
   }).format(new Date(`${date}T12:00:00.000Z`));
 }
 
-export function MerchantAvatar({ type, categoryIcon }: Pick<Transaction, "type" | "categoryIcon">) {
-  if (type === "transfer") {
-    return <span className={`${styles.avatar} ${styles.avatarLavender}`} aria-hidden="true"><ArrowLeftRight size={17} strokeWidth={1.8} /></span>;
-  }
-  const palette = type === "income" ? styles.avatarMint : styles.avatarLavender;
-  return <span className={`${styles.avatar} ${palette}`} aria-hidden="true"><CategoryIcon name={categoryIcon} size={18} /></span>;
-}
-
 export function TransactionList({ transactions, today, query = "", onQueryChange, onSelect }: TransactionListProps) {
   const [expanded, setExpanded] = useState(false);
   const titleId = useId();
@@ -43,7 +35,7 @@ export function TransactionList({ transactions, today, query = "", onQueryChange
   const listId = useId();
   const normalizedQuery = query.trim().toLocaleLowerCase("en-US");
   const filtered = transactions
-    .filter((transaction) => `${transaction.title} ${transaction.category ?? ""}`.toLocaleLowerCase("en-US").includes(normalizedQuery))
+    .filter((transaction) => `${transaction.title} ${transaction.category ?? ""} ${transaction.note ?? ""}`.toLocaleLowerCase("en-US").includes(normalizedQuery))
     .toSorted((a, b) => b.date.localeCompare(a.date));
   const visible = expanded || normalizedQuery ? filtered : filtered.slice(0, 5);
   const groups = visible.reduce<Map<string, Transaction[]>>((result, transaction) => {
@@ -84,33 +76,7 @@ export function TransactionList({ transactions, today, query = "", onQueryChange
           <div key={date} className={styles.transactionGroup}>
             <h3 className={styles.dateHeading}>{dateHeading(date, today)}</h3>
             <ul className={styles.transactionRows}>
-              {rows.map((transaction) => {
-                const income = transaction.type === "income";
-                const transfer = transaction.type === "transfer";
-                const amount = new Intl.NumberFormat("en-US", { style: "currency", currency: transaction.currency }).format(Math.abs(transaction.amountMinor) / 100);
-                const content = (
-                  <>
-                    <MerchantAvatar type={transaction.type} categoryIcon={transaction.categoryIcon} />
-                    <div className={styles.transactionDetails}>
-                      <p className={styles.transactionTitle}>{transaction.title}</p>
-                      <p className={styles.transactionMeta}>
-                        {transfer ? "Transferred" : income ? "Received" : "Paid"}<span className={styles.statusIcon} aria-hidden="true">{income ? "↙" : "↗"}</span>
-                        {transaction.category ? <span className={styles.category}>{transaction.category}</span> : null}
-                      </p>
-                    </div>
-                    <span className={`${styles.transactionAmount} ${income ? styles.positive : ""}`}>{income ? "+" : "−"}{amount}</span>
-                  </>
-                );
-                return onSelect ? (
-                  <li key={transaction.id} className={styles.transactionRowItem}>
-                    <button type="button" className={`${styles.transactionRow} ${styles.transactionRowButton}`} onClick={() => onSelect(transaction)}>
-                      {content}
-                    </button>
-                  </li>
-                ) : (
-                  <li key={transaction.id} className={styles.transactionRow}>{content}</li>
-                );
-              })}
+              {rows.map((transaction) => <TransactionItem key={transaction.id} transaction={transaction} onSelect={onSelect} />)}
             </ul>
           </div>
         ))}

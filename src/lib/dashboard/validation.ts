@@ -16,6 +16,7 @@ const baseTransactionSchema = z.object({
   walletId: uuidSchema,
   destinationWalletId: uuidSchema.optional(),
   categoryId: uuidSchema.optional(),
+  merchantId: uuidSchema.optional(),
   amount: z.string().max(32).refine((value) => parseAmountMinor(value) !== null, "Enter a positive amount with up to two decimal places."),
   date: z.string().refine(isValidDate, "Choose a valid date."),
   type: z.enum(["income", "expense", "transfer"], { error: "Choose income, expense, or transfer." }),
@@ -27,6 +28,7 @@ const baseTransactionSchema = z.object({
 function checkTransferWallets(ctx: z.core.ParsePayload<z.infer<typeof baseTransactionSchema>>) {
   const { type, destinationWalletId, walletId } = ctx.value;
   if (type === "transfer") {
+    if (ctx.value.merchantId) ctx.issues.push({ code: "custom", message: "Transfers cannot have a merchant.", path: ["merchantId"], input: ctx.value });
     if (!destinationWalletId) {
       ctx.issues.push({ code: "custom", message: "Choose a destination wallet.", path: ["destinationWalletId"], input: ctx.value });
     } else if (destinationWalletId === walletId) {

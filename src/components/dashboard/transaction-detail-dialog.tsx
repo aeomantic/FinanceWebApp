@@ -1,5 +1,6 @@
 "use client";
 
+import { MerchantIcon } from "@/components/transactions/MerchantIcon";
 import { Modal } from "@/components/ui/modal";
 import { Icon } from "@/components/ui/icon";
 import { CategoryIcon } from "@/components/ui/category-icon";
@@ -43,7 +44,7 @@ export function TransactionDetailDialog({ transaction, wallets, onClose, onEdit 
   return (
     <Modal title="Transaction" onClose={onClose} className="modal-sheet">
       <div className={styles.detailHero}>
-        <MerchantAvatar type={transaction.type} categoryIcon={transaction.categoryIcon} />
+        <MerchantAvatar {...transaction} />
         <div className={styles.detailHeroText}>
           <span className={`${styles.detailAmount} ${amountTone}`}>{sign}{formatMoney(transaction.amountMinor, transaction.currency)}</span>
           <p className={styles.detailTitle}>{transaction.title}</p>
@@ -51,6 +52,7 @@ export function TransactionDetailDialog({ transaction, wallets, onClose, onEdit 
       </div>
 
       <ul className={styles.detailRows}>
+        {!transfer && <li className={styles.detailRow}><span className={styles.detailLabel}>Merchant / Place</span><span className={styles.detailValue}>{transaction.merchant ? <><MerchantIcon merchant={transaction.merchant} small />{transaction.merchant.name}</> : "Not specified"}</span></li>}
         <li className={styles.detailRow}>
           <span className={styles.detailLabel}>Date</span>
           <span className={styles.detailValue}>{formatOccurredOn(transaction.date)}</span>
