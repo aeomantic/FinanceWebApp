@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import Link from "next/link";
+import { InvestmentsNavLink } from "@/components/dashboard/investments-nav-link";
 import { useRouter } from "next/navigation";
 import { SignOutButton } from "@/components/auth/sign-out-button";
 import { BalanceCard, type BalanceAction } from "./balance-card";
@@ -32,10 +33,14 @@ const DEMO_GOALS_SUMMARY: GoalsSummary = {
   ],
 };
 
-interface DashboardShellProps { data: DashboardData; goalsSummary?: GoalsSummary; demo?: boolean }
+import { BillsOverview } from "@/components/bills/UpcomingExpensesCard";
+import type { Bill } from "@/lib/bills/types";
+import type { Commitment } from "@/lib/commitments/types";
+
+interface DashboardShellProps { data: DashboardData; bills?: Bill[]; commitments?: Commitment[]; forecastError?: string | null; goalsSummary?: GoalsSummary; demo?: boolean }
 type Panel = BalanceAction | "notifications" | "help" | null;
 
-export function DashboardShell({ data, goalsSummary, demo = false }: DashboardShellProps) {
+export function DashboardShell({ data, goalsSummary, bills = [], commitments = [], forecastError, demo = false }: DashboardShellProps) {
   const router = useRouter();
   const wallets = demo ? DEMO_WALLETS : data.wallets;
   const goalsPreview = demo ? DEMO_GOALS_SUMMARY : (goalsSummary ?? { goals: [], wishes: [], primaryCurrency: "SGD" });
@@ -76,6 +81,7 @@ export function DashboardShell({ data, goalsSummary, demo = false }: DashboardSh
       <aside className="side-rail" aria-label="Main navigation">
         <Link href={demo ? "/preview" : "/dashboard"} className="rail-brand" aria-label="Folio home"><BrandMark /></Link>
         <nav className="rail-nav">
+          <InvestmentsNavLink demo={demo} />
           <a href="#overview" className="rail-link active" aria-label="Overview" title="Overview"><Icon name="home" /></a>
           <Link href={demo ? "/preview" : "/transactions"} className="rail-link" aria-label="Transactions" title="Transactions"><Icon name="transfer" /></Link>
           <a href="#activity" className="rail-link" aria-label="Activity" title="Activity"><Icon name="activity" /></a>
@@ -98,7 +104,7 @@ export function DashboardShell({ data, goalsSummary, demo = false }: DashboardSh
           </div>
         </header>
 
-        <main id="overview">
+        <main id="overview" className="dashboard-overview">
           <div className="page-heading">
             <div><div className="eyebrow page-eyebrow">YOUR EVERYDAY, SIMPLIFIED</div><h1>A little more clarity.<span className="heading-spark" aria-hidden="true">✳</span></h1><p>Your money. Your world. All in one place.</p></div>
             <div className="page-date"><Icon name="calendar" size={16} />{dateLabel}</div>
@@ -108,21 +114,27 @@ export function DashboardShell({ data, goalsSummary, demo = false }: DashboardSh
           {data.error && <div className="dashboard-alert" role="alert">{data.error}<button onClick={() => router.refresh()}>Try again</button></div>}
           {notice && <div className="success-notice" role="status"><Icon name="check" size={17} />{notice}<button aria-label="Dismiss notification" onClick={() => setNotice("")}><Icon name="close" size={16} /></button></div>}
 
-          {!data.error && wallet && <div className="dashboard-grid">
-            <div className="balance-area">
+          {!data.error && wallet && <section className="dashboard-priority" aria-label="Wallet overview">
               <BalanceCard currency={currency} balanceMinor={wallet.balanceMinor} deltaMinor={deltaMinor} demo={demo} onAction={setPanel} />
+            <div id="wallets">
+              <WalletList wallets={wallets} selectedWalletId={wallet?.id ?? null} onSelect={setSelectedWalletId} onCreated={() => router.refresh()} onChanged={() => router.refresh()} hiddenWalletIds={hiddenIds} onToggleHideBalance={toggleHideBalance} demo={demo} />
+            </div>
+          </section>}
+          {!demo && <BillsOverview stacked bills={bills} commitments={commitments} wallets={wallets} categories={categories} transactions={data.transactions} today={data.today} currency={currency} error={data.error || forecastError} />}
+          {!data.error && wallet && <div className="dashboard-grid dashboard-secondary">
+            <div className="transactions-area" id="transactions">
+              <div className="transaction-search"><Icon name="search" size={17} /><input ref={searchInput} aria-label="Filter transactions" placeholder="Find a transaction..." value={query} onChange={(event) => setQuery(event.target.value)} />{query && <button aria-label="Clear search" onClick={() => setQuery("")}><Icon name="close" size={15} /></button>}</div>
+              <TransactionList transactions={transactions} today={data.today} query={query} onSelect={setDetail} demo={demo} />
+            </div>
+            <div className="balance-area">
               <div className="cashflow-summary">
                 <div><span className="cashflow-icon incoming"><Icon name="arrow-down-left" size={18} /></span><span><span className="stat-label">Money in</span><strong className="tabular">{formatMoney(summary.incomeMinor, currency)}</strong></span></div>
                 <div><span className="cashflow-icon outgoing"><Icon name="arrow-up-right" size={18} /></span><span><span className="stat-label">Money out</span><strong className="tabular">{formatMoney(summary.expensesMinor, currency)}</strong></span></div>
               </div>
             </div>
             <div className="chart-area" id="activity"><SpendChart points={points} currency={currency} /></div>
-            <div className="transactions-area" id="transactions">
-              <div className="transaction-search"><Icon name="search" size={17} /><input ref={searchInput} aria-label="Filter transactions" placeholder="Find a transaction..." value={query} onChange={(event) => setQuery(event.target.value)} />{query && <button aria-label="Clear search" onClick={() => setQuery("")}><Icon name="close" size={15} /></button>}</div>
-              <TransactionList transactions={transactions} today={data.today} query={query} onSelect={setDetail} />
-            </div>
-            <div className="wallets-area" id="wallets">
-              <WalletList wallets={wallets} selectedWalletId={wallet?.id ?? null} onSelect={setSelectedWalletId} onCreated={() => router.refresh()} onChanged={() => router.refresh()} hiddenWalletIds={hiddenIds} onToggleHideBalance={toggleHideBalance} demo={demo} />
+            <div className="wallets-area">
+
               <section className="insight-card">
                 <div className="insight-top"><span className="eyebrow">SMALL STEPS. BIG PICTURE.</span><span className="insight-icon"><Icon name="activity" size={18} /></span></div>
                 <h2>Good habits start<br />with a clear view.</h2>
@@ -150,6 +162,7 @@ export function DashboardShell({ data, goalsSummary, demo = false }: DashboardSh
       {detail && (
         <TransactionDetailDialog
           transaction={detail}
+          demo={demo}
           wallets={wallets}
           onClose={() => setDetail(null)}
           onEdit={() => { setEditing(detail); setDetail(null); }}

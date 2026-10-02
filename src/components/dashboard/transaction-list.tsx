@@ -3,6 +3,7 @@
 import { useId, useState } from "react";
 import { TransactionItem } from "@/components/transactions/TransactionItem";
 export { MerchantAvatar } from "@/components/transactions/TransactionItem";
+import { DeleteTransactionsDialog } from "./delete-transactions-dialog";
 import type { Transaction } from "@/lib/dashboard/types";
 import styles from "./components.module.css";
 
@@ -13,6 +14,7 @@ export interface TransactionListProps {
   onQueryChange?: (query: string) => void;
   /** When provided, each row becomes a button that opens the detail view. */
   onSelect?: (transaction: Transaction) => void;
+  demo?: boolean;
 }
 
 export function dateHeading(date: string, today: string): string {
@@ -28,7 +30,8 @@ export function dateHeading(date: string, today: string): string {
   }).format(new Date(`${date}T12:00:00.000Z`));
 }
 
-export function TransactionList({ transactions, today, query = "", onQueryChange, onSelect }: TransactionListProps) {
+export function TransactionList({ transactions, today, query = "", onQueryChange, onSelect, demo = false }: TransactionListProps) {
+  const [deleteId, setDeleteId] = useState<string | null>(null);
   const [expanded, setExpanded] = useState(false);
   const titleId = useId();
   const searchId = useId();
@@ -36,7 +39,7 @@ export function TransactionList({ transactions, today, query = "", onQueryChange
   const normalizedQuery = query.trim().toLocaleLowerCase("en-US");
   const filtered = transactions
     .filter((transaction) => `${transaction.title} ${transaction.category ?? ""} ${transaction.note ?? ""}`.toLocaleLowerCase("en-US").includes(normalizedQuery))
-    .toSorted((a, b) => b.date.localeCompare(a.date));
+    .toSorted((a, b) => b.date.localeCompare(a.date) || (b.recordedAt ?? "").localeCompare(a.recordedAt ?? ""));
   const visible = expanded || normalizedQuery ? filtered : filtered.slice(0, 5);
   const groups = visible.reduce<Map<string, Transaction[]>>((result, transaction) => {
     const group = result.get(transaction.date) ?? [];
@@ -76,12 +79,20 @@ export function TransactionList({ transactions, today, query = "", onQueryChange
           <div key={date} className={styles.transactionGroup}>
             <h3 className={styles.dateHeading}>{dateHeading(date, today)}</h3>
             <ul className={styles.transactionRows}>
-              {rows.map((transaction) => <TransactionItem key={transaction.id} transaction={transaction} onSelect={onSelect} />)}
+              {rows.map((transaction) => (
+                <TransactionItem
+                  key={transaction.id}
+                  transaction={transaction}
+                  onSelect={onSelect}
+                  onDelete={demo ? undefined : (selected) => setDeleteId(selected.id)}
+                />
+              ))}
             </ul>
           </div>
         ))}
       </div>
       {groups.size > 0 ? <p className={styles.transactionFooter}><span className={styles.statusDot} />All your activity, in one place</p> : null}
+      {deleteId && <DeleteTransactionsDialog ids={[deleteId]} onClose={() => setDeleteId(null)} onDeleted={() => setDeleteId(null)} />}
     </section>
   );
 }

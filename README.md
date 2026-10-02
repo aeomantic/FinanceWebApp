@@ -80,6 +80,7 @@ Pay and Receive record ledger entries with exact integer minor units. They do no
 
 - `npm test`: focused tests for recovery callback routing and authorization, email normalization, password rules, errors, exact decimal parsing, safe amounts, calendar boundaries and currency-isolated totals.
 - `npm run lint`: ESLint.
+- `npm run typecheck`: TypeScript validation without emitting files.
 - `npm run build`: production compilation and TypeScript validation.
 - `supabase/tests/profile_access.sql`: local PostgreSQL regression checks for automatic provisioning, own-profile access, denied cross-user access, and missing-session/anonymous access. Run with `psql -v ON_ERROR_STOP=1 -f supabase/tests/profile_access.sql` against a disposable local database with the migrations and Supabase Auth roles/schema installed. The test rolls back its synthetic accounts.
 
@@ -90,3 +91,33 @@ Local browser verification covers desktop/mobile overflow, chart ranges and keyb
 ## Database migrations
 
 Schema and permission changes live in `supabase/migrations/` and are applied in order. Create a migration with `npx supabase migration new <name>` and apply it with `npx supabase db push` after linking the CLI to the intended project. Alternatively, run a pending migration in that project's SQL Editor. Editing these files or deploying Vercel alone does not apply them to hosted Supabase. The profile repair adds `20260913060000_profile_access.sql`, including the Auth trigger and existing-account backfill; it leaves the existing columns unchanged.
+
+### Transaction deletion and commitment payments
+
+Apply `20260928000000_commitment_payments.sql` after the earlier migrations before using Paid or deleting more than 100 selected transactions. It adds authenticated, ownership-scoped RPCs and pins the existing wallet trigger's search path. No hosted migration is applied by the application build.
+
+- Single deletion lives in `transaction-detail-dialog.tsx` and transaction rows. Batch selection and the upcoming payment card live in `transactions-view.tsx`, the client view used by `/transactions/page.tsx`.
+- Recurring cards live in `commitments-view.tsx`. Both `/commitments` and `/transactions/recurring` serve this view. The shared `paid-button.tsx` is used on recurring cards and upcoming expenses.
+- Deletes reverse expense, income, and both transfer wallets through the existing database trigger in the same transaction. Large batches use an RPC body to avoid URL limits.
+- Paid records an expense and advances the commitment atomically. Row locks and the displayed `updated_at` version reject stale or duplicate requests. The final BNPL payment sets `paid_installments` to the total and `is_active` to false; the UI displays Completed.
+- Deleting a recorded payment reverses its wallet effect but preserves commitment progress. Editing the paid count remains a manual correction and does not debit a wallet.
+
+`npm test` includes ledger selection, cancellation, final-row deletion, ownership filters, and large-batch request tests. Run `psql -v ON_ERROR_STOP=1 -f supabase/tests/ledger_payments.sql` against a disposable local database with the migrations and Supabase Auth roles/schema installed to check balance reversals, final BNPL payment, date advancement, duplicate requests, rollback, and cross-account access. All test fixtures roll back.
+
+### Investments
+
+Apply `supabase/migrations/20260928010000_investments.sql` in migration order, then set the server-only `FINNHUB_API_KEY` environment variable and restart/deploy the app. `/investments` supports fractional holdings, add/edit/delete, currency-specific performance, and sector/ticker allocation. Linking a wallet does not change its balance. The migration is safe to rerun and enforces ownership of holdings and linked wallets.
+
+`GET /api/stocks?symbol=AAPL` or `?symbols=AAPL,NVDA,VOO` accepts up to 20 symbols and requires the app's authenticated owner. The Finnhub adapter covers USD US-listed stocks/ETFs (one to five letters, optionally a class A/B suffix). Other listings and crypto can be tracked at cost but have no live quote in this adapter. Prices are the latest available provider quotes, with their market timestamp shown; they are not guaranteed real-time exchange feeds. See [Finnhub's quote documentation](https://finnhub.io/docs/api/quote).
+
+Successful provider fetches use Next.js's persistent Data Cache with 60-second revalidation. A bounded server-instance cache also stores unsuccessful lookups for 60 seconds and coalesces concurrent requests for the same ticker. Per-instance budgets cap calls at 25 per second and 50 per minute; 429 responses activate a cooldown. Browser refreshes cannot bypass these caches. These budgets are per instance, not a distributed account-wide limiter; deployments with many concurrent instances should use a shared rate limiter sized to the provider plan. Provider errors, timeouts, missing keys, and invalid tickers become Unavailable with explicitly labeled cost-basis estimates, without breaking the chart. No exchange-rate conversion is performed.
+
+`npm test` covers portfolio calculations and the quote cache, request coalescing, expiration, negative caching, malformed data, cooldown, timeouts and request budgets. `supabase/tests/investments.sql` checks decimals, CRUD, wallet ownership, cash isolation and cross-account access against a disposable local PostgreSQL database; it rolls back its fixtures. Mobile rendering was checked at 320px and 390px using synthetic holdings, including an unavailable ticker, an empty portfolio and dark mode. Live provider credentials are required for an end-to-end market-data check.
+
+### Bills tracking
+
+Run `supabase/migrations/20260930000000_bills.sql` in the Supabase SQL Editor after the existing ledger migrations. The script is idempotent. It creates owner-protected bills and the atomic `mark_bill_paid` function. The existing transaction trigger updates wallet balances; do not add another wallet debit.
+
+Dashboard and Transactions include a monthly forecast and upcoming bills / commitments. Use **Add bill** or a bill's **Manage** action to create, edit, or remove schedules. Orange indicates bills; red indicates BNPL. Payments advance the saved due date with month-end clamping and reject stale retries. Auto-pay is descriptive only: payments are recorded manually. Forecasts include only the selected currency and calendar month; subscriptions remain visible in upcoming expenses but are outside the requested bills + BNPL forecast.
+
+Validation: `npm run typecheck`, `npm run lint`, `npm test`. Database checks: apply the migration to a disposable local database, then run `supabase/tests/bills.sql` (fixtures roll back).

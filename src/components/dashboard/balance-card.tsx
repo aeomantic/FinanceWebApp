@@ -25,9 +25,9 @@ export function BalanceCard({ currency, balanceMinor, deltaMinor, demo = false, 
       <div className="balance-amount tabular" aria-live="polite">{hidden ? "••,•••.••" : formatMoney(balanceMinor, currency)}</div>
       <div className="balance-change"><span className="delta-badge"><Icon name={deltaMinor >= 0 ? "arrow-up-right" : "arrow-down-left"} size={13} />{hidden ? "•••" : `${deltaMinor >= 0 ? "+" : ""}${formatMoney(deltaMinor, currency)}`}</span><span>{demo ? "this month" : "recorded this month"}</span></div>
       <div className="balance-actions">
-        <button onClick={() => onAction("expense")}><Icon name="arrow-up-right" size={18} />Expense</button>
-        <button onClick={() => onAction("income")}><Icon name="arrow-down-left" size={18} />Income</button>
-        <button onClick={() => onAction("transfer")}><Icon name="transfer" size={18} />Transfer</button>
+        <button onClick={() => onAction("expense")}><Icon name="arrow-up-right" size={18} /><span>Expense</span></button>
+        <button onClick={() => onAction("income")}><Icon name="arrow-down-left" size={18} /><span>Income</span></button>
+        <button onClick={() => onAction("transfer")}><Icon name="transfer" size={18} /><span>Transfer</span></button>
       </div>
       <span className="balance-art" aria-hidden="true" />
     </section>

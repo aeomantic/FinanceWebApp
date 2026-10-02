@@ -2,15 +2,18 @@
 
 import { useId, useMemo, useState } from "react";
 import Link from "next/link";
-import { TransactionItem } from "@/components/transactions/TransactionItem";
+import { InvestmentsNavLink } from "@/components/dashboard/investments-nav-link";
 import { useRouter } from "next/navigation";
-import { Wallet as WalletIcon, CalendarClock } from "lucide-react";
+import { Wallet as WalletIcon, CalendarClock, Trash2, Check } from "lucide-react";
+import { DeleteTransactionsDialog } from "./delete-transactions-dialog";
+import { BillsOverview } from "@/components/bills/UpcomingExpensesCard";
+import type { Bill } from "@/lib/bills/types";
 import { SignOutButton } from "@/components/auth/sign-out-button";
 import { BrandMark, Icon } from "@/components/ui/icon";
 import { Select } from "@/components/ui/select";
 import { CategoryIcon } from "@/components/ui/category-icon";
 import { MobileNav } from "./mobile-nav";
-import { dateHeading } from "./transaction-list";
+import { dateHeading, MerchantAvatar } from "./transaction-list";
 import { TransactionDetailDialog } from "./transaction-detail-dialog";
 import { TransactionForm } from "./transaction-form";
 import { Modal } from "@/components/ui/modal";
@@ -30,6 +33,8 @@ interface TransactionsViewProps {
   /** Needed by the edit form's category picker; feed rendering works without it. */
   categories?: Category[];
   commitments?: Commitment[];
+  bills?: Bill[];
+  forecastError?: string | null;
   today: string;
   periodStart: string;
   name: string;
@@ -45,17 +50,6 @@ function periodStartFor(period: Period, today: string, allTimeStart: string): st
     return date.toISOString().slice(0, 10);
   }
   return allTimeStart;
-}
-
-/** "Overdue" for a past-due next_due_on, otherwise days-until phrased like the
- * rest of the app's relative date labels (dateHeading's Today/Yesterday). */
-function dueLabel(nextDueOn: string, today: string): string {
-  const days = Math.round((Date.parse(`${nextDueOn}T00:00:00.000Z`) - Date.parse(`${today}T00:00:00.000Z`)) / 86400000);
-  if (days < 0) return "Overdue";
-  if (days === 0) return "Due today";
-  if (days === 1) return "Due tomorrow";
-  if (days <= 13) return `Due in ${days} days`;
-  return `Due ${new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: nextDueOn.slice(0, 4) !== today.slice(0, 4) ? "numeric" : undefined, timeZone: "UTC" }).format(new Date(`${nextDueOn}T00:00:00.000Z`))}`;
 }
 
 function SegmentedControl<T extends string>({ value, onChange, options, "aria-label": ariaLabel }: {
@@ -81,20 +75,13 @@ function SegmentedControl<T extends string>({ value, onChange, options, "aria-la
   );
 }
 
-export function TransactionsView({ wallets: initialWallets, transactions: initialTransactions, categories: initialCategories, commitments = [], today, periodStart: allTimeStart, name: fullName, error, demo = false }: TransactionsViewProps) {
+export function TransactionsView({ wallets: initialWallets, transactions: initialTransactions, categories: initialCategories, commitments = [], bills = [], forecastError, today, periodStart: allTimeStart, name: fullName, error, demo = false }: TransactionsViewProps) {
   const router = useRouter();
   const wallets = demo ? DEMO_WALLETS : initialWallets;
   const transactions = demo ? getDemoTransactions(today) : initialTransactions;
   const [categories, setCategories] = useState<Category[]>(demo ? DEMO_CATEGORIES : initialCategories ?? []);
   const name = fullName.split(" ")[0] || "there";
   const searchId = useId();
-
-  const upcoming = commitments
-    .filter((commitment) => commitment.isActive)
-    .filter((commitment) => commitment.obligationType === "subscription" || (commitment.totalInstallments !== null && commitment.paidInstallments < commitment.totalInstallments))
-    .filter((commitment) => Date.parse(`${commitment.nextDueOn}T00:00:00.000Z`) - Date.parse(`${today}T00:00:00.000Z`) <= 30 * 86400000)
-    .toSorted((a, b) => a.nextDueOn.localeCompare(b.nextDueOn))
-    .slice(0, 3);
 
   const [period, setPeriod] = useState<Period>("month");
   const [typeFilter, setTypeFilter] = useState<TypeFilter>("all");
@@ -104,6 +91,13 @@ export function TransactionsView({ wallets: initialWallets, transactions: initia
   const [detail, setDetail] = useState<Transaction | null>(null);
   const [editing, setEditing] = useState<Transaction | null>(null);
   const [notice, setNotice] = useState("");
+  const [isSelectMode, setIsSelectMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [deleteIds, setDeleteIds] = useState<string[] | null>(null);
+  function toggleSelection(id: string) {
+    setSelectedIds((ids) => ids.includes(id) ? ids.filter((value) => value !== id) : [...ids, id]);
+  }
+  function clearSelection() { setSelectedIds([]); setIsSelectMode(false); }
 
   const periodStart = periodStartFor(period, today, allTimeStart);
   const inPeriod = useMemo(
@@ -145,7 +139,7 @@ export function TransactionsView({ wallets: initialWallets, transactions: initia
     .filter((transaction) => typeFilter === "all" || transaction.type === typeFilter)
     .filter((transaction) => !walletFilter || transaction.walletId === walletFilter || transaction.destinationWalletId === walletFilter)
     .filter((transaction) => `${transaction.title} ${transaction.category ?? ""} ${transaction.note ?? ""}`.toLocaleLowerCase("en-US").includes(normalizedQuery))
-    .toSorted((a, b) => b.date.localeCompare(a.date));
+    .toSorted((a, b) => b.date.localeCompare(a.date) || (b.recordedAt ?? "").localeCompare(a.recordedAt ?? ""));
 
   const groups = ledger.reduce<Map<string, Transaction[]>>((result, transaction) => {
     const group = result.get(transaction.date) ?? [];
@@ -166,6 +160,7 @@ export function TransactionsView({ wallets: initialWallets, transactions: initia
       <aside className="side-rail" aria-label="Main navigation">
         <Link href={demo ? "/preview" : "/dashboard"} className="rail-brand" aria-label="Folio home"><BrandMark /></Link>
         <nav className="rail-nav">
+          <InvestmentsNavLink demo={demo} />
           <Link href={demo ? "/preview" : "/dashboard"} className="rail-link" aria-label="Overview" title="Overview"><Icon name="home" /></Link>
           <Link href={demo ? "/preview" : "/transactions"} className="rail-link active" aria-label="Transactions" title="Transactions"><Icon name="transfer" /></Link>
           <Link href={demo ? "/preview" : "/dashboard"} className="rail-link" aria-label="Activity" title="Activity"><Icon name="activity" /></Link>
@@ -201,7 +196,7 @@ export function TransactionsView({ wallets: initialWallets, transactions: initia
 
           <SegmentedControl
             value={period}
-            onChange={setPeriod}
+            onChange={(value) => { setPeriod(value); clearSelection(); }}
             aria-label="Time period"
             options={[{ value: "month", label: "This month" }, { value: "30d", label: "Last 30 days" }, { value: "all", label: "All time" }]}
           />
@@ -217,34 +212,7 @@ export function TransactionsView({ wallets: initialWallets, transactions: initia
             </div>
           </div>
 
-          {!demo && (
-            <section className={`surface-card ${styles.transactions}`} aria-labelledby="upcoming-title">
-              <div className={styles.cardHeading}>
-                <div><p className={styles.eyebrow}>PLAN AHEAD</p><h2 id="upcoming-title">Upcoming expenses</h2></div>
-                <Link href="/commitments" className={styles.textButton}>View all<span aria-hidden="true">↗</span></Link>
-              </div>
-              {upcoming.length === 0 ? (
-                <div className={styles.emptyState}>
-                  <span className={styles.emptyIcon} aria-hidden="true">↗</span>
-                  <h3>All caught up</h3>
-                  <p>No upcoming payments due this month.</p>
-                </div>
-              ) : (
-                <ul className={styles.transactionRows}>
-                  {upcoming.map((commitment) => (
-                    <li key={commitment.id} className={styles.transactionRow}>
-                      <span className={`${styles.avatar} ${styles.avatarLavender}`} aria-hidden="true"><CategoryIcon name={commitment.icon} size={18} /></span>
-                      <div className={styles.transactionDetails}>
-                        <p className={styles.transactionTitle}>{commitment.name}</p>
-                        <p className={styles.transactionMeta}><span className={styles.walletBadge}>{dueLabel(commitment.nextDueOn, today)}</span></p>
-                      </div>
-                      <span className={styles.transactionAmount}>&minus;{formatMoney(commitment.amountMinor, commitment.currency)}</span>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </section>
-          )}
+          {!demo && <BillsOverview bills={bills} commitments={commitments} wallets={wallets} categories={categories} transactions={transactions} today={today} currency={primaryCurrency} error={error || forecastError} />}
 
           <div className="dashboard-grid">
             <div className="transactions-analytics-area">
@@ -297,22 +265,23 @@ export function TransactionsView({ wallets: initialWallets, transactions: initia
                 <div className={styles.cardHeading}>
                   <div><p className={styles.eyebrow}>FULL LEDGER</p><h2 id="ledger-heading">All transactions</h2></div>
                   <span className={styles.smallCount}>{ledger.length} total</span>
+                  {!demo && <button type="button" className={styles.textButton} aria-pressed={isSelectMode} onClick={() => { setSelectedIds([]); setIsSelectMode(!isSelectMode); }}>{isSelectMode ? "Done" : "Select"}</button>}
                 </div>
 
                 <div className={styles.filterToolbar}>
                   <div className={styles.transactionSearch}>
                     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true"><circle cx="10.7" cy="10.7" r="6.7" /><path d="m16 16 4 4" /></svg>
                     <label htmlFor={searchId} className={styles.srOnly}>Search transactions</label>
-                    <input id={searchId} type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search by note or category" />
+                    <input id={searchId} type="search" value={query} onChange={(event) => { setQuery(event.target.value); clearSelection(); }} placeholder="Search by note or category" />
                   </div>
                   <SegmentedControl
                     value={typeFilter}
-                    onChange={setTypeFilter}
+                    onChange={(value) => { setTypeFilter(value); clearSelection(); }}
                     aria-label="Filter by type"
                     options={[{ value: "all", label: "All" }, { value: "income", label: "Income" }, { value: "expense", label: "Expense" }]}
                   />
                   <div className={styles.walletFilter}>
-                    <Select aria-label="Filter by wallet" value={walletFilter} onChange={setWalletFilter} options={walletOptions} />
+                    <Select aria-label="Filter by wallet" value={walletFilter} onChange={(value) => { setWalletFilter(value); clearSelection(); }} options={walletOptions} />
                   </div>
                 </div>
 
@@ -327,7 +296,39 @@ export function TransactionsView({ wallets: initialWallets, transactions: initia
                     <div key={date} className={styles.transactionGroup}>
                       <h3 className={styles.dateHeading}>{dateHeading(date, today)}</h3>
                       <ul className={styles.transactionRows}>
-                        {rows.map((transaction) => <TransactionItem key={transaction.id} transaction={transaction} walletName={walletsById.get(transaction.walletId)?.name ?? "Wallet"} onSelect={setDetail} />)}
+                        {rows.map((transaction) => {
+                          const income = transaction.type === "income";
+                          const transfer = transaction.type === "transfer";
+                          const amount = formatMoney(transaction.amountMinor, transaction.currency);
+                          const walletName = walletsById.get(transaction.walletId)?.name ?? "Wallet";
+                          const title = transaction.merchant?.name ?? transaction.title;
+                          return (
+                            <li key={transaction.id} className={`${styles.transactionRowItem} flex items-center gap-2`}>
+                              <button
+                                type="button"
+                                className={`${styles.transactionRow} ${styles.transactionRowButton}`}
+                                role={isSelectMode ? "checkbox" : undefined}
+                                aria-checked={isSelectMode ? selectedIds.includes(transaction.id) : undefined}
+                                onClick={() => isSelectMode ? toggleSelection(transaction.id) : setDetail(transaction)}
+                              >
+                                {isSelectMode && <span aria-hidden="true" className="flex h-5 w-5 shrink-0 items-center justify-center rounded-lg border border-zinc-700">{selectedIds.includes(transaction.id) && <Check className="h-4 w-4 text-emerald-400" />}</span>}
+                                <MerchantAvatar {...transaction} />
+                                <div className={styles.transactionDetails}>
+                                  <p className={styles.transactionTitle}>{title}</p>
+                                  <p className={styles.transactionMeta}>
+                                    {transfer ? "Transferred" : income ? "Received" : "Paid"}
+                                    {transaction.category ? <span className={styles.category}>{transaction.category}</span> : null}
+                                  </p>
+                                </div>
+                                <div className={styles.ledgerRowEnd}>
+                                  <span className={styles.walletBadge}>{walletName}</span>
+                                  <span className={`${styles.transactionAmount} ${income ? styles.positive : ""}`}>{transfer ? "" : income ? "+" : "−"}{amount}</span>
+                                </div>
+                              </button>
+                              {!demo && !isSelectMode && <button type="button" aria-label={`Delete ${title}`} onClick={() => setDeleteIds([transaction.id])} className="rounded-lg p-2 text-rose-400 hover:bg-rose-950/30"><Trash2 size={16} aria-hidden="true" /></button>}
+                            </li>
+                          );
+                        })}
                       </ul>
                     </div>
                   ))}
@@ -341,10 +342,17 @@ export function TransactionsView({ wallets: initialWallets, transactions: initia
       </div>
 
       <MobileNav demo={demo} />
+      {isSelectMode && selectedIds.length > 0 && <div className="fixed bottom-24 left-1/2 z-40 flex -translate-x-1/2 items-center gap-3 whitespace-nowrap rounded-full border border-zinc-700/80 bg-zinc-900 px-4 py-2.5 shadow-2xl">
+        <span className="text-xs font-semibold text-zinc-200">{selectedIds.length} selected</span>
+        <button type="button" onClick={() => setSelectedIds(ledger.map((transaction) => transaction.id))} className="text-xs text-zinc-400 hover:text-zinc-200">Select all</button>
+        <button type="button" onClick={() => setDeleteIds([...selectedIds])} className="flex items-center gap-1.5 rounded-full bg-rose-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-rose-700"><Trash2 className="h-3.5 w-3.5" />Delete ({selectedIds.length})</button>
+      </div>}
+      {deleteIds && <DeleteTransactionsDialog ids={deleteIds} onClose={() => setDeleteIds(null)} onDeleted={() => { setDeleteIds(null); clearSelection(); setNotice("Transactions deleted. Wallet balances updated."); }} />}
 
       {detail && (
         <TransactionDetailDialog
           transaction={detail}
+          demo={demo}
           wallets={wallets}
           onClose={() => setDetail(null)}
           onEdit={() => { setEditing(detail); setDetail(null); }}

@@ -3,11 +3,13 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Icon } from "@/components/ui/icon";
+import { TrendingUp } from "lucide-react";
 
 export function MobileNav({ demo = false }: { demo?: boolean }) {
   const pathname = usePathname();
   const isWallets = pathname === "/wallets";
-  const isTransactions = pathname === "/transactions" || pathname === "/commitments";
+  const isTransactions = pathname.startsWith("/transactions") || pathname === "/commitments";
+  const isInvestments = pathname === "/investments";
   const isSettings = pathname === "/settings";
   const isHome = pathname === "/dashboard" || pathname === "/preview";
   const homeHref = demo ? "/preview" : "/dashboard";
@@ -15,7 +17,7 @@ export function MobileNav({ demo = false }: { demo?: boolean }) {
   const transactionsHref = demo ? "/preview" : "/transactions";
 
   return (
-    <nav className="mobile-nav" aria-label="Mobile navigation">
+    <nav className="mobile-nav investments-mobile-nav" aria-label="Mobile navigation">
       <Link
         href={transactionsHref}
         className={isTransactions ? "mobile-nav-pill-active" : ""}
@@ -40,6 +42,7 @@ export function MobileNav({ demo = false }: { demo?: boolean }) {
       >
         <Icon name="wallet" />
       </Link>
+      <Link href={demo ? "/login" : "/investments"} className={isInvestments ? "mobile-nav-pill-active" : ""} aria-label="Investments" aria-current={isInvestments ? "page" : undefined}><TrendingUp /></Link>
       <Link href={demo ? "/login" : "/settings"} className={isSettings ? "mobile-nav-pill-active" : ""} aria-label="Settings" aria-current={isSettings ? "page" : undefined}>
         <Icon name="settings" />
       </Link>

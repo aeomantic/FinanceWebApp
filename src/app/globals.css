@@ -129,18 +129,18 @@ button, a, input, select { outline-offset: 4px; }
 .wallets-grid-area { grid-column: span 7; min-width: 0; }
 .transactions-analytics-area { grid-column: span 5; min-width: 0; display: flex; flex-direction: column; gap: 21px; }
 .transactions-ledger-area { grid-column: span 7; min-width: 0; }
-.balance-card { padding: 24px 27px 23px; background: #fef38b; border-radius: 28px; position: relative; overflow: hidden; isolation: isolate; min-height: 280px; }
+.balance-card { width: 100%; max-width: 100%; min-width: 0; padding: 24px 27px 23px; background: #fef38b; border-radius: 28px; position: relative; overflow: hidden; isolation: isolate; min-height: 280px; }
 .balance-topline { display: flex; align-items: center; justify-content: space-between; color: #525238; }
 .balance-topline .eyebrow { font-size: 9px; letter-spacing: 1.25px; }
-.balance-visibility { border: 0; padding: 2px; display: flex; color: #5c5d3a; background: none; }
+.balance-visibility { flex-shrink: 0; border: 0; padding: 2px; display: flex; color: #5c5d3a; background: none; }
 .balance-currency { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 550; margin-top: 25px; }
 .currency-flag { font-family: Arial, sans-serif; font-size: 16px; width: 21px; }
 .exchange-badge { font-size: 8px; font-weight: 400; color: #68653f; border-radius: 20px; padding: 5px 8px; background: #ffffff42; margin-left: auto; }
 .balance-amount { font-size: clamp(31px, 3.55vw, 51px); letter-spacing: -2.1px; font-weight: 550; line-height: 1.3; margin-top: 9px; white-space: nowrap; }
 .balance-change { display: flex; align-items: center; gap: 8px; font-size: 9px; color: #686644; margin: 8px 0 26px; }
 .delta-badge { display: flex; align-items: center; gap: 4px; padding: 4px 7px; background: #ffffff63; color: #3b4822; border-radius: 20px; font-size: 9px; font-weight: 500; }
-.balance-actions { display: flex; gap: 9px; position: relative; z-index: 1; }
-.balance-actions button { display: flex; align-items: center; justify-content: center; gap: 9px; flex: 1; padding: 11px 6px; border: 1px solid #fff9; border-radius: 28px; background: #ffffff75; font-size: 11px; color: #23251c; transition: background .15s, transform .15s; }
+.balance-actions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); width: 100%; gap: 8px; position: relative; z-index: 1; }
+.balance-actions button { display: flex; align-items: center; justify-content: center; gap: 6px; min-width: 0; padding: 11px 6px; border: 1px solid #fff9; border-radius: 28px; background: #ffffff75; font-size: 11px; color: #23251c; transition: background .15s, transform .15s; }
 .balance-actions button:hover { background: #ffffffbd; transform: translateY(-2px); }
 .balance-art { width: 210px; height: 210px; position: absolute; right: -78px; top: 23px; z-index: -1; border: 1px solid #aaa55b28; border-radius: 50%; box-shadow: 0 0 0 24px #aaa55b09, 0 0 0 49px #aaa55b06; }
 .cashflow-summary { display: flex; margin: 17px 0 0; background: var(--surface-glass); border: 1px solid #fff9; border-radius: 21px; padding: 16px 19px; gap: 19px; }
@@ -204,6 +204,8 @@ a.text-action { color: inherit; text-decoration: none; }
 .success-notice { background: #e3efdd; color: #355927; }
 .success-notice button { margin-left: auto; }
 .mobile-nav { display: none; }
+.mobile-nav.investments-mobile-nav { width: min(310px, calc(100vw - 24px)); gap: 4px; }
+.mobile-nav.investments-mobile-nav a { flex-shrink: 0; }
 .app-modal { border: 1px solid #14141408; padding: 28px; border-radius: 28px; background: var(--surface); width: min(470px, calc(100vw - 32px)); max-height: calc(100dvh - 48px); overflow-y: auto; box-shadow: 0 30px 100px #192b2040; margin: auto; color: var(--color-ink); }
 .app-modal::backdrop { background: #14251b55; backdrop-filter: blur(5px); }
 .modal-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 22px; }
@@ -364,10 +366,12 @@ a.text-action { color: inherit; text-decoration: none; }
 }
 
 /* Mobile ledger spacing and persistent navigation clearance. */
-.transactions-page { display: flex; flex-direction: column; gap: 20px; padding-top: 16px; padding-bottom: calc(180px + env(safe-area-inset-bottom, 0px)); min-width: 0; }
+.transactions-page { display: flex; flex-direction: column; gap: 20px; padding-top: 16px; min-width: 0; }
 .transactions-page > .page-heading { margin: 14px 0 6px; align-items: flex-start; flex-wrap: wrap; }
 .transactions-page > .demo-banner, .transactions-page > .dashboard-alert { margin: 0; }
 .transactions-page > .dashboard-grid { gap: 20px; }
+/* The flex gap already contributes 20px before this shared footer. */
+.transactions-page > .dashboard-footer { padding-top: 5px; }
 .commitments-link { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 40px; padding: 10px 14px; border-radius: 99px; border: 1px solid var(--border); background: var(--surface-glass); color: var(--color-ink); font-size: 12px; text-decoration: none; white-space: nowrap; }
 .commitments-link:hover { background: var(--surface-hover); }
 .user-avatar, .rail-avatar { text-decoration: none; }
@@ -408,7 +412,7 @@ a.text-action { color: inherit; text-decoration: none; }
 .dark .primary-button:hover:not(:disabled) { background: #eade76; }
 
 @media (max-width: 900px) {
-  .app-frame { padding-bottom: calc(120px + env(safe-area-inset-bottom, 0px)); }
+  .app-frame { --mobile-bottom-clearance: calc(120px + env(safe-area-inset-bottom, 0px)); padding-bottom: var(--mobile-bottom-clearance); }
   .mobile-nav { position: fixed; display: flex; align-items: center; justify-content: space-between; gap: 9px; width: min(264px, calc(100vw - 32px)); height: 64px; padding: 8px 12px; bottom: calc(12px + env(safe-area-inset-bottom, 0px)); left: 50%; transform: translateX(-50%); border: 1px solid var(--border-subtle); background: var(--surface-glass); border-radius: 40px; box-shadow: 0 8px 30px #23432a1a; backdrop-filter: blur(16px); z-index: 20; }
   .mobile-nav a { display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; color: var(--color-muted); border-radius: 50%; }
   .mobile-nav .mobile-home { background: #141414; color: white; width: 44px; height: 44px; transition: color .15s; }
@@ -416,7 +420,8 @@ a.text-action { color: inherit; text-decoration: none; }
   .mobile-nav a.mobile-nav-pill-active { background: #fef38b; color: #141414; }
   .transactions-frame { padding: 22px 0 0; }
   .transactions-frame .topbar { padding-left: 16px; padding-right: 16px; }
-  .transactions-page { max-width: 672px; width: 100%; margin-inline: auto; padding-inline: 16px; }
+  .transactions-page { max-width: 672px; width: 100%; margin-inline: auto; padding-inline: 16px; padding-bottom: var(--mobile-bottom-clearance); }
+  .transactions-page > .dashboard-footer { padding-top: 3px; }
   .transactions-page > .dashboard-grid { display: flex; flex-direction: column; }
   .transactions-page .transactions-analytics-area, .transactions-page .transactions-ledger-area { width: 100%; }
 }
@@ -439,4 +444,19 @@ a.text-action { color: inherit; text-decoration: none; }
 @keyframes folio-splash-pulse { 0%, 100% { opacity: .5; } 50% { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) {
   .folio-splash-mark, .folio-splash-spark, .folio-splash-caption { animation: none; }
+}
+
+/* Keep the wallet hero and switcher ahead of forecasts at every viewport. */
+.dashboard-priority { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; min-width: 0; }
+.dashboard-priority > * { min-width: 0; max-width: 100%; }
+.dashboard-secondary .transactions-area { grid-column: 1 / -1; grid-row: 1; order: -1; }
+
+.balance-actions button svg { flex-shrink: 0; }
+.balance-actions button span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.balance-change { flex-wrap: wrap; }
+.balance-amount { max-width: 100%; overflow-wrap: anywhere; white-space: normal; }
+@media (max-width: 640px) {
+  .balance-currency .exchange-badge { display: none; }
+  .balance-actions button { gap: 4px; padding-inline: 4px; }
+  .balance-actions button svg { width: 16px; height: 16px; }
 }

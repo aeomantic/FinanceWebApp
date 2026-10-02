@@ -2,6 +2,9 @@
 
 import { MerchantIcon } from "@/components/transactions/MerchantIcon";
 import { Modal } from "@/components/ui/modal";
+import { useState } from "react";
+import { Trash2 } from "lucide-react";
+import { DeleteTransactionsDialog } from "./delete-transactions-dialog";
 import { Icon } from "@/components/ui/icon";
 import { CategoryIcon } from "@/components/ui/category-icon";
 import { MerchantAvatar } from "./transaction-list";
@@ -27,13 +30,15 @@ function formatRecordedAt(value: string): string | null {
   return `${day} · ${time}`;
 }
 
-export function TransactionDetailDialog({ transaction, wallets, onClose, onEdit }: {
+export function TransactionDetailDialog({ transaction, wallets, onClose, onEdit, demo = false }: {
   transaction: Transaction;
   wallets: Wallet[];
   onClose: () => void;
   /** When provided, the dialog offers an Edit action (hosts open the prefilled form). */
   onEdit?: () => void;
+  demo?: boolean;
 }) {
+  const [deleting, setDeleting] = useState(false);
   const income = transaction.type === "income";
   const transfer = transaction.type === "transfer";
   const amountTone = income ? styles.detailAmountPositive : transfer ? styles.detailAmountNeutral : "";
@@ -41,6 +46,7 @@ export function TransactionDetailDialog({ transaction, wallets, onClose, onEdit 
   const walletName = (id: string | undefined) => (id ? wallets.find((wallet) => wallet.id === id)?.name : undefined);
   const recordedAt = transaction.recordedAt ? formatRecordedAt(transaction.recordedAt) : null;
 
+  if (deleting) return <DeleteTransactionsDialog ids={[transaction.id]} onClose={() => setDeleting(false)} onDeleted={onClose} />;
   return (
     <Modal title="Transaction" onClose={onClose} className="modal-sheet">
       <div className={styles.detailHero}>
@@ -100,6 +106,7 @@ export function TransactionDetailDialog({ transaction, wallets, onClose, onEdit 
           Edit transaction<Icon name="pencil" size={16} />
         </button>
       )}
+      {!demo && <button type="button" onClick={() => setDeleting(true)} className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-rose-400 hover:bg-rose-950/30"><Trash2 size={16} aria-hidden="true" />Delete transaction</button>}
     </Modal>
   );
 }

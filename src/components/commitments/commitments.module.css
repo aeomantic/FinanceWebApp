@@ -3,8 +3,8 @@
 .hint { margin: 0; font-size: 11px; line-height: 1.6; color: var(--color-muted, #71717a); }
 .formGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
 .dialogStack { display: flex; flex-direction: column; gap: 18px; }
-.bnplBox { display: flex; flex-direction: column; gap: 14px; padding: 16px; border: 1px solid #f0e3a0; border-radius: 20px; background: #fefaea; }
-:global(.dark) .bnplBox { border-color: #4a4326; background: #2b2712; }
+.bnplBox { display: flex; flex-direction: column; gap: 14px; padding: 16px; border: 1px solid rgb(244 63 94 / .2); border-radius: 20px; background: rgb(244 63 94 / .1); }
+:global(.dark) .bnplBox { border-color: rgb(251 113 133 / .2); background: rgb(251 113 133 / .1); }
 .iconToggle { align-self: flex-start; padding: 9px 14px; border: 1px solid var(--border, #e6e9e3); border-radius: 100px; background: none; color: var(--color-ink, #141414); font-size: 12px; }
 .disclaimer { margin: 0; padding: 12px 14px; border-radius: 14px; background: var(--surface-muted, #f7f9f6); color: var(--color-muted, #71717a); font-size: 11px; line-height: 1.6; }
 
@@ -32,9 +32,9 @@
 .bnplTop { display: flex; align-items: center; gap: 12px; }
 .bnplProgress { display: flex; gap: 4px; margin-top: 14px; }
 .bnplSegment { height: 7px; flex: 1; border-radius: 4px; background: var(--surface-muted, #eef1ec); }
-.bnplSegmentPaid { background: #fef38b; }
+.bnplSegmentPaid { background: #ef4444; }
 .bnplProgressBar { height: 7px; flex: 1; border-radius: 4px; background: var(--surface-muted, #eef1ec); overflow: hidden; }
-.bnplProgressBarFill { height: 100%; border-radius: 4px; background: #fef38b; }
+.bnplProgressBarFill { height: 100%; border-radius: 4px; background: #ef4444; }
 .bnplFooter { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 11px; color: var(--color-muted, #71717a); font-size: 11px; }
 .bnplOutstanding { color: var(--color-ink, #141414); font-size: 13px; font-weight: 550; }
 
@@ -43,3 +43,6 @@
   .subscriptionAmount { font-size: 12px; }
   .subscriptionEnd { flex-basis: 100%; justify-content: space-between; margin-left: 0; }
 }
+
+.bnplIcon { background: rgb(244 63 94 / .1); color: #e11d48; border: 1px solid rgb(244 63 94 / .2); }
+:global(.dark) .bnplIcon { color: #fb7185; }
